@@ -1,0 +1,2 @@
+import { createFileRoute } from "@tanstack/react-router"; import { ContentPage } from "@/components/content-page";
+export const Route=createFileRoute("/faq")({head:()=>({meta:[{title:"Frequently Asked Questions | CatchUp Tutors"},{name:"description",content:"Answers about CatchUp resources, premium access, tutors, and bookings."}]}),component:()=> <ContentPage kind="faq"/>});

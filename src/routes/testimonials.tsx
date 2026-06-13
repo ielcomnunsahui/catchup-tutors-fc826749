@@ -1,0 +1,2 @@
+import { createFileRoute } from "@tanstack/react-router"; import { ContentPage } from "@/components/content-page";
+export const Route=createFileRoute("/testimonials")({head:()=>({meta:[{title:"Student Success Stories | CatchUp Tutors"},{name:"description",content:"Read how CatchUp learners build confidence and improve in Mathematics."},{property:"og:title",content:"CatchUp Student Success"},{property:"og:description",content:"Stories of academic progress and confidence."}]}),component:()=> <ContentPage kind="testimonials"/>});
