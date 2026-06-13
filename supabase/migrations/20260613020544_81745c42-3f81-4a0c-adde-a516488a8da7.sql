@@ -1,0 +1,10 @@
+CREATE POLICY "public free academic files" ON storage.objects FOR SELECT USING (bucket_id='academic-resources' AND EXISTS(SELECT 1 FROM public.resources r WHERE r.file_path=name AND r.is_published AND r.access_level='free'));
+CREATE POLICY "admin academic files" ON storage.objects FOR ALL TO authenticated USING (bucket_id='academic-resources' AND public.is_admin()) WITH CHECK (bucket_id='academic-resources' AND public.is_admin());
+CREATE POLICY "users own tutor documents" ON storage.objects FOR SELECT TO authenticated USING (bucket_id='tutor-documents' AND ((storage.foldername(name))[1]=auth.uid()::text OR public.is_admin()));
+CREATE POLICY "users upload tutor documents" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id='tutor-documents' AND (storage.foldername(name))[1]=auth.uid()::text);
+CREATE POLICY "users update tutor documents" ON storage.objects FOR UPDATE TO authenticated USING (bucket_id='tutor-documents' AND ((storage.foldername(name))[1]=auth.uid()::text OR public.is_admin())) WITH CHECK (bucket_id='tutor-documents' AND ((storage.foldername(name))[1]=auth.uid()::text OR public.is_admin()));
+CREATE POLICY "users delete tutor documents" ON storage.objects FOR DELETE TO authenticated USING (bucket_id='tutor-documents' AND ((storage.foldername(name))[1]=auth.uid()::text OR public.is_admin()));
+CREATE POLICY "profile images authenticated read" ON storage.objects FOR SELECT TO authenticated USING (bucket_id='profile-images');
+CREATE POLICY "users upload profile images" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id='profile-images' AND (storage.foldername(name))[1]=auth.uid()::text);
+CREATE POLICY "users update profile images" ON storage.objects FOR UPDATE TO authenticated USING (bucket_id='profile-images' AND ((storage.foldername(name))[1]=auth.uid()::text OR public.is_admin())) WITH CHECK (bucket_id='profile-images' AND ((storage.foldername(name))[1]=auth.uid()::text OR public.is_admin()));
+CREATE POLICY "users delete profile images" ON storage.objects FOR DELETE TO authenticated USING (bucket_id='profile-images' AND ((storage.foldername(name))[1]=auth.uid()::text OR public.is_admin()));
