@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ArrowRight, Award, BarChart3, BookOpenCheck, CheckCircle2, GraduationCap, PlayCircle, TrendingUp, Users } from "lucide-react";
+import { ArrowRight, BookOpenCheck, CheckCircle2, GraduationCap, PlayCircle, Users } from "lucide-react";
 import { SiteShell } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
-import logo from "@/assets/catchup-logo.png.asset.json";
+import heroStudents from "@/assets/hero-students.jpg.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -21,19 +21,42 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   return <SiteShell>
-    <section className="relative overflow-hidden bg-hero text-hero-foreground">
-      <div className="hero-grid absolute inset-0 opacity-70" />
-      <div className="relative mx-auto grid min-h-[720px] max-w-7xl items-center gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[1.15fr_.85fr] lg:px-8">
-        <motion.div initial={{opacity:0,y:18}} animate={{opacity:1,y:0}} transition={{duration:.55}}>
-          <div className="mb-7 flex w-fit items-center gap-2 rounded-full border border-hero-foreground/15 bg-hero-foreground/5 px-4 py-2 text-sm"><Award className="h-4 w-4 text-brand-green"/> Cambridge & IGCSE learning ecosystem</div>
-          <h1 className="font-display text-5xl font-bold leading-[1.02] tracking-tight sm:text-7xl lg:text-8xl">Catch Up.<br/><span className="text-brand-orange">Stay Ahead.</span></h1>
-          <p className="mt-7 max-w-2xl text-lg leading-8 text-hero-foreground/72">Personalized tutoring, premium resources, and expert academic mentorship designed to help students excel in Mathematics and Further Mathematics.</p>
-          <div className="mt-9 flex flex-wrap gap-3"><Button asChild variant="hero" size="lg"><Link to="/tutors">Find a Tutor <ArrowRight/></Link></Button><Button asChild variant="heroOutline" size="lg"><Link to="/resources">Explore Resources</Link></Button><Button asChild variant="success" size="lg"><Link to="/pricing">Go Premium</Link></Button></div>
-          <div className="mt-9 flex flex-wrap gap-2">{["Cambridge Mathematics","Further Mathematics","IGCSE Mathematics"].map(x=><span key={x} className="rounded-full border border-hero-foreground/15 px-3 py-1.5 text-xs font-semibold text-hero-foreground/70">{x}</span>)}</div>
-        </motion.div>
-        <motion.div initial={{opacity:0,scale:.95}} animate={{opacity:1,scale:1}} transition={{duration:.65,delay:.1}} className="relative hidden lg:block">
-          <div className="absolute -left-8 top-12 h-28 w-28 rounded-full bg-brand-orange/20 blur-3xl"/><div className="absolute -right-4 bottom-8 h-36 w-36 rounded-full bg-brand-green/20 blur-3xl"/>
-          <div className="relative rounded-[2rem] border border-hero-foreground/15 bg-hero-foreground/7 p-7 shadow-lift backdrop-blur"><img src={logo.url} alt="CatchUp Tutors growth logo" className="mx-auto w-full max-w-md"/><div className="mt-5 grid grid-cols-2 gap-4"><div className="rounded-2xl bg-hero-foreground/8 p-5"><TrendingUp className="text-brand-green"/><p className="mt-3 text-3xl font-bold">98%</p><p className="text-sm text-hero-foreground/60">Success rate</p></div><div className="rounded-2xl bg-hero-foreground/8 p-5"><BarChart3 className="text-brand-orange"/><p className="mt-3 text-3xl font-bold">10K+</p><p className="text-sm text-hero-foreground/60">Students helped</p></div></div></div>
+    <section className="relative overflow-hidden bg-background">
+      <div className="absolute inset-0">
+        <img
+          src={heroStudents.url}
+          alt="Students learning together"
+          width={1920}
+          height={1080}
+          className="h-full w-full object-cover object-right"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/92 to-background/10 md:via-background/80 md:to-transparent" />
+      </div>
+      <div className="relative mx-auto grid min-h-[640px] max-w-7xl items-center px-4 py-24 sm:px-6 lg:min-h-[720px] lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: .55 }}
+          className="max-w-2xl"
+        >
+          <p className="mb-6 text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+            Cambridge · IGCSE · A-Level
+          </p>
+          <h1 className="font-display text-5xl font-semibold leading-[1.05] tracking-tight text-foreground sm:text-6xl lg:text-7xl">
+            Catch Up.<br />
+            <span className="text-primary">Stay Ahead.</span>
+          </h1>
+          <p className="mt-6 max-w-xl text-lg leading-8 text-muted-foreground">
+            Personalized tutoring and premium resources that help students master Mathematics with clarity and confidence.
+          </p>
+          <div className="mt-10 flex flex-wrap gap-3">
+            <Button asChild size="lg">
+              <Link to="/tutors">Find a Tutor <ArrowRight /></Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link to="/resources">Explore Resources</Link>
+            </Button>
+          </div>
         </motion.div>
       </div>
     </section>
