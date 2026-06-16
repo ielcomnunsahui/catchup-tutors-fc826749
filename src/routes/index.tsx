@@ -50,13 +50,17 @@ function Index() {
             Personalized tutoring and premium resources that help students master Mathematics with clarity and confidence.
           </p>
           <div className="mt-10 flex flex-wrap gap-3">
+            <Button asChild size="lg" variant="hero" className="shadow-lift">
+              <Link to="/pricing"><Crown /> Unlock Premium <ArrowRight /></Link>
+            </Button>
             <Button asChild size="lg">
-              <Link to="/tutors">Find a Tutor <ArrowRight /></Link>
+              <Link to="/tutors">Find a Tutor</Link>
             </Button>
             <Button asChild size="lg" variant="outline">
               <Link to="/resources">Explore Resources</Link>
             </Button>
           </div>
+          <p className="mt-5 text-sm text-muted-foreground">From <span className="font-semibold text-foreground">₦5,000/month</span> · Cancel anytime</p>
         </motion.div>
       </div>
     </section>
