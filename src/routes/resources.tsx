@@ -87,8 +87,11 @@ export const Route = createFileRoute("/resources")({
     subject: typeof s.subject === "string" ? s.subject : undefined,
     view: s.view === "yearly" || s.view === "topics" ? s.view : undefined,
   }),
-  head: ({ search }) => {
-    const m = buildMeta(search as Search);
+  loaderDeps: ({ search }) => search,
+  loader: ({ deps }) => deps,
+  head: ({ loaderData }) => {
+    const search: Search = loaderData ?? {};
+    const m = buildMeta(search);
     const ld: Record<string, unknown> = {
       "@context": "https://schema.org",
       "@type": "CollectionPage",
@@ -100,7 +103,7 @@ export const Route = createFileRoute("/resources")({
     if (m.program && m.subject) {
       ld["@type"] = "LearningResource";
       ld["educationalLevel"] = m.subject.level;
-      ld["learningResourceType"] = (search as Search).view === "topics" ? "Topic questions" : "Past examination papers";
+      ld["learningResourceType"] = search.view === "topics" ? "Topic questions" : "Past examination papers";
       ld["about"] = `${m.program.name} ${m.subject.name} (${m.subject.code})`;
     }
     return {
