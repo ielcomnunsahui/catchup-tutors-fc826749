@@ -1,4 +1,4 @@
-import { BookOpen, CheckCircle2, HelpCircle, LockKeyhole, Mail, MapPin, MessageCircle, ShieldCheck } from "lucide-react";
+import { BookOpen, CheckCircle2, Facebook, HelpCircle, Instagram, LockKeyhole, Mail, MapPin, MessageCircle, ShieldCheck, Youtube } from "lucide-react";
 import { SiteShell, PageHero } from "./site-shell";
 import { Button } from "./ui/button";
 
