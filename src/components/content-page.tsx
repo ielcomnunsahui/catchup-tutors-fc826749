@@ -19,7 +19,37 @@ export function ContentPage({ kind }: { kind: PageKind }) {
 }
 
 function renderContent(kind: PageKind) {
-  if (kind === "about") return <div className="grid gap-12 lg:grid-cols-[.8fr_1.2fr]"><div className="rounded-3xl bg-primary/10 p-8"><div className="flex aspect-square items-center justify-center rounded-2xl border border-primary/20 bg-background text-center text-muted-foreground">Founder photo<br />managed in Admin</div></div><div><p className="text-sm font-bold uppercase tracking-widest text-primary">Ahmed Thaoban · Founder</p><h2 className="mt-3 font-display text-3xl font-bold">Teaching that meets students where they are—and takes them further.</h2><p className="mt-5 leading-7 text-muted-foreground">CatchUp Tutors was created to make high-quality Mathematics learning personal, structured, and accessible. Founder biography and journey content are editable from the Admin Dashboard as the story grows.</p>{["Make complex ideas feel clear", "Connect practice to exam performance", "Build confidence through measurable progress"].map((x) => <div key={x} className="mt-5 flex gap-3"><CheckCircle2 className="mt-0.5 text-brand-green" /><span>{x}</span></div>)}</div></div>;
+  if (kind === "about") return <div className="space-y-16">
+    <div className="grid gap-12 lg:grid-cols-[.8fr_1.2fr]">
+      <div className="rounded-3xl bg-primary/10 p-8">
+        <div className="flex aspect-square items-center justify-center rounded-2xl border border-primary/20 bg-background text-center text-muted-foreground">
+          <div className="px-6"><div className="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-primary/15 font-display text-2xl font-bold text-primary">AT</div>Founder photo<br /><span className="text-xs">(upload from Admin Dashboard)</span></div>
+        </div>
+      </div>
+      <div>
+        <p className="text-sm font-bold uppercase tracking-widest text-primary">Ahmed Thaoban · Founder</p>
+        <h2 className="mt-3 font-display text-3xl font-bold">Teaching that meets students where they are—and takes them further.</h2>
+        <p className="mt-5 leading-7 text-muted-foreground">CatchUp Tutors was founded by Ahmed Thaoban to make high-quality Mathematics learning personal, structured, and accessible for Cambridge and IGCSE students. Full founder biography and journey content are editable from the Admin Dashboard as the story grows.</p>
+        {["Make complex ideas feel clear", "Connect practice to exam performance", "Build confidence through measurable progress"].map((x) => <div key={x} className="mt-5 flex gap-3"><CheckCircle2 className="mt-0.5 text-brand-green" /><span>{x}</span></div>)}
+      </div>
+    </div>
+    <div className="rounded-3xl border bg-card p-8">
+      <h2 className="font-display text-2xl font-bold">Contact & Community</h2>
+      <p className="mt-2 text-muted-foreground">Reach the CatchUp team directly or follow our learning community.</p>
+      <div className="mt-7 grid gap-5 md:grid-cols-2">
+        <Info icon={Mail} title="Contact email" text="Catchuptutors01@gmail.com" href="mailto:Catchuptutors01@gmail.com" />
+        <Info icon={Mail} title="Support email" text="support@catchuptutors.com" href="mailto:support@catchuptutors.com" />
+        <Info icon={MessageCircle} title="WhatsApp bookings" text="+234 810 180 4411" href="https://wa.me/2348101804411" />
+        <Info icon={MapPin} title="Locations" text="Nigeria · United Kingdom" />
+      </div>
+      <div className="mt-7 flex flex-wrap items-center gap-4">
+        <span className="text-sm font-semibold">Follow us:</span>
+        <a href="https://www.instagram.com/tutors.catchup?igsh=MXB4cmgzdGVucjM0aw==" target="_blank" rel="noopener" aria-label="Instagram" className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground"><Instagram className="size-5"/></a>
+        <a href="https://www.facebook.com/share/1BTRMp9BPw/" target="_blank" rel="noopener" aria-label="Facebook" className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground"><Facebook className="size-5"/></a>
+        <a href="https://youtube.com/@catch-uptutors2691?si=9YKS7NsmOUOdU96f" target="_blank" rel="noopener" aria-label="YouTube" className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground"><Youtube className="size-5"/></a>
+      </div>
+    </div>
+  </div>;
   if (kind === "testimonials") return <div className="grid gap-6 md:grid-cols-3">{[{n:"Amina O.",p:"IGCSE Mathematics",q:"I stopped guessing and started understanding how to approach each question."},{n:"Daniel K.",p:"Cambridge Mathematics",q:"The topic structure showed me exactly where I needed more practice."},{n:"Maya R.",p:"Further Mathematics",q:"My tutor made advanced ideas feel manageable and connected."}].map((t) => <article key={t.n} className="rounded-3xl border bg-card p-7 shadow-soft"><div className="text-brand-orange">★★★★★</div><blockquote className="mt-5 text-lg leading-8">“{t.q}”</blockquote><p className="mt-6 font-bold">{t.n}</p><p className="text-sm text-muted-foreground">{t.p}</p></article>)}</div>;
   if (kind === "contact") return <div className="grid gap-10 lg:grid-cols-2"><form className="rounded-3xl border bg-card p-7 shadow-soft" onSubmit={(e) => e.preventDefault()}><div className="grid gap-5"><label className="grid gap-2 text-sm font-semibold">Full name<input required maxLength={100} className="h-12 rounded-xl border bg-background px-4" /></label><label className="grid gap-2 text-sm font-semibold">Email<input required type="email" maxLength={255} className="h-12 rounded-xl border bg-background px-4" /></label><label className="grid gap-2 text-sm font-semibold">How can we help?<textarea required maxLength={2000} rows={6} className="rounded-xl border bg-background p-4" /></label><Button type="submit" size="lg">Send message</Button></div></form><div className="space-y-5"><Info icon={Mail} title="Email" text="Catchuptutors01@gmail.com"/><Info icon={MessageCircle} title="WhatsApp" text="+234 810 180 4411"/><Info icon={MapPin} title="Locations" text="Nigeria · United Kingdom"/></div></div>;
   if (kind === "faq") return <div className="mx-auto max-w-3xl space-y-4">{[["What can I access for free?","Selected lesson videos, tutor discovery, and selected past-question resources."],["How does premium access work?","An active monthly, quarterly, or annual subscription unlocks premium video lessons and resources."],["Are tutoring sessions included?","No. One-to-one sessions are priced separately by each approved tutor."],["How are tutors approved?","Applications, qualifications, identity details, and teaching information are reviewed before profiles become public."]].map(([q,a]) => <details key={q} className="rounded-2xl border bg-card p-5"><summary className="cursor-pointer font-display font-semibold">{q}</summary><p className="mt-3 text-muted-foreground">{a}</p></details>)}</div>;
