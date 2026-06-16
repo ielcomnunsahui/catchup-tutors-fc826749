@@ -1,8 +1,473 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BookMarked, CalendarDays, Download, LockKeyhole, PlayCircle, Search } from "lucide-react";
+import { useState } from "react";
+import {
+  ArrowLeft,
+  BookMarked,
+  CalendarDays,
+  ChevronRight,
+  Download,
+  GraduationCap,
+  Layers3,
+  LockKeyhole,
+  PlayCircle,
+  Sigma,
+} from "lucide-react";
 import { SiteShell, PageHero } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/resources")({ head: () => ({ meta: [{ title: "Mathematics Resources | CatchUp Tutors" }, { name: "description", content: "Cambridge and IGCSE yearly papers, topic questions, solutions, and video lessons." }, { property: "og:title", content: "CatchUp Mathematics Resources" }, { property: "og:description", content: "Past questions, marking schemes, topic packs, and video lessons." }] }), component: ResourcesPage });
-const topics=["Algebra","Functions","Trigonometry","Calculus","Vectors","Statistics","Probability","Coordinate Geometry","Series","Mechanics"];
-function ResourcesPage(){return <SiteShell><PageHero eyebrow="Resource library" title="Past papers organized for purposeful practice." description="Find exactly what you need by program, subject, year, or topic—then learn deeper with inline video and premium support."/><section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8"><div className="flex flex-col gap-3 rounded-2xl border bg-card p-4 shadow-soft md:flex-row"><label className="flex flex-1 items-center gap-3 rounded-xl border bg-background px-4"><Search className="text-muted-foreground"/><input aria-label="Search resources" placeholder="Search topics, years, or resource titles" className="h-12 min-w-0 flex-1 bg-transparent outline-none"/></label>{["Cambridge","Mathematics","All resources"].map(x=><select key={x} aria-label={x} className="h-12 rounded-xl border bg-background px-4"><option>{x}</option></select>)}</div><div className="mt-12 grid gap-8 lg:grid-cols-[1.3fr_.7fr]"><div><div className="flex items-center gap-3"><CalendarDays className="text-primary"/><h2 className="font-display text-2xl font-bold">Yearly past questions</h2></div><div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{[2025,2024,2023,2022,2021,2020].map(y=><article key={y} className="rounded-2xl border bg-card p-5"><p className="text-sm font-bold text-primary">CAMBRIDGE · MATHEMATICS</p><h3 className="mt-2 font-display text-2xl font-bold">{y} Papers</h3><div className="mt-5 grid gap-2"><Button variant="outline" disabled><Download/> Question paper</Button><Button variant="outline" disabled><BookMarked/> Marking scheme</Button></div></article>)}</div></div><aside className="rounded-3xl bg-brand-navy p-7 text-hero-foreground"><LockKeyhole className="text-brand-green"/><h2 className="mt-5 font-display text-2xl font-bold">Want to understand each topic deeply?</h2><p className="mt-3 text-hero-foreground/70">Unlock step-by-step lessons, worked examples, premium resources, and priority learning support.</p><Button asChild variant="hero" className="mt-6"><Link to="/pricing">Subscribe to Premium</Link></Button></aside></div><div className="mt-16"><div className="flex items-center gap-3"><PlayCircle className="text-brand-orange"/><h2 className="font-display text-2xl font-bold">Topic questions & lessons</h2></div><div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">{topics.map((topic,i)=><article key={topic} className="rounded-2xl border bg-card p-5 transition hover:-translate-y-1 hover:shadow-soft"><span className="text-xs font-bold text-muted-foreground">TOPIC {String(i+1).padStart(2,"0")}</span><h3 className="mt-3 font-display font-bold">{topic}</h3><p className="mt-2 text-sm text-muted-foreground">Questions · Solutions · Video</p></article>)}</div></div></section></SiteShell>}
+export const Route = createFileRoute("/resources")({
+  head: () => ({
+    meta: [
+      { title: "Resource Library | CatchUp Tutors" },
+      {
+        name: "description",
+        content:
+          "Browse Cambridge and IGCSE Mathematics resources — yearly past questions, topic-based past questions, marking schemes, and video lessons.",
+      },
+      { property: "og:title", content: "CatchUp Resource Library" },
+      {
+        property: "og:description",
+        content:
+          "Step-by-step path: pick your program, choose a subject, then practice with yearly or topic past questions.",
+      },
+    ],
+  }),
+  component: ResourcesPage,
+});
+
+type Program = { id: string; name: string; tagline: string; badge: string };
+type Subject = { id: string; name: string; code: string; level: string };
+
+const PROGRAMS: Program[] = [
+  {
+    id: "cambridge",
+    name: "Cambridge",
+    tagline: "AS / A-Level pathway for university-bound students.",
+    badge: "9709 · 9231",
+  },
+  {
+    id: "igcse",
+    name: "IGCSE",
+    tagline: "International GCSE foundation for Years 10–11.",
+    badge: "0580 · 0606",
+  },
+];
+
+const SUBJECTS: Record<string, Subject[]> = {
+  cambridge: [
+    { id: "math-9709", name: "Mathematics", code: "9709", level: "A-Level" },
+    { id: "fmath-9231", name: "Further Mathematics", code: "9231", level: "A-Level" },
+  ],
+  igcse: [
+    { id: "math-0580", name: "Mathematics", code: "0580", level: "IGCSE" },
+    { id: "fmath-0606", name: "Additional Mathematics", code: "0606", level: "IGCSE" },
+  ],
+};
+
+const YEARS = [2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018];
+
+const TOPICS: Record<string, string[]> = {
+  "math-9709": [
+    "Quadratics",
+    "Functions",
+    "Coordinate Geometry",
+    "Circular Measure",
+    "Trigonometry",
+    "Series",
+    "Differentiation",
+    "Integration",
+    "Vectors",
+    "Numerical Solutions",
+    "Probability",
+    "Statistics",
+  ],
+  "fmath-9231": [
+    "Roots of Polynomials",
+    "Rational Functions",
+    "Summation of Series",
+    "Matrices",
+    "Polar Coordinates",
+    "Vectors",
+    "Proof by Induction",
+    "Differential Equations",
+    "Complex Numbers",
+    "Hyperbolic Functions",
+  ],
+  "math-0580": [
+    "Number",
+    "Algebra",
+    "Coordinate Geometry",
+    "Geometry",
+    "Mensuration",
+    "Trigonometry",
+    "Vectors & Transformations",
+    "Statistics",
+    "Probability",
+  ],
+  "fmath-0606": [
+    "Sets",
+    "Functions",
+    "Quadratic Functions",
+    "Indices & Surds",
+    "Factors of Polynomials",
+    "Logarithmic & Exponential",
+    "Straight Line Graphs",
+    "Circular Measure",
+    "Trigonometry",
+    "Permutations & Combinations",
+    "Series",
+    "Vectors",
+    "Differentiation",
+    "Integration",
+    "Kinematics",
+  ],
+};
+
+type Step = "program" | "subject" | "type" | "yearly" | "topics";
+
+function ResourcesPage() {
+  const [step, setStep] = useState<Step>("program");
+  const [program, setProgram] = useState<Program | null>(null);
+  const [subject, setSubject] = useState<Subject | null>(null);
+
+  const reset = () => {
+    setStep("program");
+    setProgram(null);
+    setSubject(null);
+  };
+
+  return (
+    <SiteShell>
+      <PageHero
+        eyebrow="Resource library"
+        title="Practice with purpose. Built around the syllabus."
+        description="Pick your program, choose a subject, then dive into yearly past questions or topic-based practice — with marking schemes and video walkthroughs."
+      />
+
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <Breadcrumbs
+          step={step}
+          program={program}
+          subject={subject}
+          onJump={(s) => {
+            if (s === "program") reset();
+            if (s === "subject") setStep("subject");
+            if (s === "type") setStep("type");
+          }}
+        />
+
+        <div className="mt-8">
+          {step === "program" && (
+            <StepShell
+              eyebrow="Step 1 of 3"
+              title="Choose your program"
+              description="Start with the examination board you're preparing for."
+            >
+              <div className="grid gap-5 md:grid-cols-2">
+                {PROGRAMS.map((p) => (
+                  <ChoiceCard
+                    key={p.id}
+                    icon={<GraduationCap className="size-6" />}
+                    badge={p.badge}
+                    title={p.name}
+                    description={p.tagline}
+                    onClick={() => {
+                      setProgram(p);
+                      setStep("subject");
+                    }}
+                  />
+                ))}
+              </div>
+            </StepShell>
+          )}
+
+          {step === "subject" && program && (
+            <StepShell
+              eyebrow="Step 2 of 3"
+              title={`${program.name} subjects`}
+              description="Select the subject you want to revise."
+            >
+              <div className="grid gap-5 md:grid-cols-2">
+                {SUBJECTS[program.id].map((s) => (
+                  <ChoiceCard
+                    key={s.id}
+                    icon={<Sigma className="size-6" />}
+                    badge={`${s.level} · ${s.code}`}
+                    title={s.name}
+                    description={`Full ${s.level} ${s.name} syllabus — papers, schemes & lessons.`}
+                    onClick={() => {
+                      setSubject(s);
+                      setStep("type");
+                    }}
+                  />
+                ))}
+              </div>
+            </StepShell>
+          )}
+
+          {step === "type" && program && subject && (
+            <StepShell
+              eyebrow="Step 3 of 3"
+              title={`${subject.name} (${subject.code})`}
+              description="How would you like to practice today?"
+            >
+              <div className="grid gap-5 md:grid-cols-2">
+                <ChoiceCard
+                  icon={<CalendarDays className="size-6" />}
+                  badge="By exam session"
+                  title="Yearly past questions"
+                  description="Full question papers and marking schemes from 2018 – 2025, summer & winter sessions."
+                  onClick={() => setStep("yearly")}
+                />
+                <ChoiceCard
+                  icon={<Layers3 className="size-6" />}
+                  badge="By syllabus topic"
+                  title="Topic-based past questions"
+                  description="Targeted question sets per syllabus topic — with worked solutions and video lessons."
+                  onClick={() => setStep("topics")}
+                />
+              </div>
+            </StepShell>
+          )}
+
+          {step === "yearly" && subject && program && (
+            <YearlyView program={program} subject={subject} onBack={() => setStep("type")} />
+          )}
+
+          {step === "topics" && subject && program && (
+            <TopicsView program={program} subject={subject} onBack={() => setStep("type")} />
+          )}
+        </div>
+      </section>
+    </SiteShell>
+  );
+}
+
+function Breadcrumbs({
+  step,
+  program,
+  subject,
+  onJump,
+}: {
+  step: Step;
+  program: Program | null;
+  subject: Subject | null;
+  onJump: (s: Step) => void;
+}) {
+  const crumbs: { label: string; target?: Step; active?: boolean }[] = [
+    { label: "Program", target: "program", active: step === "program" },
+  ];
+  if (program) crumbs.push({ label: program.name, target: "subject", active: step === "subject" });
+  if (subject) crumbs.push({ label: subject.name, target: "type", active: step === "type" });
+  if (step === "yearly") crumbs.push({ label: "Yearly past questions", active: true });
+  if (step === "topics") crumbs.push({ label: "Topic past questions", active: true });
+
+  return (
+    <nav className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+      {crumbs.map((c, i) => (
+        <span key={i} className="flex items-center gap-2">
+          {i > 0 && <ChevronRight className="size-3.5" />}
+          {c.target && !c.active ? (
+            <button
+              onClick={() => onJump(c.target!)}
+              className="font-medium text-foreground/70 hover:text-primary"
+            >
+              {c.label}
+            </button>
+          ) : (
+            <span className={cn(c.active && "font-semibold text-foreground")}>{c.label}</span>
+          )}
+        </span>
+      ))}
+    </nav>
+  );
+}
+
+function StepShell({
+  eyebrow,
+  title,
+  description,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">{eyebrow}</p>
+      <h2 className="mt-2 font-display text-3xl font-bold sm:text-4xl">{title}</h2>
+      <p className="mt-2 max-w-2xl text-muted-foreground">{description}</p>
+      <div className="mt-8">{children}</div>
+    </div>
+  );
+}
+
+function ChoiceCard({
+  icon,
+  badge,
+  title,
+  description,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  badge: string;
+  title: string;
+  description: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="group relative flex flex-col items-start gap-4 rounded-2xl border bg-card p-6 text-left transition hover:-translate-y-1 hover:border-primary/50 hover:shadow-soft"
+    >
+      <div className="flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        {icon}
+      </div>
+      <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+        {badge}
+      </span>
+      <h3 className="font-display text-2xl font-bold">{title}</h3>
+      <p className="text-sm text-muted-foreground">{description}</p>
+      <span className="mt-auto flex items-center gap-1 text-sm font-semibold text-primary transition group-hover:gap-2">
+        Continue <ChevronRight className="size-4" />
+      </span>
+    </button>
+  );
+}
+
+function YearlyView({
+  program,
+  subject,
+  onBack,
+}: {
+  program: Program;
+  subject: Subject;
+  onBack: () => void;
+}) {
+  return (
+    <div>
+      <BackBar onBack={onBack} label="Back to practice options" />
+      <div className="mt-6 flex items-center gap-3">
+        <CalendarDays className="text-primary" />
+        <div>
+          <h2 className="font-display text-3xl font-bold">Yearly past questions</h2>
+          <p className="text-sm text-muted-foreground">
+            {program.name} · {subject.name} ({subject.code})
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {YEARS.map((y) => (
+          <article key={y} className="rounded-2xl border bg-card p-5">
+            <p className="text-xs font-bold uppercase tracking-wide text-primary">
+              {subject.code} · {y}
+            </p>
+            <h3 className="mt-2 font-display text-2xl font-bold">{y} Papers</h3>
+            <div className="mt-5 grid gap-2">
+              {["May / June", "Oct / Nov"].map((session) => (
+                <div key={session} className="rounded-xl border p-3">
+                  <p className="mb-2 text-sm font-semibold">{session}</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button size="sm" variant="outline" disabled>
+                      <Download /> Paper
+                    </Button>
+                    <Button size="sm" variant="outline" disabled>
+                      <BookMarked /> Scheme
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <PremiumCTA />
+    </div>
+  );
+}
+
+function TopicsView({
+  program,
+  subject,
+  onBack,
+}: {
+  program: Program;
+  subject: Subject;
+  onBack: () => void;
+}) {
+  const topics = TOPICS[subject.id] ?? [];
+  return (
+    <div>
+      <BackBar onBack={onBack} label="Back to practice options" />
+      <div className="mt-6 flex items-center gap-3">
+        <Layers3 className="text-brand-orange" />
+        <div>
+          <h2 className="font-display text-3xl font-bold">Topic-based past questions</h2>
+          <p className="text-sm text-muted-foreground">
+            {program.name} · {subject.name} ({subject.code})
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {topics.map((topic, i) => (
+          <article
+            key={topic}
+            className="group rounded-2xl border bg-card p-5 transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-soft"
+          >
+            <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+              Topic {String(i + 1).padStart(2, "0")}
+            </span>
+            <h3 className="mt-2 font-display text-lg font-bold">{topic}</h3>
+            <p className="mt-2 text-sm text-muted-foreground">Questions · Solutions · Video</p>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <Button size="sm" variant="outline" disabled>
+                <Download /> Pack
+              </Button>
+              <Button size="sm" variant="outline" disabled>
+                <PlayCircle /> Lesson
+              </Button>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <PremiumCTA />
+    </div>
+  );
+}
+
+function BackBar({ onBack, label }: { onBack: () => void; label: string }) {
+  return (
+    <button
+      onClick={onBack}
+      className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-primary"
+    >
+      <ArrowLeft className="size-4" /> {label}
+    </button>
+  );
+}
+
+function PremiumCTA() {
+  return (
+    <aside className="mt-12 flex flex-col items-start gap-5 rounded-3xl bg-brand-navy p-7 text-hero-foreground md:flex-row md:items-center md:justify-between">
+      <div className="flex items-start gap-4">
+        <LockKeyhole className="mt-1 size-8 text-brand-green" />
+        <div>
+          <h3 className="font-display text-2xl font-bold">Go deeper with Premium</h3>
+          <p className="mt-1 max-w-xl text-hero-foreground/70">
+            Step-by-step video walkthroughs, worked solutions, and priority learning support.
+          </p>
+        </div>
+      </div>
+      <Button asChild variant="hero">
+        <Link to="/pricing">View plans</Link>
+      </Button>
+    </aside>
+  );
+}
