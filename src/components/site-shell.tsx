@@ -27,11 +27,28 @@ export function SiteShell({ children }: { children: ReactNode }) {
     <main>{children}</main>
     <footer className="bg-brand-navy text-hero-foreground">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-4 lg:px-8">
-        <div className="md:col-span-2"><div className="flex items-center gap-2 font-display text-xl font-bold"><GraduationCap className="text-brand-orange" /> CatchUp Tutors</div><p className="mt-4 max-w-md text-sm leading-6 text-hero-foreground/70">Personalized Cambridge and IGCSE learning for students ready to catch up, build confidence, and stay ahead.</p></div>
-        <div><h2 className="font-display font-semibold">Explore</h2><div className="mt-4 grid gap-2 text-sm text-hero-foreground/70"><Link to="/faq">FAQ</Link><Link to="/contact">Contact</Link><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link></div></div>
-        <div><h2 className="font-display font-semibold">Follow</h2><div className="mt-4 flex gap-3"><a href="https://www.instagram.com/tutors.catchup" aria-label="Instagram"><Instagram /></a><a href="https://www.facebook.com" aria-label="Facebook"><Facebook /></a><a href="https://youtube.com/@catch-uptutors2691" aria-label="YouTube"><Youtube /></a></div></div>
+        <div className="md:col-span-2">
+          <div className="flex items-center gap-2 font-display text-xl font-bold"><GraduationCap className="text-brand-orange" /> CatchUp Tutors</div>
+          <p className="mt-4 max-w-md text-sm leading-6 text-hero-foreground/70">Personalized Cambridge and IGCSE learning for students ready to catch up, build confidence, and stay ahead.</p>
+          <div className="mt-5 space-y-2 text-sm text-hero-foreground/75">
+            <p>📧 <a href="mailto:Catchuptutors01@gmail.com" className="hover:text-brand-orange">Catchuptutors01@gmail.com</a></p>
+            <p>🛟 <a href="mailto:support@catchuptutors.com" className="hover:text-brand-orange">support@catchuptutors.com</a></p>
+            <p>💬 <a href="https://wa.me/2348101804411" target="_blank" rel="noopener" className="hover:text-brand-orange">WhatsApp: +234 810 180 4411</a></p>
+            <p>📍 Nigeria · United Kingdom</p>
+          </div>
+        </div>
+        <div><h2 className="font-display font-semibold">Explore</h2><div className="mt-4 grid gap-2 text-sm text-hero-foreground/70"><Link to="/programs">Programs</Link><Link to="/resources">Resources</Link><Link to="/tutors">Tutors</Link><Link to="/pricing">Pricing</Link><Link to="/faq">FAQ</Link><Link to="/contact">Contact</Link><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link></div></div>
+        <div>
+          <h2 className="font-display font-semibold">Follow</h2>
+          <div className="mt-4 flex gap-3">
+            <a href="https://www.instagram.com/tutors.catchup?igsh=MXB4cmgzdGVucjM0aw==" target="_blank" rel="noopener" aria-label="Instagram" className="hover:text-brand-orange"><Instagram /></a>
+            <a href="https://www.facebook.com/share/1BTRMp9BPw/" target="_blank" rel="noopener" aria-label="Facebook" className="hover:text-brand-orange"><Facebook /></a>
+            <a href="https://youtube.com/@catch-uptutors2691?si=9YKS7NsmOUOdU96f" target="_blank" rel="noopener" aria-label="YouTube" className="hover:text-brand-orange"><Youtube /></a>
+          </div>
+          <p className="mt-6 text-xs text-hero-foreground/55">Catch Up. Stay Ahead.</p>
+        </div>
       </div>
-      <div className="border-t border-hero-foreground/10 py-5 text-center text-xs text-hero-foreground/55">© 2026 CatchUp Tutors. Catch Up. Stay Ahead.</div>
+      <div className="border-t border-hero-foreground/10 py-5 text-center text-xs text-hero-foreground/55">© 2026 CatchUp Tutors. All rights reserved.</div>
     </footer>
   </div>;
 }
