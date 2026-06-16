@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ArrowRight, BookOpenCheck, CheckCircle2, GraduationCap, PlayCircle, Users } from "lucide-react";
+import { ArrowRight, BookOpenCheck, CheckCircle2, Crown, GraduationCap, PlayCircle, Users } from "lucide-react";
 import { SiteShell } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import heroStudents from "@/assets/hero-students.jpg.asset.json";
