@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { BookOpen, CalendarCheck, Clock3, Crown, GraduationCap, LogOut, PlayCircle, UserRound } from "lucide-react";
+import { BookOpen, CalendarCheck, Clock3, Crown, GraduationCap, LogOut, PlayCircle, Settings2, UserRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 export const Route=createFileRoute("/dashboard")({ssr:false,head:()=>({meta:[{title:"Learning Dashboard | CatchUp Tutors"},{name:"description",content:"Manage your CatchUp Tutors learning, bookings, resources, and premium access."}]}),component:Dashboard});
