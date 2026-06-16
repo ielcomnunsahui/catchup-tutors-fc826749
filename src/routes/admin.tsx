@@ -83,7 +83,7 @@ function useTable<T extends { id: string }>(table: "programs" | "subjects" | "to
   const [loading, setLoading] = useState(true);
   const reload = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from(table).select("*").order(orderBy, { ascending: true });
+    const { data, error } = await (supabase as any).from(table).select("*").order(orderBy, { ascending: true });
     if (error) toast.error(`Failed to load ${table}: ${error.message}`);
     setRows((data ?? []) as T[]);
     setLoading(false);
@@ -93,13 +93,13 @@ function useTable<T extends { id: string }>(table: "programs" | "subjects" | "to
 }
 
 async function togglePublish(table: string, id: string, value: boolean) {
-  const { error } = await supabase.from(table as never).update({ is_published: value }).eq("id", id);
+  const { error } = await (supabase as any).from(table).update({ is_published: value }).eq("id", id);
   if (error) toast.error(error.message); else toast.success(value ? "Published" : "Unpublished");
 }
 
 async function removeRow(table: string, id: string) {
   if (!confirm("Delete this item? This cannot be undone.")) return false;
-  const { error } = await supabase.from(table as never).delete().eq("id", id);
+  const { error } = await (supabase as any).from(table).delete().eq("id", id);
   if (error) { toast.error(error.message); return false; }
   toast.success("Deleted"); return true;
 }
