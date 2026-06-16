@@ -138,8 +138,8 @@ function ProgramsTab() {
           if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
           const payload = parsed.data;
           const { error } = editing.id
-            ? await supabase.from("programs").update(payload).eq("id", editing.id)
-            : await supabase.from("programs").insert(payload);
+            ? await (supabase as any).from("programs").update(payload).eq("id", editing.id)
+            : await (supabase as any).from("programs").insert(payload);
           if (error) { toast.error(error.message); return; }
           toast.success("Saved"); setEditing(null); reload();
         }}>
@@ -197,8 +197,8 @@ function SubjectsTab() {
           const parsed = subjectSchema.safeParse({ ...editing, slug: editing.slug || slugify(editing.name || "") });
           if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
           const { error } = editing.id
-            ? await supabase.from("subjects").update(parsed.data).eq("id", editing.id)
-            : await supabase.from("subjects").insert(parsed.data);
+            ? await (supabase as any).from("subjects").update(parsed.data).eq("id", editing.id)
+            : await (supabase as any).from("subjects").insert(parsed.data);
           if (error) { toast.error(error.message); return; }
           toast.success("Saved"); setEditing(null); reload();
         }}>
@@ -253,8 +253,8 @@ function TopicsTab() {
           const parsed = topicSchema.safeParse({ ...editing, slug: editing.slug || slugify(editing.name || ""), description: editing.description ?? "" });
           if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
           const { error } = editing.id
-            ? await supabase.from("topics").update(parsed.data).eq("id", editing.id)
-            : await supabase.from("topics").insert(parsed.data);
+            ? await (supabase as any).from("topics").update(parsed.data).eq("id", editing.id)
+            : await (supabase as any).from("topics").insert(parsed.data);
           if (error) { toast.error(error.message); return; }
           toast.success("Saved"); setEditing(null); reload();
         }}>
@@ -343,8 +343,8 @@ function ResourcesTab() {
           const parsed = resourceSchema.safeParse({ ...editing, description: editing.description ?? "", topic_id: editing.topic_id || null, year: editing.year ?? null });
           if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
           const { error } = editing.id
-            ? await supabase.from("resources").update(parsed.data).eq("id", editing.id)
-            : await supabase.from("resources").insert(parsed.data);
+            ? await (supabase as any).from("resources").update(parsed.data).eq("id", editing.id)
+            : await (supabase as any).from("resources").insert(parsed.data);
           if (error) { toast.error(error.message); return; }
           toast.success("Saved"); setEditing(null); reload();
         }}>
