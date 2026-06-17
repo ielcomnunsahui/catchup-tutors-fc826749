@@ -288,10 +288,11 @@ function YearlyView({ program, subject, onBack }: { program: Program; subject: S
           </article>
         ))}
       </div>
-      <PremiumCTA />
     </div>
   );
 }
+
+function _OldEnd() { return null;
 
 function TopicsView({ program, subject, onBack }: { program: Program; subject: Subject; onBack: () => void }) {
   const topics = TOPICS[subject.id] ?? [];
