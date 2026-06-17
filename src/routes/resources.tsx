@@ -318,7 +318,6 @@ function TopicsView({ program, subject, onBack }: { program: Program; subject: S
           </article>
         ))}
       </div>
-      <PremiumCTA />
     </div>
   );
 }
@@ -331,17 +330,29 @@ function BackBar({ onBack, label }: { onBack: () => void; label: string }) {
   );
 }
 
-function PremiumCTA() {
+export function PremiumCTA() {
   return (
-    <aside className="mt-12 flex flex-col items-start gap-5 rounded-3xl bg-brand-navy p-7 text-hero-foreground md:flex-row md:items-center md:justify-between">
-      <div className="flex items-start gap-4">
-        <LockKeyhole className="mt-1 size-8 text-brand-green" />
-        <div>
-          <h3 className="font-display text-2xl font-bold">Go deeper with Premium</h3>
-          <p className="mt-1 max-w-xl text-hero-foreground/70">Step-by-step video walkthroughs, worked solutions, and priority learning support.</p>
-        </div>
+    <aside className="flex h-full flex-col items-start gap-5 rounded-3xl bg-brand-navy p-7 text-hero-foreground">
+      <LockKeyhole className="size-8 text-brand-green" />
+      <div>
+        <h3 className="font-display text-2xl font-bold">Go deeper with Premium</h3>
+        <p className="mt-2 text-hero-foreground/70">Step-by-step video walkthroughs, worked solutions, and priority learning support.</p>
       </div>
-      <Button asChild variant="hero"><Link to="/pricing">View plans</Link></Button>
+      <Button asChild variant="hero" className="mt-auto"><Link to="/pricing">View plans <ArrowRight /></Link></Button>
     </aside>
   );
 }
+
+export function TutorCTA() {
+  return (
+    <aside className="flex h-full flex-col items-start gap-5 rounded-3xl border bg-card p-7">
+      <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Users className="size-6" /></div>
+      <div>
+        <h3 className="font-display text-2xl font-bold">Need a tutor by your side?</h3>
+        <p className="mt-2 text-muted-foreground">Book an approved Mathematics tutor — pick by subject, topic, and availability with transparent pricing.</p>
+      </div>
+      <Button asChild className="mt-auto" size="lg"><Link to="/tutors">Find a Tutor <ArrowRight /></Link></Button>
+    </aside>
+  );
+}
+
