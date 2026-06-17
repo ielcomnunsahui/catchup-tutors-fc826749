@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft,
+  ArrowRight,
   BookMarked,
   CalendarDays,
   ChevronRight,
@@ -10,6 +11,7 @@ import {
   LockKeyhole,
   PlayCircle,
   Sigma,
+  Users,
 } from "lucide-react";
 import { SiteShell, PageHero } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
