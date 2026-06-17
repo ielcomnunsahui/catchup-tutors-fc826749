@@ -201,6 +201,11 @@ function ResourcesPage() {
             <TopicsView program={program} subject={subject} onBack={() => go({ view: undefined })} />
           )}
         </div>
+
+        <div className="mt-16 grid gap-5 lg:grid-cols-2">
+          <PremiumCTA />
+          <TutorCTA />
+        </div>
       </section>
     </SiteShell>
   );
