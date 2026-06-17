@@ -292,7 +292,7 @@ function YearlyView({ program, subject, onBack }: { program: Program; subject: S
   );
 }
 
-function _OldEnd() { return null;
+
 
 function TopicsView({ program, subject, onBack }: { program: Program; subject: Subject; onBack: () => void }) {
   const topics = TOPICS[subject.id] ?? [];
