@@ -43,7 +43,7 @@ function AdminPage() {
   useEffect(() => {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
-      if (!u.user) { navigate({ to: "/auth", replace: true }); return; }
+      if (!u.user) { navigate("/auth", { replace: true }); return; }
       const { data, error } = await supabase.rpc("has_role", { _user_id: u.user.id, _role: "admin" });
       if (error || !data) { setStatus("denied"); return; }
       setStatus("ok");
