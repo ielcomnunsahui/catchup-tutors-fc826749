@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
@@ -14,6 +15,11 @@ export default function ResetPassword() {
   }
   return (
     <main className="flex min-h-screen items-center justify-center bg-background p-5">
+      <Helmet>
+        <title>Reset Password | CatchUp Tutors</title>
+        <meta name="description" content="Set a new password for your CatchUp Tutors account." />
+        <meta name="robots" content="noindex,nofollow" />
+      </Helmet>
       <form onSubmit={submit} className="w-full max-w-md rounded-3xl border bg-card p-8 shadow-soft">
         <h1 className="font-display text-3xl font-bold">Set a new password</h1>
         <p className="mt-2 text-muted-foreground">Choose a secure password for your CatchUp account.</p>

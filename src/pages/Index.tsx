@@ -15,29 +15,37 @@ const TESTIMONIALS = [
 
 function Testimonials() {
   const [i, setI] = useState(0);
+  const [paused, setPaused] = useState(false);
   useEffect(() => {
-    const t = setInterval(() => setI((p) => (p + 1) % TESTIMONIALS.length), 30000);
+    if (paused) return;
+    const t = setInterval(() => setI((p) => (p + 1) % TESTIMONIALS.length), 7000);
     return () => clearInterval(t);
-  }, []);
+  }, [paused]);
+  const prev = () => setI((p) => (p - 1 + TESTIMONIALS.length) % TESTIMONIALS.length);
+  const next = () => setI((p) => (p + 1) % TESTIMONIALS.length);
   const t = TESTIMONIALS[i];
   return (
-    <section className="bg-card py-20">
+    <section className="bg-card py-20" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={() => setPaused(false)} aria-roledescription="carousel" aria-label="Student testimonials">
       <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
         <p className="text-sm font-bold uppercase tracking-widest text-primary">What students say</p>
         <h2 className="mt-3 font-display text-4xl font-bold">Real progress. Real students.</h2>
-        <div className="relative mt-12 min-h-[220px]">
+        <div className="relative mt-12 min-h-[240px]" aria-live="polite">
           <AnimatePresence mode="wait">
-            <motion.figure key={i} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.5 }} className="mx-auto max-w-3xl">
+            <motion.figure key={i} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.45 }} className="mx-auto max-w-3xl">
               <Quote className="mx-auto h-10 w-10 text-primary/40" />
               <blockquote className="mt-5 font-display text-2xl leading-relaxed text-foreground sm:text-3xl">"{t.quote}"</blockquote>
               <figcaption className="mt-7"><p className="font-semibold text-foreground">{t.name}</p><p className="text-sm text-muted-foreground">{t.role}</p></figcaption>
             </motion.figure>
           </AnimatePresence>
         </div>
-        <div className="mt-10 flex justify-center gap-2" role="tablist" aria-label="Testimonials">
-          {TESTIMONIALS.map((_, idx) => (
-            <button key={idx} onClick={() => setI(idx)} aria-label={`Show testimonial ${idx + 1}`} aria-selected={idx === i} className={`h-2 rounded-full transition-all ${idx === i ? "w-8 bg-primary" : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"}`} />
-          ))}
+        <div className="mt-8 flex items-center justify-center gap-4">
+          <button onClick={prev} aria-label="Previous testimonial" className="rounded-full border p-2 hover:bg-muted">‹</button>
+          <div className="flex gap-2" role="tablist" aria-label="Testimonials">
+            {TESTIMONIALS.map((_, idx) => (
+              <button key={idx} role="tab" onClick={() => setI(idx)} aria-label={`Show testimonial ${idx + 1}`} aria-selected={idx === i} className={`h-2 rounded-full transition-all ${idx === i ? "w-8 bg-primary" : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"}`} />
+            ))}
+          </div>
+          <button onClick={next} aria-label="Next testimonial" className="rounded-full border p-2 hover:bg-muted">›</button>
         </div>
       </div>
     </section>
