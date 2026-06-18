@@ -1,0 +1,27 @@
+import { Link } from "react-router-dom";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+
+export default function ResetPassword() {
+  const [message, setMessage] = useState("");
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const password = String(new FormData(e.currentTarget).get("password"));
+    if (password.length < 8) { setMessage("Use at least 8 characters."); return; }
+    const { error } = await supabase.auth.updateUser({ password });
+    setMessage(error ? error.message : "Password updated. You can now sign in.");
+  }
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-background p-5">
+      <form onSubmit={submit} className="w-full max-w-md rounded-3xl border bg-card p-8 shadow-soft">
+        <h1 className="font-display text-3xl font-bold">Set a new password</h1>
+        <p className="mt-2 text-muted-foreground">Choose a secure password for your CatchUp account.</p>
+        <input name="password" type="password" minLength={8} maxLength={72} required className="mt-7 h-12 w-full rounded-xl border px-4" />
+        {message && <p className="mt-4 text-sm">{message}</p>}
+        <Button type="submit" size="lg" className="mt-5 w-full">Update password</Button>
+        <Link to="/auth" className="mt-5 block text-center text-sm text-primary">Back to sign in</Link>
+      </form>
+    </main>
+  );
+}

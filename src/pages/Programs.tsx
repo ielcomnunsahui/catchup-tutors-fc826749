@@ -1,14 +1,13 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { ArrowRight, BookOpen, Sigma } from "lucide-react";
-import { SiteShell, PageHero } from "@/components/site-shell";
+import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
-import { PremiumCTA, TutorCTA } from "@/routes/resources";
+import { PremiumCTA, TutorCTA } from "./Resources";
 
-export const Route = createFileRoute("/programs")({ head: () => ({ meta: [{ title: "Cambridge & IGCSE Programs | CatchUp Tutors" }, { name: "description", content: "Explore Cambridge and IGCSE Mathematics and Further Mathematics learning programs." }, { property: "og:title", content: "CatchUp Tutors Programs" }, { property: "og:description", content: "Structured Cambridge and IGCSE Mathematics learning pathways." }] }), component: ProgramsPage });
-
-function ProgramsPage() {
+export default function Programs() {
   return (
     <SiteShell>
+      <Seo title="Cambridge & IGCSE Programs | CatchUp Tutors" description="Explore Cambridge and IGCSE Mathematics and Further Mathematics learning programs." />
       <PageHero eyebrow="Learning pathways" title="Choose the program that moves you forward." description="Structured exam preparation, targeted practice, premium lessons, and tutor support—organized around your curriculum." />
       <section className="mx-auto grid max-w-7xl gap-7 px-4 py-16 sm:px-6 md:grid-cols-2 lg:px-8">
         {[
@@ -22,9 +21,7 @@ function ProgramsPage() {
             </div>
             <div className="p-8">
               <p className="leading-7 text-muted-foreground">{program.text}</p>
-              <div className="mt-6 flex flex-wrap gap-2">
-                {program.subjects.map((s) => <span key={s} className="rounded-full bg-muted px-3 py-1.5 text-sm font-semibold">{s}</span>)}
-              </div>
+              <div className="mt-6 flex flex-wrap gap-2">{program.subjects.map((s) => <span key={s} className="rounded-full bg-muted px-3 py-1.5 text-sm font-semibold">{s}</span>)}</div>
               <Button asChild className="mt-8"><Link to="/resources">Explore subjects <ArrowRight /></Link></Button>
             </div>
           </article>

@@ -1,19 +1,9 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Link, useSearchParams } from "react-router-dom";
 import {
-  ArrowLeft,
-  ArrowRight,
-  BookMarked,
-  CalendarDays,
-  ChevronRight,
-  Download,
-  GraduationCap,
-  Layers3,
-  LockKeyhole,
-  PlayCircle,
-  Sigma,
-  Users,
+  ArrowLeft, ArrowRight, BookMarked, CalendarDays, ChevronRight, Download,
+  GraduationCap, Layers3, LockKeyhole, PlayCircle, Sigma, Users,
 } from "lucide-react";
-import { SiteShell, PageHero } from "@/components/site-shell";
+import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -39,20 +29,20 @@ const SUBJECTS: Record<string, Subject[]> = {
 const YEARS = [2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018];
 
 const TOPICS: Record<string, string[]> = {
-  "math-9709": ["Quadratics","Functions","Coordinate Geometry","Circular Measure","Trigonometry","Series","Differentiation","Integration","Vectors","Numerical Solutions","Probability","Statistics"],
-  "fmath-9231": ["Roots of Polynomials","Rational Functions","Summation of Series","Matrices","Polar Coordinates","Vectors","Proof by Induction","Differential Equations","Complex Numbers","Hyperbolic Functions"],
-  "math-0580": ["Number","Algebra","Coordinate Geometry","Geometry","Mensuration","Trigonometry","Vectors & Transformations","Statistics","Probability"],
-  "fmath-0606": ["Sets","Functions","Quadratic Functions","Indices & Surds","Factors of Polynomials","Logarithmic & Exponential","Straight Line Graphs","Circular Measure","Trigonometry","Permutations & Combinations","Series","Vectors","Differentiation","Integration","Kinematics"],
+  "math-9709": ["Quadratics", "Functions", "Coordinate Geometry", "Circular Measure", "Trigonometry", "Series", "Differentiation", "Integration", "Vectors", "Numerical Solutions", "Probability", "Statistics"],
+  "fmath-9231": ["Roots of Polynomials", "Rational Functions", "Summation of Series", "Matrices", "Polar Coordinates", "Vectors", "Proof by Induction", "Differential Equations", "Complex Numbers", "Hyperbolic Functions"],
+  "math-0580": ["Number", "Algebra", "Coordinate Geometry", "Geometry", "Mensuration", "Trigonometry", "Vectors & Transformations", "Statistics", "Probability"],
+  "fmath-0606": ["Sets", "Functions", "Quadratic Functions", "Indices & Surds", "Factors of Polynomials", "Logarithmic & Exponential", "Straight Line Graphs", "Circular Measure", "Trigonometry", "Permutations & Combinations", "Series", "Vectors", "Differentiation", "Integration", "Kinematics"],
 };
 
 type ViewKind = "yearly" | "topics";
 type Search = { program?: string; subject?: string; view?: ViewKind };
 
-function findProgram(id?: string) { return PROGRAMS.find((p) => p.id === id) ?? null; }
-function findSubject(programId?: string, subjectId?: string) {
+const findProgram = (id?: string) => PROGRAMS.find((p) => p.id === id) ?? null;
+const findSubject = (programId?: string, subjectId?: string) => {
   if (!programId || !subjectId) return null;
   return SUBJECTS[programId]?.find((s) => s.id === subjectId) ?? null;
-}
+};
 
 function buildMeta(search: Search) {
   const program = findProgram(search.program);
@@ -60,9 +50,6 @@ function buildMeta(search: Search) {
   const base = "CatchUp Tutors";
   let title = `Resource Library | ${base}`;
   let description = "Cambridge and IGCSE Mathematics — yearly past questions, topic-based PQs, marking schemes, and video lessons.";
-  const path = ["/resources"];
-  if (search.program) path.push(`?program=${search.program}`);
-
   if (program && !subject) {
     title = `${program.name} Mathematics Resources | ${base}`;
     description = `${program.name} Mathematics & Further Mathematics — syllabus-aligned past questions, schemes and lessons (${program.badge}).`;
@@ -73,117 +60,82 @@ function buildMeta(search: Search) {
   }
   if (program && subject && search.view === "yearly") {
     title = `${subject.name} ${subject.code} Yearly Past Papers (2018–2025) | ${base}`;
-    description = `Download ${program.name} ${subject.name} ${subject.code} past papers and marking schemes from 2018 to 2025, May/June and Oct/Nov sessions.`;
+    description = `Download ${program.name} ${subject.name} ${subject.code} past papers and marking schemes from 2018 to 2025.`;
   }
   if (program && subject && search.view === "topics") {
     title = `${subject.name} ${subject.code} Topic-Based Past Questions | ${base}`;
     description = `Topic-grouped past questions for ${program.name} ${subject.name} ${subject.code} with worked solutions and video lessons.`;
   }
-  const url = `/resources${search.program ? `?program=${search.program}` : ""}${search.subject ? `&subject=${search.subject}` : ""}${search.view ? `&view=${search.view}` : ""}`;
-  return { title, description, url, program, subject };
+  return { title, description, program, subject };
 }
 
-export const Route = createFileRoute("/resources")({
-  validateSearch: (s: Record<string, unknown>): Search => ({
-    program: typeof s.program === "string" ? s.program : undefined,
-    subject: typeof s.subject === "string" ? s.subject : undefined,
-    view: s.view === "yearly" || s.view === "topics" ? s.view : undefined,
-  }),
-  loaderDeps: ({ search }) => search,
-  loader: ({ deps }) => deps,
-  head: ({ loaderData }) => {
-    const search: Search = loaderData ?? {};
-    const m = buildMeta(search);
-    const ld: Record<string, unknown> = {
-      "@context": "https://schema.org",
-      "@type": "CollectionPage",
-      name: m.title,
-      description: m.description,
-      url: m.url,
-      isPartOf: { "@type": "WebSite", name: "CatchUp Tutors" },
-    };
-    if (m.program && m.subject) {
-      ld["@type"] = "LearningResource";
-      ld["educationalLevel"] = m.subject.level;
-      ld["learningResourceType"] = search.view === "topics" ? "Topic questions" : "Past examination papers";
-      ld["about"] = `${m.program.name} ${m.subject.name} (${m.subject.code})`;
-    }
-    return {
-      meta: [
-        { title: m.title },
-        { name: "description", content: m.description },
-        { property: "og:title", content: m.title },
-        { property: "og:description", content: m.description },
-        { property: "og:type", content: "website" },
-        { property: "og:url", content: m.url },
-        { name: "twitter:card", content: "summary_large_image" },
-        { name: "twitter:title", content: m.title },
-        { name: "twitter:description", content: m.description },
-      ],
-      links: [{ rel: "canonical", href: m.url }],
-      scripts: [{ type: "application/ld+json", children: JSON.stringify(ld) }],
-    };
-  },
-  component: ResourcesPage,
-});
+type Step = "program" | "subject" | "type" | "yearly" | "topics";
 
-function ResourcesPage() {
-  const search = Route.useSearch();
-  const navigate = useNavigate({ from: "/resources" });
+export default function Resources() {
+  const [params, setParams] = useSearchParams();
+  const search: Search = {
+    program: params.get("program") || undefined,
+    subject: params.get("subject") || undefined,
+    view: (params.get("view") === "yearly" || params.get("view") === "topics") ? (params.get("view") as ViewKind) : undefined,
+  };
   const program = findProgram(search.program);
   const subject = findSubject(search.program, search.subject);
 
-  const go = (next: Partial<Search>) => navigate({ search: { ...search, ...next } });
-  const reset = () => navigate({ search: {} });
+  const go = (next: Partial<Search>) => {
+    const merged = { ...search, ...next };
+    const p = new URLSearchParams();
+    if (merged.program) p.set("program", merged.program);
+    if (merged.subject) p.set("subject", merged.subject);
+    if (merged.view) p.set("view", merged.view);
+    setParams(p);
+  };
+  const reset = () => setParams(new URLSearchParams());
 
-  const step: "program" | "subject" | "type" | "yearly" | "topics" =
+  const step: Step =
     search.view === "yearly" ? "yearly"
     : search.view === "topics" ? "topics"
     : subject ? "type"
     : program ? "subject"
     : "program";
 
+  const meta = buildMeta(search);
+  const jsonLd: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": meta.program && meta.subject ? "LearningResource" : "CollectionPage",
+    name: meta.title, description: meta.description,
+    isPartOf: { "@type": "WebSite", name: "CatchUp Tutors" },
+  };
+  if (meta.program && meta.subject) {
+    jsonLd.educationalLevel = meta.subject.level;
+    jsonLd.learningResourceType = search.view === "topics" ? "Topic questions" : "Past examination papers";
+    jsonLd.about = `${meta.program.name} ${meta.subject.name} (${meta.subject.code})`;
+  }
+
   return (
     <SiteShell>
-      <PageHero
-        eyebrow="Resource library"
-        title="Practice with purpose. Built around the syllabus."
-        description="Pick your program, choose a subject, then dive into yearly past questions or topic-based practice — with marking schemes and video walkthroughs."
-      />
-
+      <Seo title={meta.title} description={meta.description} jsonLd={jsonLd} />
+      <PageHero eyebrow="Resource library" title="Practice with purpose. Built around the syllabus." description="Pick your program, choose a subject, then dive into yearly past questions or topic-based practice — with marking schemes and video walkthroughs." />
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <Breadcrumbs
-          step={step}
-          program={program}
-          subject={subject}
-          onJump={(s) => {
-            if (s === "program") reset();
-            if (s === "subject") go({ subject: undefined, view: undefined });
-            if (s === "type") go({ view: undefined });
-          }}
-        />
-
+        <Breadcrumbs step={step} program={program} subject={subject} onJump={(s) => {
+          if (s === "program") reset();
+          if (s === "subject") go({ subject: undefined, view: undefined });
+          if (s === "type") go({ view: undefined });
+        }} />
         <div className="mt-8">
           {step === "program" && (
             <StepShell eyebrow="Step 1 of 3" title="Choose your program" description="Start with the examination board you're preparing for.">
               <div className="grid gap-5 md:grid-cols-2">
-                {PROGRAMS.map((p) => (
-                  <ChoiceCard key={p.id} icon={<GraduationCap className="size-6" />} badge={p.badge} title={p.name} description={p.tagline} onClick={() => go({ program: p.id, subject: undefined, view: undefined })} />
-                ))}
+                {PROGRAMS.map((p) => <ChoiceCard key={p.id} icon={<GraduationCap className="size-6" />} badge={p.badge} title={p.name} description={p.tagline} onClick={() => go({ program: p.id, subject: undefined, view: undefined })} />)}
               </div>
             </StepShell>
           )}
-
           {step === "subject" && program && (
             <StepShell eyebrow="Step 2 of 3" title={`${program.name} subjects`} description="Select the subject you want to revise.">
               <div className="grid gap-5 md:grid-cols-2">
-                {SUBJECTS[program.id].map((s) => (
-                  <ChoiceCard key={s.id} icon={<Sigma className="size-6" />} badge={`${s.level} · ${s.code}`} title={s.name} description={`Full ${s.level} ${s.name} syllabus — papers, schemes & lessons.`} onClick={() => go({ subject: s.id, view: undefined })} />
-                ))}
+                {SUBJECTS[program.id].map((s) => <ChoiceCard key={s.id} icon={<Sigma className="size-6" />} badge={`${s.level} · ${s.code}`} title={s.name} description={`Full ${s.level} ${s.name} syllabus — papers, schemes & lessons.`} onClick={() => go({ subject: s.id, view: undefined })} />)}
               </div>
             </StepShell>
           )}
-
           {step === "type" && program && subject && (
             <StepShell eyebrow="Step 3 of 3" title={`${subject.name} (${subject.code})`} description="How would you like to practice today?">
               <div className="grid gap-5 md:grid-cols-2">
@@ -192,26 +144,14 @@ function ResourcesPage() {
               </div>
             </StepShell>
           )}
-
-          {step === "yearly" && subject && program && (
-            <YearlyView program={program} subject={subject} onBack={() => go({ view: undefined })} />
-          )}
-
-          {step === "topics" && subject && program && (
-            <TopicsView program={program} subject={subject} onBack={() => go({ view: undefined })} />
-          )}
+          {step === "yearly" && subject && program && <YearlyView program={program} subject={subject} onBack={() => go({ view: undefined })} />}
+          {step === "topics" && subject && program && <TopicsView program={program} subject={subject} onBack={() => go({ view: undefined })} />}
         </div>
-
-        <div className="mt-16 grid gap-5 lg:grid-cols-2">
-          <PremiumCTA />
-          <TutorCTA />
-        </div>
+        <div className="mt-16 grid gap-5 lg:grid-cols-2"><PremiumCTA /><TutorCTA /></div>
       </section>
     </SiteShell>
   );
 }
-
-type Step = "program" | "subject" | "type" | "yearly" | "topics";
 
 function Breadcrumbs({ step, program, subject, onJump }: { step: Step; program: Program | null; subject: Subject | null; onJump: (s: Step) => void }) {
   const crumbs: { label: string; target?: Step; active?: boolean }[] = [{ label: "Program", target: "program", active: step === "program" }];
@@ -224,11 +164,7 @@ function Breadcrumbs({ step, program, subject, onJump }: { step: Step; program: 
       {crumbs.map((c, i) => (
         <span key={i} className="flex items-center gap-2">
           {i > 0 && <ChevronRight className="size-3.5" />}
-          {c.target && !c.active ? (
-            <button onClick={() => onJump(c.target!)} className="font-medium text-foreground/70 hover:text-primary">{c.label}</button>
-          ) : (
-            <span className={cn(c.active && "font-semibold text-foreground")}>{c.label}</span>
-          )}
+          {c.target && !c.active ? <button onClick={() => onJump(c.target!)} className="font-medium text-foreground/70 hover:text-primary">{c.label}</button> : <span className={cn(c.active && "font-semibold text-foreground")}>{c.label}</span>}
         </span>
       ))}
     </nav>
@@ -264,10 +200,7 @@ function YearlyView({ program, subject, onBack }: { program: Program; subject: S
       <BackBar onBack={onBack} label="Back to practice options" />
       <div className="mt-6 flex items-center gap-3">
         <CalendarDays className="text-primary" />
-        <div>
-          <h2 className="font-display text-3xl font-bold">Yearly past questions</h2>
-          <p className="text-sm text-muted-foreground">{program.name} · {subject.name} ({subject.code})</p>
-        </div>
+        <div><h2 className="font-display text-3xl font-bold">Yearly past questions</h2><p className="text-sm text-muted-foreground">{program.name} · {subject.name} ({subject.code})</p></div>
       </div>
       <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {YEARS.map((y) => (
@@ -292,8 +225,6 @@ function YearlyView({ program, subject, onBack }: { program: Program; subject: S
   );
 }
 
-
-
 function TopicsView({ program, subject, onBack }: { program: Program; subject: Subject; onBack: () => void }) {
   const topics = TOPICS[subject.id] ?? [];
   return (
@@ -301,10 +232,7 @@ function TopicsView({ program, subject, onBack }: { program: Program; subject: S
       <BackBar onBack={onBack} label="Back to practice options" />
       <div className="mt-6 flex items-center gap-3">
         <Layers3 className="text-brand-orange" />
-        <div>
-          <h2 className="font-display text-3xl font-bold">Topic-based past questions</h2>
-          <p className="text-sm text-muted-foreground">{program.name} · {subject.name} ({subject.code})</p>
-        </div>
+        <div><h2 className="font-display text-3xl font-bold">Topic-based past questions</h2><p className="text-sm text-muted-foreground">{program.name} · {subject.name} ({subject.code})</p></div>
       </div>
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {topics.map((topic, i) => (
@@ -335,10 +263,7 @@ export function PremiumCTA() {
   return (
     <aside className="flex h-full flex-col items-start gap-5 rounded-3xl bg-brand-navy p-7 text-hero-foreground">
       <LockKeyhole className="size-8 text-brand-green" />
-      <div>
-        <h3 className="font-display text-2xl font-bold">Go deeper with Premium</h3>
-        <p className="mt-2 text-hero-foreground/70">Step-by-step video walkthroughs, worked solutions, and priority learning support.</p>
-      </div>
+      <div><h3 className="font-display text-2xl font-bold">Go deeper with Premium</h3><p className="mt-2 text-hero-foreground/70">Step-by-step video walkthroughs, worked solutions, and priority learning support.</p></div>
       <Button asChild variant="hero" className="mt-auto"><Link to="/pricing">View plans <ArrowRight /></Link></Button>
     </aside>
   );
@@ -348,12 +273,8 @@ export function TutorCTA() {
   return (
     <aside className="flex h-full flex-col items-start gap-5 rounded-3xl border bg-card p-7">
       <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Users className="size-6" /></div>
-      <div>
-        <h3 className="font-display text-2xl font-bold">Need a tutor by your side?</h3>
-        <p className="mt-2 text-muted-foreground">Book an approved Mathematics tutor — pick by subject, topic, and availability with transparent pricing.</p>
-      </div>
+      <div><h3 className="font-display text-2xl font-bold">Need a tutor by your side?</h3><p className="mt-2 text-muted-foreground">Book an approved Mathematics tutor — pick by subject, topic, and availability with transparent pricing.</p></div>
       <Button asChild className="mt-auto" size="lg"><Link to="/tutors">Find a Tutor <ArrowRight /></Link></Button>
     </aside>
   );
 }
-

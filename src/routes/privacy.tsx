@@ -1,2 +1,0 @@
-import { createFileRoute } from "@tanstack/react-router"; import { ContentPage } from "@/components/content-page";
-export const Route=createFileRoute("/privacy")({head:()=>({meta:[{title:"Privacy Policy | CatchUp Tutors"},{name:"description",content:"How CatchUp Tutors protects account, learning, booking, and payment data."}]}),component:()=> <ContentPage kind="privacy"/>});

@@ -1,4 +1,5 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -15,17 +16,18 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/admin")({
-  ssr: false,
-  head: () => ({
-    meta: [
-      { title: "Admin Console | CatchUp Tutors" },
-      { name: "description", content: "Manage programs, subjects, yearly papers, and topic-based past questions." },
-      { name: "robots", content: "noindex,nofollow" },
-    ],
-  }),
-  component: AdminPage,
-});
+export default function Admin() {
+  return (
+    <>
+      <Helmet>
+        <title>Admin Console | CatchUp Tutors</title>
+        <meta name="description" content="Manage programs, subjects, yearly papers, and topic-based past questions." />
+        <meta name="robots" content="noindex,nofollow" />
+      </Helmet>
+      <AdminPage />
+    </>
+  );
+}
 
 type Program = { id: string; name: string; slug: string; description: string; accent: string; is_published: boolean; sort_order: number };
 type Subject = { id: string; program_id: string; name: string; slug: string; description: string; is_published: boolean; sort_order: number };
@@ -41,7 +43,7 @@ function AdminPage() {
   useEffect(() => {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
-      if (!u.user) { navigate({ to: "/auth", replace: true }); return; }
+      if (!u.user) { navigate("/auth", { replace: true }); return; }
       const { data, error } = await supabase.rpc("has_role", { _user_id: u.user.id, _role: "admin" });
       if (error || !data) { setStatus("denied"); return; }
       setStatus("ok");
