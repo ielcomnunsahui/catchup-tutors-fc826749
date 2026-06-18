@@ -1,4 +1,5 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useLocation } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Menu, X, GraduationCap, Instagram, Facebook, Youtube } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,7 @@ const navigation = [
 
 export function SiteShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const { pathname } = useLocation();
   return <div className="min-h-screen bg-background text-foreground">
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/95 backdrop-blur">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -55,4 +56,22 @@ export function SiteShell({ children }: { children: ReactNode }) {
 
 export function PageHero({ eyebrow, title, description, children }: { eyebrow: string; title: string; description: string; children?: ReactNode }) {
   return <section className="bg-hero text-hero-foreground"><div className="hero-grid mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8"><p className="mb-4 text-sm font-bold uppercase tracking-[0.2em] text-brand-green">{eyebrow}</p><h1 className="max-w-4xl font-display text-4xl font-bold tracking-tight sm:text-6xl">{title}</h1><p className="mt-6 max-w-2xl text-lg leading-8 text-hero-foreground/75">{description}</p>{children && <div className="mt-8">{children}</div>}</div></section>;
+}
+
+export type SeoProps = { title: string; description: string; image?: string; jsonLd?: Record<string, unknown> };
+export function Seo({ title, description, image, jsonLd }: SeoProps) {
+  return (
+    <Helmet>
+      <title>{title}</title>
+      <meta name="description" content={description} />
+      <meta property="og:title" content={title} />
+      <meta property="og:description" content={description} />
+      <meta property="og:type" content="website" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={title} />
+      <meta name="twitter:description" content={description} />
+      {image && <meta property="og:image" content={image} />}
+      {jsonLd && <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>}
+    </Helmet>
+  );
 }
