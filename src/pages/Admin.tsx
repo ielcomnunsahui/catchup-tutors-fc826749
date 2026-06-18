@@ -16,17 +16,18 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/admin")({
-  ssr: false,
-  head: () => ({
-    meta: [
-      { title: "Admin Console | CatchUp Tutors" },
-      { name: "description", content: "Manage programs, subjects, yearly papers, and topic-based past questions." },
-      { name: "robots", content: "noindex,nofollow" },
-    ],
-  }),
-  component: AdminPage,
-});
+export default function Admin() {
+  return (
+    <>
+      <Helmet>
+        <title>Admin Console | CatchUp Tutors</title>
+        <meta name="description" content="Manage programs, subjects, yearly papers, and topic-based past questions." />
+        <meta name="robots" content="noindex,nofollow" />
+      </Helmet>
+      <AdminPage />
+    </>
+  );
+}
 
 type Program = { id: string; name: string; slug: string; description: string; accent: string; is_published: boolean; sort_order: number };
 type Subject = { id: string; program_id: string; name: string; slug: string; description: string; is_published: boolean; sort_order: number };
