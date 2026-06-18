@@ -239,10 +239,11 @@ function TopicsView({ program, subject, onBack }: { program: Program; subject: S
           <article key={topic} className="group rounded-2xl border bg-card p-5 transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-soft">
             <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Topic {String(i + 1).padStart(2, "0")}</span>
             <h3 className="mt-2 font-display text-lg font-bold">{topic}</h3>
-            <p className="mt-2 text-sm text-muted-foreground">Questions · Solutions · Video</p>
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <Button size="sm" variant="outline" disabled><Download /> Pack</Button>
-              <Button size="sm" variant="outline" disabled><PlayCircle /> Lesson</Button>
+            <p className="mt-2 text-sm text-muted-foreground">Past questions · Worked solutions · Video explanation</p>
+            <div className="mt-4 grid gap-2">
+              <Button size="sm" variant="outline" disabled className="justify-start"><Download /> Download Past Questions</Button>
+              <Button size="sm" variant="outline" disabled className="justify-start"><BookMarked /> Download PQ Solutions</Button>
+              <Button size="sm" variant="outline" disabled className="justify-start"><PlayCircle /> View Solution (video)</Button>
             </div>
           </article>
         ))}

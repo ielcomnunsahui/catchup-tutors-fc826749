@@ -1,10 +1,16 @@
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { SiteShell } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 
 export default function NotFound() {
   return (
     <SiteShell>
+      <Helmet>
+        <title>Page Not Found | CatchUp Tutors</title>
+        <meta name="description" content="The page you're looking for doesn't exist on CatchUp Tutors." />
+        <meta name="robots" content="noindex,follow" />
+      </Helmet>
       <section className="mx-auto max-w-2xl px-4 py-32 text-center sm:px-6 lg:px-8">
         <p className="text-sm font-bold uppercase tracking-widest text-primary">404</p>
         <h1 className="mt-3 font-display text-5xl font-bold">Page not found</h1>

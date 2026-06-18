@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { BookOpen, CalendarCheck, Clock3, Crown, GraduationCap, LogOut, PlayCircle, Settings2, UserRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,11 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Student Dashboard | CatchUp Tutors</title>
+        <meta name="description" content="Your CatchUp Tutors learning dashboard — sessions, progress, and resources." />
+        <meta name="robots" content="noindex,nofollow" />
+      </Helmet>
       <header className="border-b bg-card">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link to="/" className="flex items-center gap-2 font-display font-bold"><GraduationCap className="text-primary" /> CatchUp Tutors</Link>
