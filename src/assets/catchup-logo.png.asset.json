@@ -1,11 +1,11 @@
 {
-  "version": 1,
   "asset_id": "72bf33f8-cc50-4bb0-be92-e1615294bb32",
-  "project_id": "b30c0824-7b20-4641-9441-4f8d36f307f1",
-  "url": "/__l5e/assets-v1/72bf33f8-cc50-4bb0-be92-e1615294bb32/catchup-logo.png",
-  "r2_key": "a/v1/b30c0824-7b20-4641-9441-4f8d36f307f1/72bf33f8-cc50-4bb0-be92-e1615294bb32/catchup-logo.png",
-  "original_filename": "catchup-logo.png",
-  "size": 216079,
   "content_type": "image/png",
-  "created_at": "2026-06-13T02:05:15Z"
+  "created_at": "2026-06-13T02:05:15Z",
+  "original_filename": "catchup-logo.png",
+  "project_id": "2ae3d4b7-22ed-4b19-a5ea-df07b4e409bd",
+  "r2_key": "a/v1/2ae3d4b7-22ed-4b19-a5ea-df07b4e409bd/72bf33f8-cc50-4bb0-be92-e1615294bb32/catchup-logo.png",
+  "size": 216079,
+  "url": "/__l5e/assets-v1/72bf33f8-cc50-4bb0-be92-e1615294bb32/catchup-logo.png",
+  "version": 1
 }
