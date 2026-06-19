@@ -4,9 +4,17 @@ import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 
 export default function Tutors() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    serviceType: "One-to-one Mathematics tutoring",
+    provider: { "@type": "EducationalOrganization", name: "CatchUp Tutors" },
+    areaServed: ["Nigeria", "United Kingdom", "Worldwide"],
+    audience: { "@type": "EducationalAudience", educationalRole: "student" },
+  };
   return (
     <SiteShell>
-      <Seo title="Expert Mathematics Tutors | CatchUp Tutors" description="Find approved Cambridge and IGCSE Mathematics tutors and book one-to-one sessions." />
+      <Seo title="Expert Mathematics Tutors | CatchUp Tutors" description="Find approved Cambridge and IGCSE Mathematics tutors and book one-to-one sessions." path="/tutors" jsonLd={jsonLd} />
       <PageHero eyebrow="Approved experts" title="Find the tutor who understands your next step." description="Compare subjects, teaching focus, experience, availability, and tutor-set session pricing." />
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3 rounded-2xl border bg-card px-4 shadow-soft">

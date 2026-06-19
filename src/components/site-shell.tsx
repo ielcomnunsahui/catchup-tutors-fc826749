@@ -58,8 +58,10 @@ export function PageHero({ eyebrow, title, description, children }: { eyebrow: s
   return <section className="bg-hero text-hero-foreground"><div className="hero-grid mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8"><p className="mb-4 text-sm font-bold uppercase tracking-[0.2em] text-brand-green">{eyebrow}</p><h1 className="max-w-4xl font-display text-4xl font-bold tracking-tight sm:text-6xl">{title}</h1><p className="mt-6 max-w-2xl text-lg leading-8 text-hero-foreground/75">{description}</p>{children && <div className="mt-8">{children}</div>}</div></section>;
 }
 
-export type SeoProps = { title: string; description: string; image?: string; jsonLd?: Record<string, unknown> };
-export function Seo({ title, description, image, jsonLd }: SeoProps) {
+export type SeoProps = { title: string; description: string; image?: string; path?: string; noindex?: boolean; jsonLd?: Record<string, unknown> | Record<string, unknown>[] };
+export function Seo({ title, description, image, path, noindex, jsonLd }: SeoProps) {
+  const url = path ?? (typeof window !== "undefined" ? window.location.pathname : undefined);
+  const blocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
   return (
     <Helmet>
       <title>{title}</title>
@@ -67,11 +69,17 @@ export function Seo({ title, description, image, jsonLd }: SeoProps) {
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
       <meta property="og:type" content="website" />
+      {url && <meta property="og:url" content={url} />}
+      {url && <link rel="canonical" href={url} />}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
       {image && <meta property="og:image" content={image} />}
-      {jsonLd && <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>}
+      {image && <meta name="twitter:image" content={image} />}
+      {noindex && <meta name="robots" content="noindex,nofollow" />}
+      {blocks.map((b, i) => (
+        <script key={`ld-${i}`} type="application/ld+json">{JSON.stringify(b)}</script>
+      ))}
     </Helmet>
   );
 }

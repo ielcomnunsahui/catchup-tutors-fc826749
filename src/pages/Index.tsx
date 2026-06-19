@@ -55,7 +55,7 @@ function Testimonials() {
 export default function Index() {
   return (
     <SiteShell>
-      <Seo title="CatchUp Tutors | Cambridge & IGCSE Mathematics" description="Premium Cambridge and IGCSE Mathematics tutoring, resources, past questions, and video learning." />
+      <Seo title="CatchUp Tutors | Cambridge & IGCSE Mathematics" description="Premium Cambridge and IGCSE Mathematics tutoring, resources, past questions, and video learning." path="/" jsonLd={[{ "@context": "https://schema.org", "@type": "EducationalOrganization", name: "CatchUp Tutors", url: "/", description: "Cambridge and IGCSE Mathematics tutoring and resources.", areaServed: ["Nigeria", "United Kingdom"], sameAs: ["https://www.instagram.com/tutors.catchup", "https://www.facebook.com/share/1BTRMp9BPw/", "https://youtube.com/@catch-uptutors2691"] }, { "@context": "https://schema.org", "@type": "WebSite", name: "CatchUp Tutors", url: "/" }]} />
       <section className="relative overflow-hidden bg-background">
         <div className="absolute inset-0">
           <img src={heroStudents.url} alt="Students learning together" width={1920} height={1080} className="h-full w-full object-cover object-right" />
