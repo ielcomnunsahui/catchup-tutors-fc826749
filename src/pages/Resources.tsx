@@ -113,7 +113,7 @@ export default function Resources() {
 
   return (
     <SiteShell>
-      <Seo title={meta.title} description={meta.description} jsonLd={jsonLd} />
+      <Seo title={meta.title} description={meta.description} path="/resources" jsonLd={jsonLd} />
       <PageHero eyebrow="Resource library" title="Practice with purpose. Built around the syllabus." description="Pick your program, choose a subject, then dive into yearly past questions or topic-based practice — with marking schemes and video walkthroughs." />
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <Breadcrumbs step={step} program={program} subject={subject} onJump={(s) => {
