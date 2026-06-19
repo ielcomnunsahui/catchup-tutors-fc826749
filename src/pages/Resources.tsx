@@ -212,8 +212,8 @@ function YearlyView({ program, subject, onBack }: { program: Program; subject: S
                 <div key={session} className="rounded-xl border p-3">
                   <p className="mb-2 text-sm font-semibold">{session}</p>
                   <div className="grid grid-cols-2 gap-2">
-                    <Button size="sm" variant="outline" disabled><Download /> Paper</Button>
-                    <Button size="sm" variant="outline" disabled><BookMarked /> Scheme</Button>
+                    <Button asChild size="sm" variant="outline"><a href={SAMPLE_PDF} target="_blank" rel="noopener"><Download /> Paper</a></Button>
+                    <Button asChild size="sm" variant="outline"><a href={SAMPLE_PDF} target="_blank" rel="noopener"><BookMarked /> Scheme</a></Button>
                   </div>
                 </div>
               ))}
@@ -224,6 +224,9 @@ function YearlyView({ program, subject, onBack }: { program: Program; subject: S
     </div>
   );
 }
+
+const SAMPLE_PDF = "https://www.africau.edu/images/default/sample.pdf";
+const SAMPLE_VIDEO = "https://www.youtube.com/watch?v=NybHckSEQBI";
 
 function TopicsView({ program, subject, onBack }: { program: Program; subject: Subject; onBack: () => void }) {
   const topics = TOPICS[subject.id] ?? [];
@@ -241,9 +244,9 @@ function TopicsView({ program, subject, onBack }: { program: Program; subject: S
             <h3 className="mt-2 font-display text-lg font-bold">{topic}</h3>
             <p className="mt-2 text-sm text-muted-foreground">Past questions · Worked solutions · Video explanation</p>
             <div className="mt-4 grid gap-2">
-              <Button size="sm" variant="outline" disabled className="justify-start"><Download /> Download Past Questions</Button>
-              <Button size="sm" variant="outline" disabled className="justify-start"><BookMarked /> Download PQ Solutions</Button>
-              <Button size="sm" variant="outline" disabled className="justify-start"><PlayCircle /> View Solution (video)</Button>
+              <Button asChild size="sm" variant="outline" className="justify-start"><a href={SAMPLE_PDF} target="_blank" rel="noopener"><Download /> Download Past Questions</a></Button>
+              <Button asChild size="sm" variant="outline" className="justify-start"><a href={SAMPLE_PDF} target="_blank" rel="noopener"><BookMarked /> Download PQ Solutions</a></Button>
+              <Button asChild size="sm" variant="outline" className="justify-start"><a href={SAMPLE_VIDEO} target="_blank" rel="noopener"><PlayCircle /> View Solution (video)</a></Button>
             </div>
           </article>
         ))}
