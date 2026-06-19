@@ -4,10 +4,30 @@ import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { PremiumCTA, TutorCTA } from "./Resources";
 
+const PROGRAM_LIST = [
+  { name: "Cambridge Mathematics", description: "Cambridge IGCSE/AS/A-Level Mathematics program with deep conceptual learning." },
+  { name: "Cambridge Further Mathematics", description: "Advanced Cambridge Further Mathematics with rigorous exam preparation." },
+  { name: "IGCSE Mathematics", description: "Focused IGCSE Mathematics exam preparation with topic-based practice." },
+];
+
 export default function Programs() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: PROGRAM_LIST.map((p, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      item: {
+        "@type": "Course",
+        name: p.name,
+        description: p.description,
+        provider: { "@type": "EducationalOrganization", name: "CatchUp Tutors" },
+      },
+    })),
+  };
   return (
     <SiteShell>
-      <Seo title="Cambridge & IGCSE Programs | CatchUp Tutors" description="Explore Cambridge and IGCSE Mathematics and Further Mathematics learning programs." />
+      <Seo title="Cambridge & IGCSE Programs | CatchUp Tutors" description="Explore Cambridge and IGCSE Mathematics and Further Mathematics learning programs." path="/programs" jsonLd={jsonLd} />
       <PageHero eyebrow="Learning pathways" title="Choose the program that moves you forward." description="Structured exam preparation, targeted practice, premium lessons, and tutor support—organized around your curriculum." />
       <section className="mx-auto grid max-w-7xl gap-7 px-4 py-16 sm:px-6 md:grid-cols-2 lg:px-8">
         {[

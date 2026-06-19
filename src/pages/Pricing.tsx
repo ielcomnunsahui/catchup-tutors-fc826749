@@ -11,9 +11,17 @@ const plans = [
 ];
 
 export default function Pricing() {
+  const jsonLd = plans.filter((p) => p.name !== "Free").map((p) => ({
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: `CatchUp Tutors — ${p.name}`,
+    description: p.features.join(". "),
+    brand: { "@type": "Brand", name: "CatchUp Tutors" },
+    offers: { "@type": "Offer", price: p.price.replace(/[^\d]/g, ""), priceCurrency: "NGN", availability: "https://schema.org/InStock" },
+  }));
   return (
     <SiteShell>
-      <Seo title="Premium Learning Plans | CatchUp Tutors" description="Choose monthly, quarterly, or annual premium access to Mathematics videos and resources." />
+      <Seo title="Premium Learning Plans | CatchUp Tutors" description="Choose monthly, quarterly, or annual premium access to Mathematics videos and resources." path="/pricing" jsonLd={jsonLd} />
       <PageHero eyebrow="Premium learning" title="A clearer path to deeper understanding." description="Start free, then unlock the complete video and resource library when you're ready. Tutor sessions are priced separately." />
       <section className="mx-auto grid max-w-7xl gap-5 px-4 py-16 sm:px-6 md:grid-cols-2 lg:grid-cols-4 lg:px-8">
         {plans.map((p) => (

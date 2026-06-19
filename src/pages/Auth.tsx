@@ -67,7 +67,7 @@ export default function Auth() {
 
   return (
     <div className="grid min-h-screen bg-background lg:grid-cols-2">
-      <Seo title="Sign In or Register | CatchUp Tutors" description="Access your CatchUp Tutors learning dashboard or create a student or tutor account." />
+      <Seo title="Sign In or Register | CatchUp Tutors" description="Access your CatchUp Tutors learning dashboard or create a student or tutor account." path="/auth" noindex />
       <div className="hidden bg-hero p-12 text-hero-foreground lg:flex lg:flex-col">
         <Link to="/" className="flex items-center gap-2 text-sm text-hero-foreground/70"><ArrowLeft /> Back home</Link>
         <div className="my-auto">
