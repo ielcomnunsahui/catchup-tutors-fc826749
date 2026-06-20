@@ -1,11 +1,60 @@
+import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, ArrowRight, BookMarked, CalendarDays, ChevronRight, Download,
-  GraduationCap, Layers3, LockKeyhole, PlayCircle, Sigma, Users,
+  ExternalLink, GraduationCap, Layers3, LockKeyhole, PlayCircle, Sigma, Users, X,
 } from "lucide-react";
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+
+type ViewerState =
+  | { kind: "pdf"; url: string; title: string }
+  | { kind: "video"; youtubeId: string; title: string }
+  | null;
+
+function ytId(url: string) {
+  const m = url.match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/);
+  return m?.[1] ?? "";
+}
+
+function ResourceViewer({ state, onClose }: { state: ViewerState; onClose: () => void }) {
+  if (!state) return null;
+  return (
+    <Dialog open={!!state} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-5xl p-0 overflow-hidden">
+        <DialogHeader className="flex flex-row items-center justify-between gap-4 border-b px-5 py-3">
+          <DialogTitle className="truncate text-base">{state.title}</DialogTitle>
+          <div className="flex items-center gap-2">
+            {state.kind === "pdf" ? (
+              <Button asChild size="sm" variant="outline"><a href={state.url} download target="_blank" rel="noopener"><Download /> Download</a></Button>
+            ) : (
+              <Button asChild size="sm" variant="outline"><a href={`https://www.youtube.com/watch?v=${state.youtubeId}`} target="_blank" rel="noopener"><ExternalLink /> Open on YouTube</a></Button>
+            )}
+            <Button size="icon" variant="ghost" onClick={onClose}><X /></Button>
+          </div>
+        </DialogHeader>
+        <div className="bg-muted">
+          {state.kind === "pdf" ? (
+            <iframe src={`${state.url}#toolbar=1&navpanes=0`} title={state.title} className="h-[78vh] w-full bg-white" />
+          ) : (
+            <div className="relative aspect-video w-full">
+              <iframe
+                src={`https://www.youtube.com/embed/${state.youtubeId}?rel=0&modestbranding=1&autoplay=1`}
+                title={state.title}
+                className="absolute inset-0 h-full w-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 type Program = { id: string; name: string; tagline: string; badge: string };
 type Subject = { id: string; name: string; code: string; level: string };
