@@ -244,6 +244,7 @@ function ChoiceCard({ icon, badge, title, description, onClick }: { icon: React.
 }
 
 function YearlyView({ program, subject, onBack }: { program: Program; subject: Subject; onBack: () => void }) {
+  const [viewer, setViewer] = useState<ViewerState>(null);
   return (
     <div>
       <BackBar onBack={onBack} label="Back to practice options" />
@@ -261,8 +262,13 @@ function YearlyView({ program, subject, onBack }: { program: Program; subject: S
                 <div key={session} className="rounded-xl border p-3">
                   <p className="mb-2 text-sm font-semibold">{session}</p>
                   <div className="grid grid-cols-2 gap-2">
-                    <Button asChild size="sm" variant="outline"><a href={SAMPLE_PDF} target="_blank" rel="noopener"><Download /> Paper</a></Button>
-                    <Button asChild size="sm" variant="outline"><a href={SAMPLE_PDF} target="_blank" rel="noopener"><BookMarked /> Scheme</a></Button>
+                    <Button size="sm" variant="outline" onClick={() => setViewer({ kind: "pdf", url: SAMPLE_PDF, title: `${subject.code} ${y} ${session} — Paper` })}>
+                      <BookMarked /> View Paper
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setViewer({ kind: "pdf", url: SAMPLE_PDF, title: `${subject.code} ${y} ${session} — Mark Scheme` })}>
+                      <BookMarked /> View Scheme
+                    </Button>
+                    <Button asChild size="sm" variant="ghost" className="col-span-2 justify-center"><a href={SAMPLE_PDF} download target="_blank" rel="noopener"><Download /> Download both as PDF</a></Button>
                   </div>
                 </div>
               ))}
@@ -270,6 +276,7 @@ function YearlyView({ program, subject, onBack }: { program: Program; subject: S
           </article>
         ))}
       </div>
+      <ResourceViewer state={viewer} onClose={() => setViewer(null)} />
     </div>
   );
 }
@@ -279,6 +286,8 @@ const SAMPLE_VIDEO = "https://www.youtube.com/watch?v=NybHckSEQBI";
 
 function TopicsView({ program, subject, onBack }: { program: Program; subject: Subject; onBack: () => void }) {
   const topics = TOPICS[subject.id] ?? [];
+  const [viewer, setViewer] = useState<ViewerState>(null);
+  const videoId = ytId(SAMPLE_VIDEO);
   return (
     <div>
       <BackBar onBack={onBack} label="Back to practice options" />
@@ -293,16 +302,27 @@ function TopicsView({ program, subject, onBack }: { program: Program; subject: S
             <h3 className="mt-2 font-display text-lg font-bold">{topic}</h3>
             <p className="mt-2 text-sm text-muted-foreground">Past questions · Worked solutions · Video explanation</p>
             <div className="mt-4 grid gap-2">
-              <Button asChild size="sm" variant="outline" className="justify-start"><a href={SAMPLE_PDF} target="_blank" rel="noopener"><Download /> Download Past Questions</a></Button>
-              <Button asChild size="sm" variant="outline" className="justify-start"><a href={SAMPLE_PDF} target="_blank" rel="noopener"><BookMarked /> Download PQ Solutions</a></Button>
-              <Button asChild size="sm" variant="outline" className="justify-start"><a href={SAMPLE_VIDEO} target="_blank" rel="noopener"><PlayCircle /> View Solution (video)</a></Button>
+              <Button size="sm" variant="outline" className="justify-start" onClick={() => setViewer({ kind: "pdf", url: SAMPLE_PDF, title: `${topic} — Past Questions` })}>
+                <BookMarked /> View Past Questions
+              </Button>
+              <Button size="sm" variant="outline" className="justify-start" onClick={() => setViewer({ kind: "pdf", url: SAMPLE_PDF, title: `${topic} — Worked Solutions` })}>
+                <BookMarked /> View PQ Solutions
+              </Button>
+              <Button size="sm" variant="outline" className="justify-start" onClick={() => setViewer({ kind: "video", youtubeId: videoId, title: `${topic} — Video Solution` })}>
+                <PlayCircle /> Watch Solution Video
+              </Button>
+              <a href={SAMPLE_PDF} download target="_blank" rel="noopener" className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-primary">
+                <Download className="size-3.5" /> Download PDFs
+              </a>
             </div>
           </article>
         ))}
       </div>
+      <ResourceViewer state={viewer} onClose={() => setViewer(null)} />
     </div>
   );
 }
+
 
 function BackBar({ onBack, label }: { onBack: () => void; label: string }) {
   return (
