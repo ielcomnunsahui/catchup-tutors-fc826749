@@ -1,11 +1,60 @@
+import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, ArrowRight, BookMarked, CalendarDays, ChevronRight, Download,
-  GraduationCap, Layers3, LockKeyhole, PlayCircle, Sigma, Users,
+  ExternalLink, GraduationCap, Layers3, LockKeyhole, PlayCircle, Sigma, Users, X,
 } from "lucide-react";
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+
+type ViewerState =
+  | { kind: "pdf"; url: string; title: string }
+  | { kind: "video"; youtubeId: string; title: string }
+  | null;
+
+function ytId(url: string) {
+  const m = url.match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/);
+  return m?.[1] ?? "";
+}
+
+function ResourceViewer({ state, onClose }: { state: ViewerState; onClose: () => void }) {
+  if (!state) return null;
+  return (
+    <Dialog open={!!state} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-5xl p-0 overflow-hidden">
+        <DialogHeader className="flex flex-row items-center justify-between gap-4 border-b px-5 py-3">
+          <DialogTitle className="truncate text-base">{state.title}</DialogTitle>
+          <div className="flex items-center gap-2">
+            {state.kind === "pdf" ? (
+              <Button asChild size="sm" variant="outline"><a href={state.url} download target="_blank" rel="noopener"><Download /> Download</a></Button>
+            ) : (
+              <Button asChild size="sm" variant="outline"><a href={`https://www.youtube.com/watch?v=${state.youtubeId}`} target="_blank" rel="noopener"><ExternalLink /> Open on YouTube</a></Button>
+            )}
+            <Button size="icon" variant="ghost" onClick={onClose}><X /></Button>
+          </div>
+        </DialogHeader>
+        <div className="bg-muted">
+          {state.kind === "pdf" ? (
+            <iframe src={`${state.url}#toolbar=1&navpanes=0`} title={state.title} className="h-[78vh] w-full bg-white" />
+          ) : (
+            <div className="relative aspect-video w-full">
+              <iframe
+                src={`https://www.youtube.com/embed/${state.youtubeId}?rel=0&modestbranding=1&autoplay=1`}
+                title={state.title}
+                className="absolute inset-0 h-full w-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 type Program = { id: string; name: string; tagline: string; badge: string };
 type Subject = { id: string; name: string; code: string; level: string };
@@ -195,6 +244,7 @@ function ChoiceCard({ icon, badge, title, description, onClick }: { icon: React.
 }
 
 function YearlyView({ program, subject, onBack }: { program: Program; subject: Subject; onBack: () => void }) {
+  const [viewer, setViewer] = useState<ViewerState>(null);
   return (
     <div>
       <BackBar onBack={onBack} label="Back to practice options" />
@@ -212,8 +262,13 @@ function YearlyView({ program, subject, onBack }: { program: Program; subject: S
                 <div key={session} className="rounded-xl border p-3">
                   <p className="mb-2 text-sm font-semibold">{session}</p>
                   <div className="grid grid-cols-2 gap-2">
-                    <Button asChild size="sm" variant="outline"><a href={SAMPLE_PDF} target="_blank" rel="noopener"><Download /> Paper</a></Button>
-                    <Button asChild size="sm" variant="outline"><a href={SAMPLE_PDF} target="_blank" rel="noopener"><BookMarked /> Scheme</a></Button>
+                    <Button size="sm" variant="outline" onClick={() => setViewer({ kind: "pdf", url: SAMPLE_PDF, title: `${subject.code} ${y} ${session} — Paper` })}>
+                      <BookMarked /> View Paper
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setViewer({ kind: "pdf", url: SAMPLE_PDF, title: `${subject.code} ${y} ${session} — Mark Scheme` })}>
+                      <BookMarked /> View Scheme
+                    </Button>
+                    <Button asChild size="sm" variant="ghost" className="col-span-2 justify-center"><a href={SAMPLE_PDF} download target="_blank" rel="noopener"><Download /> Download both as PDF</a></Button>
                   </div>
                 </div>
               ))}
@@ -221,6 +276,7 @@ function YearlyView({ program, subject, onBack }: { program: Program; subject: S
           </article>
         ))}
       </div>
+      <ResourceViewer state={viewer} onClose={() => setViewer(null)} />
     </div>
   );
 }
@@ -230,6 +286,8 @@ const SAMPLE_VIDEO = "https://www.youtube.com/watch?v=NybHckSEQBI";
 
 function TopicsView({ program, subject, onBack }: { program: Program; subject: Subject; onBack: () => void }) {
   const topics = TOPICS[subject.id] ?? [];
+  const [viewer, setViewer] = useState<ViewerState>(null);
+  const videoId = ytId(SAMPLE_VIDEO);
   return (
     <div>
       <BackBar onBack={onBack} label="Back to practice options" />
@@ -244,16 +302,27 @@ function TopicsView({ program, subject, onBack }: { program: Program; subject: S
             <h3 className="mt-2 font-display text-lg font-bold">{topic}</h3>
             <p className="mt-2 text-sm text-muted-foreground">Past questions · Worked solutions · Video explanation</p>
             <div className="mt-4 grid gap-2">
-              <Button asChild size="sm" variant="outline" className="justify-start"><a href={SAMPLE_PDF} target="_blank" rel="noopener"><Download /> Download Past Questions</a></Button>
-              <Button asChild size="sm" variant="outline" className="justify-start"><a href={SAMPLE_PDF} target="_blank" rel="noopener"><BookMarked /> Download PQ Solutions</a></Button>
-              <Button asChild size="sm" variant="outline" className="justify-start"><a href={SAMPLE_VIDEO} target="_blank" rel="noopener"><PlayCircle /> View Solution (video)</a></Button>
+              <Button size="sm" variant="outline" className="justify-start" onClick={() => setViewer({ kind: "pdf", url: SAMPLE_PDF, title: `${topic} — Past Questions` })}>
+                <BookMarked /> View Past Questions
+              </Button>
+              <Button size="sm" variant="outline" className="justify-start" onClick={() => setViewer({ kind: "pdf", url: SAMPLE_PDF, title: `${topic} — Worked Solutions` })}>
+                <BookMarked /> View PQ Solutions
+              </Button>
+              <Button size="sm" variant="outline" className="justify-start" onClick={() => setViewer({ kind: "video", youtubeId: videoId, title: `${topic} — Video Solution` })}>
+                <PlayCircle /> Watch Solution Video
+              </Button>
+              <a href={SAMPLE_PDF} download target="_blank" rel="noopener" className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-primary">
+                <Download className="size-3.5" /> Download PDFs
+              </a>
             </div>
           </article>
         ))}
       </div>
+      <ResourceViewer state={viewer} onClose={() => setViewer(null)} />
     </div>
   );
 }
+
 
 function BackBar({ onBack, label }: { onBack: () => void; label: string }) {
   return (
