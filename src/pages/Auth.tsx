@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
 import { Seo } from "@/components/site-shell";
-import logo from "@/assets/catchup-logo.png.asset.json";
+import logo from "@/assets/catchup-logo.png";
 
 const schema = z.object({
   name: z.string().trim().min(2).max(100).optional(),
@@ -71,7 +71,7 @@ export default function Auth() {
       <div className="hidden bg-hero p-12 text-hero-foreground lg:flex lg:flex-col">
         <Link to="/" className="flex items-center gap-2 text-sm text-hero-foreground/70"><ArrowLeft /> Back home</Link>
         <div className="my-auto">
-          <img src={logo.url} alt="CatchUp Tutors" className="w-72" />
+          <img src={logo} alt="CatchUp Tutors" className="w-72" />
           <h1 className="mt-10 font-display text-5xl font-bold">Catch Up.<br /><span className="text-brand-orange">Stay Ahead.</span></h1>
           <p className="mt-6 max-w-md text-lg leading-8 text-hero-foreground/65">Your resources, tutoring, premium lessons, and progress—all in one focused learning space.</p>
         </div>

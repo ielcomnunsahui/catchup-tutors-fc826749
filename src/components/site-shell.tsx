@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Menu, X, GraduationCap, Instagram, Facebook, Youtube } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import logo from "@/assets/catchup-logo.png.asset.json";
+import logoUrl from "@/assets/catchup-logo.png";
 
 const navigation = [
   ["Programs", "/programs"], ["Resources", "/resources"], ["Tutors", "/tutors"],
@@ -16,7 +16,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
   return <div className="min-h-screen bg-background text-foreground">
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/95 backdrop-blur">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link to="/" aria-label="CatchUp Tutors home"><img src={logo.url} alt="CatchUp Tutors" className="h-14 w-auto" /></Link>
+        <Link to="/" aria-label="CatchUp Tutors home"><img src={logoUrl} alt="CatchUp Tutors" className="h-14 w-auto" /></Link>
         <nav aria-label="Main navigation" className="hidden items-center gap-1 lg:flex">
           {navigation.map(([label, to]) => <Link key={to} to={to} className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${pathname === to ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`}>{label}</Link>)}
         </nav>
