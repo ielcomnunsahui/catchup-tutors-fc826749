@@ -105,12 +105,14 @@
   --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
   --sidebar-border: oklch(0.929 0.013 255.508);
   --sidebar-ring: oklch(0.704 0.04 256.788);
-  --brand-blue: oklch(0.55 0.22 257);
+  --brand-blue: oklch(0.475 0.221 262);
   --brand-orange: oklch(0.72 0.19 45);
   --brand-green: oklch(0.75 0.18 135);
-  --brand-navy: oklch(0.2 0.055 255);
-  --hero: oklch(0.15 0.05 255);
-  --hero-foreground: oklch(0.98 0.005 255);
+  --brand-navy: oklch(0.475 0.221 262);
+  --hero: oklch(0.475 0.221 262);
+  --hero-foreground: oklch(1 0 0);
+  --primary: oklch(0.475 0.221 262);
+  --ring: oklch(0.475 0.221 262);
   --shadow-soft: 0 18px 50px color-mix(in oklab, var(--brand-navy) 10%, transparent);
   --shadow-lift: 0 24px 70px color-mix(in oklab, var(--brand-blue) 20%, transparent);
 }
