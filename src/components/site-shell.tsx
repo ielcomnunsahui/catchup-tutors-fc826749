@@ -7,7 +7,7 @@ import logoUrl from "@/assets/catchup-logo.png";
 
 const navigation = [
   ["Programs", "/programs"], ["Resources", "/resources"], ["Tutors", "/tutors"],
-  ["Pricing", "/pricing"], ["About", "/about"], ["Testimonials", "/testimonials"],
+  ["Summer Lessons", "/summerlessons"], ["Pricing", "/pricing"], ["About", "/about"],
 ] as const;
 
 export function SiteShell({ children }: { children: ReactNode }) {

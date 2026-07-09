@@ -35,6 +35,7 @@ export default function App() {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/admin" element={<Admin />} />
+      <Route path="/summerlessons" element={<SummerLessons />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
