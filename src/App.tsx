@@ -14,6 +14,7 @@ import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
+import SummerLessons from "./pages/SummerLessons";
 import NotFound from "./pages/NotFound";
 
 export default function App() {
