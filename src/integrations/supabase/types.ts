@@ -770,6 +770,117 @@ export type Database = {
         }
         Relationships: []
       }
+      summer_student_registrations: {
+        Row: {
+          age: number
+          commit_character: boolean
+          commit_excellence: boolean
+          commit_proximity: boolean
+          created_at: string
+          current_class: string
+          department: string | null
+          email: string
+          full_name: string
+          gender: string
+          home_address: string
+          id: string
+          parent_name: string
+          phone: string
+          status: string
+          target_exams: string[]
+        }
+        Insert: {
+          age: number
+          commit_character?: boolean
+          commit_excellence?: boolean
+          commit_proximity?: boolean
+          created_at?: string
+          current_class: string
+          department?: string | null
+          email: string
+          full_name: string
+          gender: string
+          home_address: string
+          id?: string
+          parent_name: string
+          phone: string
+          status?: string
+          target_exams?: string[]
+        }
+        Update: {
+          age?: number
+          commit_character?: boolean
+          commit_excellence?: boolean
+          commit_proximity?: boolean
+          created_at?: string
+          current_class?: string
+          department?: string | null
+          email?: string
+          full_name?: string
+          gender?: string
+          home_address?: string
+          id?: string
+          parent_name?: string
+          phone?: string
+          status?: string
+          target_exams?: string[]
+        }
+        Relationships: []
+      }
+      summer_tutor_volunteers: {
+        Row: {
+          availability: string
+          commit_impact: boolean
+          commit_integrity: boolean
+          commit_reliability: boolean
+          created_at: string
+          email: string
+          experience_years: number | null
+          full_name: string
+          gender: string | null
+          id: string
+          motivation: string | null
+          phone: string
+          qualification: string
+          status: string
+          subjects: string[]
+        }
+        Insert: {
+          availability: string
+          commit_impact?: boolean
+          commit_integrity?: boolean
+          commit_reliability?: boolean
+          created_at?: string
+          email: string
+          experience_years?: number | null
+          full_name: string
+          gender?: string | null
+          id?: string
+          motivation?: string | null
+          phone: string
+          qualification: string
+          status?: string
+          subjects?: string[]
+        }
+        Update: {
+          availability?: string
+          commit_impact?: boolean
+          commit_integrity?: boolean
+          commit_reliability?: boolean
+          created_at?: string
+          email?: string
+          experience_years?: number | null
+          full_name?: string
+          gender?: string | null
+          id?: string
+          motivation?: string | null
+          phone?: string
+          qualification?: string
+          status?: string
+          subjects?: string[]
+        }
+        Relationships: []
+      }
       testimonials: {
         Row: {
           created_at: string
