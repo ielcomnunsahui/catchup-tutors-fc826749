@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import logoUrl from "@/assets/catchup-logo.png";
 
 const navigation = [
-  ["Programs", "/programs"], ["Resources", "/resources"], ["Tutors", "/tutors"],
-  ["Summer Lessons", "/summerlessons"], ["Pricing", "/pricing"], ["About", "/about"],
+  ["About", "/about"], ["Programs", "/programs"], ["Resources", "/resources"], ["Tutors", "/tutors"],
+  ["Summer Lessons", "/summerlessons"], ["Pricing", "/pricing"], 
 ] as const;
 
 const SOCIAL = {
