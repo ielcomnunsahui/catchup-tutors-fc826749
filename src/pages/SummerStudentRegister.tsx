@@ -1,7 +1,8 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
 import { Loader2, ArrowRight, Printer, Download, ArrowLeft, PartyPopper, Mail } from "lucide-react";
+import { renderLetterPdf } from "@/lib/letter-pdf";
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,14 +57,31 @@ export default function SummerStudentRegister() {
     setDone({ id: data.id, fullName: form.full_name });
     fireConfetti();
     toast.success("Admission confirmed 🎉");
-
-    supabase.functions.invoke("send-summer-admission", {
-      body: {
-        kind: "student", fullName: form.full_name, email: form.email,
-        phone: form.phone, admissionId: `CUT-STU-${data.id.slice(0, 8).toUpperCase()}`,
-      },
-    }).catch(() => {});
   };
+
+  // Generate PDF after letter is rendered, then email it as attachment.
+  const [pdf, setPdf] = useState<{ download: () => void; fileName: string } | null>(null);
+  useEffect(() => {
+    if (!done || !letterRef.current) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const admissionId = `CUT-STU-${done.id.slice(0, 8).toUpperCase()}`;
+        const fileName = `CatchUp-Admission-${admissionId}.pdf`;
+        const out = await renderLetterPdf(letterRef.current!, fileName);
+        if (cancelled) return;
+        setPdf({ download: out.download, fileName: out.fileName });
+        supabase.functions.invoke("send-summer-admission", {
+          body: {
+            kind: "student", fullName: done.fullName, email: form.email,
+            phone: form.phone, admissionId,
+            attachmentBase64: out.base64, attachmentFilename: fileName,
+          },
+        }).catch(() => {});
+      } catch { /* PDF failed – user still has on-screen letter and print */ }
+    })();
+    return () => { cancelled = true; };
+  }, [done]);
 
   if (done) {
     const admissionId = `CUT-STU-${done.id.slice(0, 8).toUpperCase()}`;
