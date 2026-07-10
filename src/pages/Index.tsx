@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { ArrowRight, ArrowUpRight, Quote, ChevronLeft, ChevronRight } from "lucide-react";
 import { SiteShell, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 import hero1600 from "@/assets/hero-campus-1600.jpg";
 import hero1200 from "@/assets/hero-campus-1200.jpg";
 import hero768 from "@/assets/hero-campus-768.jpg";
