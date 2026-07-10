@@ -15,6 +15,8 @@ import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
 import SummerLessons from "./pages/SummerLessons";
+import SummerStudentRegister from "./pages/SummerStudentRegister";
+import SummerTutorRegister from "./pages/SummerTutorRegister";
 import NotFound from "./pages/NotFound";
 
 export default function App() {
@@ -36,6 +38,8 @@ export default function App() {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="/summerlessons" element={<SummerLessons />} />
+      <Route path="/summerlessons/student" element={<SummerStudentRegister />} />
+      <Route path="/summerlessons/tutor" element={<SummerTutorRegister />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
