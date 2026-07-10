@@ -97,11 +97,14 @@ export default function SummerStudentRegister() {
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <Button onClick={() => window.print()}><Printer /> Print letter</Button>
-              <Button variant="outline" onClick={() => window.print()}><Download /> Save as PDF</Button>
+              <Button variant="outline" onClick={() => pdf?.download()} disabled={!pdf}>
+                {pdf ? <Download /> : <Loader2 className="animate-spin" />}
+                {pdf ? "Download PDF" : "Preparing PDF…"}
+              </Button>
               <Button variant="ghost" asChild><Link to="/"><ArrowLeft /> Back to home</Link></Button>
             </div>
             <p className="mx-auto mt-4 flex max-w-md items-center justify-center gap-2 text-xs text-muted-foreground">
-              <Mail className="h-3.5 w-3.5" /> A copy was sent to <b className="ml-1 text-foreground">your email</b>. Check spam if you don't see it.
+              <Mail className="h-3.5 w-3.5" /> A signed PDF copy is attached to the confirmation email sent to <b className="ml-1 text-foreground">{form.email}</b>. Check spam if you don't see it.
             </p>
           </div>
           <div className="print:m-0">
