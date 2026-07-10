@@ -1,7 +1,8 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
 import { Loader2, ArrowRight, Printer, Download, ArrowLeft, PartyPopper, Mail } from "lucide-react";
+import { renderLetterPdf } from "@/lib/letter-pdf";
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,14 +57,31 @@ export default function SummerStudentRegister() {
     setDone({ id: data.id, fullName: form.full_name });
     fireConfetti();
     toast.success("Admission confirmed 🎉");
-
-    supabase.functions.invoke("send-summer-admission", {
-      body: {
-        kind: "student", fullName: form.full_name, email: form.email,
-        phone: form.phone, admissionId: `CUT-STU-${data.id.slice(0, 8).toUpperCase()}`,
-      },
-    }).catch(() => {});
   };
+
+  // Generate PDF after letter is rendered, then email it as attachment.
+  const [pdf, setPdf] = useState<{ download: () => void; fileName: string } | null>(null);
+  useEffect(() => {
+    if (!done || !letterRef.current) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const admissionId = `CUT-STU-${done.id.slice(0, 8).toUpperCase()}`;
+        const fileName = `CatchUp-Admission-${admissionId}.pdf`;
+        const out = await renderLetterPdf(letterRef.current!, fileName);
+        if (cancelled) return;
+        setPdf({ download: out.download, fileName: out.fileName });
+        supabase.functions.invoke("send-summer-admission", {
+          body: {
+            kind: "student", fullName: done.fullName, email: form.email,
+            phone: form.phone, admissionId,
+            attachmentBase64: out.base64, attachmentFilename: fileName,
+          },
+        }).catch(() => {});
+      } catch { /* PDF failed – user still has on-screen letter and print */ }
+    })();
+    return () => { cancelled = true; };
+  }, [done]);
 
   if (done) {
     const admissionId = `CUT-STU-${done.id.slice(0, 8).toUpperCase()}`;
@@ -79,11 +97,14 @@ export default function SummerStudentRegister() {
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <Button onClick={() => window.print()}><Printer /> Print letter</Button>
-              <Button variant="outline" onClick={() => window.print()}><Download /> Save as PDF</Button>
+              <Button variant="outline" onClick={() => pdf?.download()} disabled={!pdf}>
+                {pdf ? <Download /> : <Loader2 className="animate-spin" />}
+                {pdf ? "Download PDF" : "Preparing PDF…"}
+              </Button>
               <Button variant="ghost" asChild><Link to="/"><ArrowLeft /> Back to home</Link></Button>
             </div>
             <p className="mx-auto mt-4 flex max-w-md items-center justify-center gap-2 text-xs text-muted-foreground">
-              <Mail className="h-3.5 w-3.5" /> A copy was sent to <b className="ml-1 text-foreground">your email</b>. Check spam if you don't see it.
+              <Mail className="h-3.5 w-3.5" /> A signed PDF copy is attached to the confirmation email sent to <b className="ml-1 text-foreground">{form.email}</b>. Check spam if you don't see it.
             </p>
           </div>
           <div className="print:m-0">

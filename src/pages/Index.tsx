@@ -4,18 +4,19 @@ import { useEffect, useState } from "react";
 import { ArrowRight, ArrowUpRight, Quote, ChevronLeft, ChevronRight } from "lucide-react";
 import { SiteShell, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 import hero1600 from "@/assets/hero-campus-1600.jpg";
 import hero1200 from "@/assets/hero-campus-1200.jpg";
 import hero768 from "@/assets/hero-campus-768.jpg";
+import studentPhoto from "@/assets/testimonial-student.jpg";
 
 type Testimonial = { quote: string; name: string; role: string; image?: string };
 
 const TESTIMONIALS: Testimonial[] = [
-  { quote: "I went from struggling with Paper 3 to a confident A. Every concept finally clicked.", name: "Aisha O.", role: "Cambridge A-Level Mathematics" },
-  { quote: "The walkthroughs are the clearest I've ever seen. My tutor tailored every session to my weak areas.", name: "Daniel K.", role: "IGCSE Additional Mathematics" },
-  { quote: "Past questions sorted by topic saved me hours. I knew exactly what to revise.", name: "Chiamaka E.", role: "Cambridge Further Mathematics" },
-  { quote: "Finally a platform that treats Maths like a craft. Premium was worth every Naira.", name: "Yusuf A.", role: "IGCSE Mathematics" },
+  { quote: "I went from struggling with Paper 3 to a confident A. Every concept finally clicked, and revision stopped feeling like punishment.", name: "Aisha O.", role: "Cambridge A-Level Mathematics", image: studentPhoto },
+  { quote: "The walkthroughs are the clearest I've ever seen. My tutor tailored every single session to my weak areas — no filler, no wasted time.", name: "Daniel K.", role: "IGCSE Additional Mathematics", image: studentPhoto },
+  { quote: "Past questions sorted by topic saved me hours. I walked into the exam hall knowing exactly what to expect.", name: "Chiamaka E.", role: "Cambridge Further Mathematics", image: studentPhoto },
+  { quote: "Finally a platform that treats Maths like a craft. Premium was worth every Naira — I'd recommend it to any serious student.", name: "Yusuf A.", role: "IGCSE Mathematics", image: studentPhoto },
 ];
 
 const VALUES = [
@@ -60,56 +61,94 @@ function Testimonials() {
   const initials = t.name.split(" ").map((s) => s[0]).join("").slice(0, 2).toUpperCase();
   return (
     <section
-      className="border-t border-border py-20 sm:py-28"
+      className="border-t border-border bg-background py-20 sm:py-28"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={() => setPaused(false)}
       aria-roledescription="carousel"
       aria-label="Student testimonials"
     >
-      <div className="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">What students say</p>
-        <div className="relative mt-10 min-h-[300px] sm:min-h-[260px]" aria-live="polite">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="flex items-end justify-between gap-6">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-brand-orange">Testimonials</p>
+            <h2 className="mt-3 max-w-2xl font-display text-3xl font-bold leading-tight text-brand-navy sm:text-4xl md:text-5xl">
+              What students say.
+            </h2>
+          </div>
+          <p className="hidden text-sm text-muted-foreground sm:block">{i + 1} / {TESTIMONIALS.length}</p>
+        </div>
+
+        <div className="relative mt-12 grid gap-10 lg:grid-cols-12 lg:gap-14" aria-live="polite">
           <AnimatePresence mode="wait">
             <motion.figure
               key={i}
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.4, ease: EASE }}
+              exit={{ opacity: 0, y: -16 }}
+              transition={{ duration: 0.5, ease: EASE }}
+              className="contents"
             >
-              <Avatar className="mx-auto h-16 w-16 border border-border">
-                {t.image && <AvatarImage src={t.image} alt={`Portrait of ${t.name}`} />}
-                <AvatarFallback className="bg-brand-navy text-sm font-semibold text-hero-foreground">{initials}</AvatarFallback>
-              </Avatar>
-              <Quote className="mx-auto mt-6 h-6 w-6 text-muted-foreground/50" aria-hidden="true" />
-              <blockquote className="mt-4 font-display text-xl leading-relaxed text-foreground sm:text-2xl">
-                "{t.quote}"
-              </blockquote>
-              <figcaption className="mt-6">
-                <p className="font-semibold text-foreground">{t.name}</p>
-                <p className="text-sm text-muted-foreground">{t.role}</p>
-              </figcaption>
+              {/* Quote — left */}
+              <div className="order-2 flex flex-col justify-center lg:order-1 lg:col-span-7">
+                <Quote className="h-10 w-10 text-brand-orange" aria-hidden="true" />
+                <blockquote className="mt-6 font-display text-2xl leading-relaxed text-brand-navy sm:text-3xl md:text-[2rem]">
+                  <span className="text-brand-navy/40">“</span>
+                  {t.quote}
+                  <span className="text-brand-navy/40">”</span>
+                </blockquote>
+                <figcaption className="mt-8 border-l-2 border-brand-orange pl-5">
+                  <p className="font-display text-lg font-bold text-brand-navy">{t.name}</p>
+                  <p className="mt-0.5 text-sm text-muted-foreground">{t.role}</p>
+                </figcaption>
+
+                <div className="mt-10 flex items-center gap-4">
+                  <button onClick={prev} aria-label="Previous testimonial" className="grid h-11 w-11 place-items-center rounded-full border border-border text-brand-navy transition-colors hover:border-brand-navy hover:bg-brand-navy hover:text-hero-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-navy focus-visible:ring-offset-2">
+                    <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                  </button>
+                  <div className="flex gap-2" role="tablist" aria-label="Testimonial slides">
+                    {TESTIMONIALS.map((_, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setI(idx)}
+                        role="tab"
+                        aria-label={`Show testimonial ${idx + 1}`}
+                        aria-selected={idx === i}
+                        className={`h-1.5 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-navy focus-visible:ring-offset-2 ${idx === i ? "w-10 bg-brand-navy" : "w-1.5 bg-border hover:bg-muted-foreground/40"}`}
+                      />
+                    ))}
+                  </div>
+                  <button onClick={next} aria-label="Next testimonial" className="grid h-11 w-11 place-items-center rounded-full border border-border text-brand-navy transition-colors hover:border-brand-navy hover:bg-brand-navy hover:text-hero-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-navy focus-visible:ring-offset-2">
+                    <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Photo — right */}
+              <div className="order-1 lg:order-2 lg:col-span-5">
+                <div className="relative mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden rounded-3xl bg-muted shadow-lift lg:max-w-none">
+                  {t.image ? (
+                    <img
+                      src={t.image}
+                      alt={`Portrait of ${t.name}`}
+                      loading="lazy"
+                      width={900}
+                      height={1100}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-brand-navy text-4xl font-bold text-hero-foreground">{initials}</div>
+                  )}
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-brand-navy/70 via-brand-navy/10 to-transparent p-5">
+                    <p className="text-xs font-semibold uppercase tracking-[0.25em] text-hero-foreground/80">Verified student</p>
+                    <p className="mt-1 font-display text-base font-semibold text-hero-foreground">{t.name}</p>
+                  </div>
+                  <div aria-hidden="true" className="absolute -left-3 -top-3 hidden h-24 w-24 rounded-full border-2 border-brand-orange lg:block" />
+                </div>
+              </div>
             </motion.figure>
           </AnimatePresence>
-        </div>
-        <div className="mt-8 flex items-center justify-center gap-4">
-          <button onClick={prev} aria-label="Previous testimonial" className="rounded-full border border-border p-2 text-brand-navy transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-navy focus-visible:ring-offset-2">
-            <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-          </button>
-          <div className="flex gap-2">
-            {TESTIMONIALS.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setI(idx)}
-                aria-label={`Show testimonial ${idx + 1}`}
-                aria-current={idx === i}
-                className={`h-1.5 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-navy focus-visible:ring-offset-2 ${idx === i ? "w-8 bg-brand-navy" : "w-1.5 bg-border hover:bg-muted-foreground/40"}`}
-              />
-            ))}
-          </div>
-          <button onClick={next} aria-label="Next testimonial" className="rounded-full border border-border p-2 text-brand-navy transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-navy focus-visible:ring-offset-2">
-            <ChevronRight className="h-5 w-5" aria-hidden="true" />
-          </button>
         </div>
       </div>
     </section>

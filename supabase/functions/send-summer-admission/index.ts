@@ -12,6 +12,8 @@ type Payload = {
   phone?: string;
   admissionId: string;
   meta?: Record<string, unknown>;
+  attachmentBase64?: string;
+  attachmentFilename?: string;
 };
 
 function studentHtml(p: Payload) {
@@ -58,11 +60,15 @@ function tutorHtml(p: Payload) {
   </div>`;
 }
 
-async function send(to: string, subject: string, html: string) {
+async function send(to: string, subject: string, html: string, attachment?: { content: string; filename: string }) {
+  const body: Record<string, unknown> = { from: FROM, to: [to], subject, html };
+  if (attachment?.content && attachment.filename) {
+    body.attachments = [{ filename: attachment.filename, content: attachment.content }];
+  }
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
-    body: JSON.stringify({ from: FROM, to: [to], subject, html }),
+    body: JSON.stringify(body),
   });
   const data = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(`Resend ${r.status}: ${JSON.stringify(data)}`);
@@ -81,8 +87,11 @@ Deno.serve(async (req) => {
     const subject = p.kind === "student"
       ? "Your CatchUp Tutors Admission Letter"
       : "Your CatchUp Tutors Volunteer Acceptance";
-    const userRes = await send(p.email, subject, html).catch((e) => ({ error: String(e) }));
-    const adminRes = await send(ADMIN_EMAIL, `New ${p.kind} registration · ${p.fullName}`, html).catch((e) => ({ error: String(e) }));
+    const attachment = p.attachmentBase64 && p.attachmentFilename
+      ? { content: p.attachmentBase64, filename: p.attachmentFilename }
+      : undefined;
+    const userRes = await send(p.email, subject, html, attachment).catch((e) => ({ error: String(e) }));
+    const adminRes = await send(ADMIN_EMAIL, `New ${p.kind} registration · ${p.fullName}`, html, attachment).catch((e) => ({ error: String(e) }));
     return new Response(JSON.stringify({ ok: true, userRes, adminRes }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
