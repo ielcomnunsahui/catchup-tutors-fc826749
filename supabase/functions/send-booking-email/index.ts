@@ -2,7 +2,7 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const ADMIN_EMAIL = "thecatchuptutors@gmail.com";
-const FROM = "CatchUp Tutors <onboarding@resend.dev>";
+const FROM = "CatchUp Tutors <bookings@catch-uptutors.com>";
 
 type Payload = {
   bookingId: string;
