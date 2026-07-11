@@ -62,7 +62,7 @@ function tutorHtml(p: Payload) {
 }
 
 async function send(to: string, subject: string, html: string, attachment?: { content: string; filename: string }) {
-  const body: Record<string, unknown> = { from: FROM, to: [to], subject, html };
+  const body: Record<string, unknown> = { from: FROM, to: [to], subject, html, reply_to: REPLY_TO };
   if (attachment?.content && attachment.filename) {
     body.attachments = [{ filename: attachment.filename, content: attachment.content }];
   }
