@@ -473,3 +473,221 @@ function PublishSwitch({ value, onChange }: { value: boolean; onChange: (v: bool
     </div>
   );
 }
+
+type StudentReg = {
+  id: string; full_name: string; email: string; phone: string; gender: string; age: number | null;
+  home_address: string; parent_name: string; current_class: string; department: string | null;
+  target_exams: string[] | null; status: string; created_at: string;
+};
+type TutorReg = {
+  id: string; full_name: string; email: string; phone: string; gender: string; qualification: string;
+  subjects: string[] | null; experience_years: number | null; availability: string; motivation: string;
+  status: string; created_at: string;
+};
+
+const REG_STATUSES = ["pending", "approved", "waitlisted", "rejected"] as const;
+
+function RegistrationsTab() {
+  const [kind, setKind] = useState<"student" | "tutor">("student");
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center gap-2">
+        <Button variant={kind === "student" ? "default" : "outline"} onClick={() => setKind("student")}>Students</Button>
+        <Button variant={kind === "tutor" ? "default" : "outline"} onClick={() => setKind("tutor")}>Volunteer tutors</Button>
+      </div>
+      {kind === "student" ? <StudentRegTable /> : <TutorRegTable />}
+    </div>
+  );
+}
+
+function useRegs<T extends { id: string; status: string; created_at: string }>(table: "summer_student_registrations" | "summer_tutor_volunteers") {
+  const [rows, setRows] = useState<T[]>([]);
+  const [loading, setLoading] = useState(true);
+  const reload = async () => {
+    setLoading(true);
+    const { data, error } = await (supabase as any).from(table).select("*").order("created_at", { ascending: false });
+    if (error) toast.error(error.message);
+    setRows((data ?? []) as T[]);
+    setLoading(false);
+  };
+  useEffect(() => { reload(); }, []);
+  const updateStatus = async (id: string, status: string) => {
+    const { error } = await (supabase as any).from(table).update({ status }).eq("id", id);
+    if (error) return toast.error(error.message);
+    setRows((r) => r.map((x) => (x.id === id ? { ...x, status } : x)));
+    toast.success(`Status set to ${status}`);
+  };
+  const remove = async (id: string) => {
+    if (!confirm("Delete this registration? This cannot be undone.")) return;
+    const { error } = await (supabase as any).from(table).delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    setRows((r) => r.filter((x) => x.id !== id));
+    toast.success("Deleted");
+  };
+  return { rows, loading, reload, updateStatus, remove };
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const map: Record<string, string> = {
+    pending: "bg-amber-100 text-amber-800 border-amber-200",
+    approved: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    waitlisted: "bg-blue-100 text-blue-800 border-blue-200",
+    rejected: "bg-red-100 text-red-800 border-red-200",
+  };
+  return <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-semibold capitalize ${map[status] ?? "bg-muted"}`}>{status}</span>;
+}
+
+function StudentRegTable() {
+  const { rows, loading, updateStatus, remove, reload } = useRegs<StudentReg>("summer_student_registrations");
+  const [q, setQ] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const filtered = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    return rows.filter((r) => {
+      if (statusFilter !== "all" && r.status !== statusFilter) return false;
+      if (!s) return true;
+      return [r.full_name, r.email, r.phone, r.parent_name, r.current_class, r.department ?? "", (r.target_exams ?? []).join(" ")]
+        .join(" ").toLowerCase().includes(s);
+    });
+  }, [rows, q, statusFilter]);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <Input placeholder="Search name, email, phone, class, exam…" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-sm" />
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            {REG_STATUSES.map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Button variant="outline" onClick={reload}>Refresh</Button>
+        <span className="ml-auto text-sm text-muted-foreground">{filtered.length} of {rows.length}</span>
+      </div>
+      {loading ? <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" /></div> : (
+        <div className="overflow-x-auto rounded-xl border">
+          <table className="min-w-full text-sm">
+            <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
+              <tr>
+                <th className="px-4 py-3">Student</th><th className="px-4 py-3">Contact</th><th className="px-4 py-3">Class</th>
+                <th className="px-4 py-3">Exams</th><th className="px-4 py-3">Submitted</th><th className="px-4 py-3">Status</th><th className="px-4 py-3"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {filtered.map((r) => (
+                <tr key={r.id} className="align-top">
+                  <td className="px-4 py-3">
+                    <div className="font-semibold">{r.full_name}</div>
+                    <div className="text-xs text-muted-foreground">{r.gender} · {r.age ?? "—"} yrs</div>
+                    <div className="text-xs text-muted-foreground">Parent: {r.parent_name}</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div>{r.email}</div>
+                    <div className="text-xs text-muted-foreground">{r.phone}</div>
+                    <div className="text-xs text-muted-foreground line-clamp-2 max-w-[220px]">{r.home_address}</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div>{r.current_class}</div>
+                    {r.department && <div className="text-xs text-muted-foreground">{r.department}</div>}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex max-w-[180px] flex-wrap gap-1">
+                      {(r.target_exams ?? []).map((e) => <Badge key={e} variant="secondary" className="text-[10px]">{e}</Badge>)}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</td>
+                  <td className="px-4 py-3">
+                    <Select value={r.status} onValueChange={(v) => updateStatus(r.id, v)}>
+                      <SelectTrigger className="h-8 w-32"><StatusBadge status={r.status} /></SelectTrigger>
+                      <SelectContent>{REG_STATUSES.map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <Button variant="ghost" size="icon" onClick={() => remove(r.id)} aria-label="Delete"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                  </td>
+                </tr>
+              ))}
+              {filtered.length === 0 && <tr><td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">No registrations match.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TutorRegTable() {
+  const { rows, loading, updateStatus, remove, reload } = useRegs<TutorReg>("summer_tutor_volunteers");
+  const [q, setQ] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const filtered = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    return rows.filter((r) => {
+      if (statusFilter !== "all" && r.status !== statusFilter) return false;
+      if (!s) return true;
+      return [r.full_name, r.email, r.phone, r.qualification, (r.subjects ?? []).join(" "), r.availability]
+        .join(" ").toLowerCase().includes(s);
+    });
+  }, [rows, q, statusFilter]);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <Input placeholder="Search name, email, subject, availability…" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-sm" />
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            {REG_STATUSES.map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Button variant="outline" onClick={reload}>Refresh</Button>
+        <span className="ml-auto text-sm text-muted-foreground">{filtered.length} of {rows.length}</span>
+      </div>
+      {loading ? <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" /></div> : (
+        <div className="overflow-x-auto rounded-xl border">
+          <table className="min-w-full text-sm">
+            <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
+              <tr>
+                <th className="px-4 py-3">Volunteer</th><th className="px-4 py-3">Contact</th><th className="px-4 py-3">Qualification</th>
+                <th className="px-4 py-3">Subjects</th><th className="px-4 py-3">Availability</th><th className="px-4 py-3">Status</th><th className="px-4 py-3"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {filtered.map((r) => (
+                <tr key={r.id} className="align-top">
+                  <td className="px-4 py-3">
+                    <div className="font-semibold">{r.full_name}</div>
+                    <div className="text-xs text-muted-foreground">{r.gender} · {r.experience_years ?? 0} yrs exp</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div>{r.email}</div>
+                    <div className="text-xs text-muted-foreground">{r.phone}</div>
+                  </td>
+                  <td className="px-4 py-3">{r.qualification}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex max-w-[200px] flex-wrap gap-1">
+                      {(r.subjects ?? []).map((s) => <Badge key={s} variant="secondary" className="text-[10px]">{s}</Badge>)}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-xs">{r.availability}</td>
+                  <td className="px-4 py-3">
+                    <Select value={r.status} onValueChange={(v) => updateStatus(r.id, v)}>
+                      <SelectTrigger className="h-8 w-32"><StatusBadge status={r.status} /></SelectTrigger>
+                      <SelectContent>{REG_STATUSES.map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <Button variant="ghost" size="icon" onClick={() => remove(r.id)} aria-label="Delete"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                  </td>
+                </tr>
+              ))}
+              {filtered.length === 0 && <tr><td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">No volunteers match.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
