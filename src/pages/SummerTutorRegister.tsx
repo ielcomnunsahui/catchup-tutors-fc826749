@@ -48,16 +48,17 @@ export default function SummerTutorRegister() {
       toast.error("Please accept the three volunteer commitments"); return;
     }
     setSubmitting(true);
-    const { data, error } = await supabase.from("summer_tutor_volunteers").insert({
-      ...form,
+    const applicationId = crypto.randomUUID();
+    const { error } = await supabase.from("summer_tutor_volunteers").insert({
+      id: applicationId, ...form,
       experience_years: form.experience_years ? parseInt(form.experience_years) : null,
       gender: form.gender || null,
       motivation: form.motivation || null,
-    }).select("id").single();
+    });
     setSubmitting(false);
-    if (error || !data) { toast.error(error?.message ?? "Could not submit"); return; }
+    if (error) { toast.error(error.message); return; }
 
-    setDone({ id: data.id, fullName: form.full_name, subjects: form.subjects });
+    setDone({ id: applicationId, fullName: form.full_name, subjects: form.subjects });
     fireConfetti();
     toast.success("Application received 🎉");
   };
