@@ -38,6 +38,7 @@ export default function App() {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/admin" element={<Admin />} />
+      <Route path="/events" element={<Events />} />
       <Route path="/summerlessons" element={<SummerLessons />} />
       <Route path="/summerlessons/student" element={<SummerStudentRegister />} />
       <Route path="/summerlessons/tutor" element={<SummerTutorRegister />} />
