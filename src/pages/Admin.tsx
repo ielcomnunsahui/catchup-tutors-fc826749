@@ -64,16 +64,18 @@ function AdminPage() {
       </section>
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <Tabs defaultValue="programs">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5">
             <TabsTrigger value="programs">Programs</TabsTrigger>
             <TabsTrigger value="subjects">Subjects</TabsTrigger>
             <TabsTrigger value="topics">Topics</TabsTrigger>
             <TabsTrigger value="resources">Past questions</TabsTrigger>
+            <TabsTrigger value="registrations">Summer registrations</TabsTrigger>
           </TabsList>
           <TabsContent value="programs" className="mt-8"><ProgramsTab /></TabsContent>
           <TabsContent value="subjects" className="mt-8"><SubjectsTab /></TabsContent>
           <TabsContent value="topics" className="mt-8"><TopicsTab /></TabsContent>
           <TabsContent value="resources" className="mt-8"><ResourcesTab /></TabsContent>
+          <TabsContent value="registrations" className="mt-8"><RegistrationsTab /></TabsContent>
         </Tabs>
       </section>
     </SiteShell>
