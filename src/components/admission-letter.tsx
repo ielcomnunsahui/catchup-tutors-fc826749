@@ -82,8 +82,8 @@ export const AdmissionLetter = forwardRef<HTMLDivElement, AdmissionLetterProps>(
             <p className="mt-1 text-sm font-semibold">Mr. Ahmed Thaoban</p>
             <p className="text-xs text-[#0f172a]/60">Founder, CatchUp Tutors · MSc Mathematics</p>
           </div>
-          <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-[#FF6B12] text-center text-[9px] font-bold uppercase leading-tight tracking-wider text-[#FF6B12]">
-            Official<br />CatchUp<br />Tutors<br />Seal
+          <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-[#FF6B12] bg-white p-2">
+            <img src={logoUrl} alt="CatchUp Tutors" className="h-full w-full object-contain" crossOrigin="anonymous" />
           </div>
         </div>
       </div>

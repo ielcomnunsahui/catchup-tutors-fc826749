@@ -9,7 +9,7 @@ import logoUrl from "@/assets/catchup-logo.png";
 
 const navigation = [
   ["About", "/about"], ["Programs", "/programs"], ["Resources", "/resources"], ["Tutors", "/tutors"],
-  ["Summer Lessons", "/summerlessons"], ["Pricing", "/pricing"], 
+  ["Events", "/events"], ["Pricing", "/pricing"],
 ] as const;
 
 const SOCIAL = {
@@ -149,7 +149,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
             </div>
 
             <FooterCol title="Learn" links={[["Programs","/programs"],["Resources","/resources"],["Tutors","/tutors"],["Pricing","/pricing"]]} />
-            <FooterCol title="Company" links={[["About","/about"],["Summer Lessons","/summerlessons"],["Testimonials","/testimonials"],["FAQ","/faq"]]} />
+            <FooterCol title="Company" links={[["About","/about"],["Events","/events"],["Testimonials","/testimonials"],["FAQ","/faq"]]} />
             <FooterCol title="Support" links={[["Contact","/contact"],["Sign in","/auth"],["Privacy","/privacy"],["Terms","/terms"]]} />
           </div>
 
