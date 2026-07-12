@@ -48,13 +48,14 @@ export default function SummerStudentRegister() {
       toast.error("Please accept the three commitments"); return;
     }
     setSubmitting(true);
-    const { data, error } = await supabase.from("summer_student_registrations").insert({
-      ...form, age: parseInt(form.age), department: form.department || null,
-    }).select("id").single();
+    const registrationId = crypto.randomUUID();
+    const { error } = await supabase.from("summer_student_registrations").insert({
+      id: registrationId, ...form, age: parseInt(form.age), department: form.department || null,
+    });
     setSubmitting(false);
-    if (error || !data) { toast.error(error?.message ?? "Could not submit"); return; }
+    if (error) { toast.error(error.message); return; }
 
-    setDone({ id: data.id, fullName: form.full_name });
+    setDone({ id: registrationId, fullName: form.full_name });
     fireConfetti();
     toast.success("Admission confirmed 🎉");
   };
