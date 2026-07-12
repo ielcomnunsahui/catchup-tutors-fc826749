@@ -16,6 +16,7 @@ import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
 import SummerLessons from "./pages/SummerLessons";
 import Events from "./pages/Events";
+import Partnership from "./pages/Partnership";
 import SummerStudentRegister from "./pages/SummerStudentRegister";
 import SummerTutorRegister from "./pages/SummerTutorRegister";
 import NotFound from "./pages/NotFound";
