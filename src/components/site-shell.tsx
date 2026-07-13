@@ -9,7 +9,7 @@ import logoUrl from "@/assets/catchup-logo.png";
 
 const navigation = [
   ["About", "/about"], ["Programs", "/programs"], ["Resources", "/resources"], ["Tutors", "/tutors"],
-  ["Events", "/events"], ["Pricing", "/pricing"],
+  ["Events", "/events"], ["Partnership", "/partnership"], ["Pricing", "/pricing"],
 ] as const;
 
 const SOCIAL = {

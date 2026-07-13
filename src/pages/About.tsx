@@ -7,7 +7,7 @@ import {
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import founderPortrait from "@/assets/founder-ahmed.jpeg.asset.json";
+const founderPortrait = { url: "/founder-ahmed.jpeg" };
 
 const VALUES = [
   { icon: HandHeart, emoji: "💡", title: "Empathy without judgement", desc: "We meet students exactly where they are. No shame in falling behind — only a safe space to breathe, learn and grow.", accent: "from-rose-500/15 to-rose-500/0", ring: "ring-rose-500/30", text: "text-rose-500" },
