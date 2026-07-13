@@ -15,6 +15,7 @@ export default function Dashboard() {
       if (!data.user) { navigate("/auth", { replace: true }); return; }
       setName(String(data.user.user_metadata.full_name || data.user.email || "Student"));
       const { data: role } = await supabase.rpc("has_role", { _user_id: data.user.id, _role: "admin" });
+      if (role) { navigate("/admin", { replace: true }); return; }
       setIsAdmin(!!role);
     });
   }, [navigate]);

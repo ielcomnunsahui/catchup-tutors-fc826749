@@ -33,18 +33,20 @@ export default function Auth() {
     if (!parsed.success) { setMessage(parsed.error.issues[0]?.message || "Check your details."); return; }
     setBusy(true);
     if (mode === "login") {
-      const { error } = await supabase.auth.signInWithPassword({ email: parsed.data.email, password: parsed.data.password });
+      const { data: signIn, error } = await supabase.auth.signInWithPassword({ email: parsed.data.email, password: parsed.data.password });
       if (error) setMessage(error.message);
-      else navigate("/dashboard");
+      else if (signIn.user) {
+        const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: signIn.user.id, _role: "admin" });
+        navigate(isAdmin ? "/admin" : "/dashboard");
+      }
     } else {
       const { data, error } = await supabase.auth.signUp({
         email: parsed.data.email, password: parsed.data.password,
-        options: { emailRedirectTo: window.location.origin, data: { full_name: parsed.data.name } },
+        options: { emailRedirectTo: `${window.location.origin}/dashboard`, data: { full_name: parsed.data.name } },
       });
       if (error) setMessage(error.message);
       else if (data.user) {
-        await supabase.from("profiles").insert({ id: data.user.id, email: parsed.data.email, full_name: parsed.data.name || "" });
-        await supabase.from("user_roles").insert({ user_id: data.user.id, role: "student" });
+        // Profile + default 'student' role are created automatically by the on_auth_user_created trigger.
         setMessage("Check your email to verify your account, then sign in.");
       }
     }
