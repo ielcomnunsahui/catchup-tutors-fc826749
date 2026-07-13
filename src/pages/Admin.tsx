@@ -503,14 +503,175 @@ type TutorReg = {
 };
 
 const REG_STATUSES = ["pending", "approved", "waitlisted", "rejected"] as const;
+type RegStatus = (typeof REG_STATUSES)[number];
+const STATUS_META: Record<string, { cls: string; icon: typeof Clock }> = {
+  pending: { cls: "bg-amber-100 text-amber-800 border-amber-200", icon: Clock },
+  approved: { cls: "bg-emerald-100 text-emerald-800 border-emerald-200", icon: UserCheck },
+  waitlisted: { cls: "bg-blue-100 text-blue-800 border-blue-200", icon: Users },
+  rejected: { cls: "bg-red-100 text-red-800 border-red-200", icon: X },
+};
+function StatusBadge({ status }: { status: string }) {
+  const m = STATUS_META[status];
+  const Icon = m?.icon;
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold capitalize ${m?.cls ?? "bg-muted"}`}>
+      {Icon && <Icon className="h-3 w-3" />} {status}
+    </span>
+  );
+}
+
+/* ---------- Overview ---------- */
+
+type OverviewStats = {
+  programs: number; subjects: number; topics: number; resources: number;
+  studentsTotal: number; studentsPending: number; studentsWeek: number;
+  tutorsTotal: number; tutorsPending: number;
+};
+type RecentReg = { id: string; full_name: string; email: string; status: string; created_at: string; kind: "student" | "tutor" };
+
+function OverviewTab() {
+  const [stats, setStats] = useState<OverviewStats | null>(null);
+  const [recent, setRecent] = useState<RecentReg[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const weekAgo = new Date(Date.now() - 7 * 864e5).toISOString();
+      const c = (t: any) => (supabase as any).from(t).select("*", { count: "exact", head: true });
+      const [p, s, tp, r, sAll, sPend, sWeek, tAll, tPend, sRecent, tRecent] = await Promise.all([
+        c("programs"), c("subjects"), c("topics"), c("resources"),
+        c("summer_student_registrations"),
+        c("summer_student_registrations").eq("status", "pending"),
+        c("summer_student_registrations").gte("created_at", weekAgo),
+        c("summer_tutor_volunteers"),
+        c("summer_tutor_volunteers").eq("status", "pending"),
+        (supabase as any).from("summer_student_registrations").select("id,full_name,email,status,created_at").order("created_at", { ascending: false }).limit(5),
+        (supabase as any).from("summer_tutor_volunteers").select("id,full_name,email,status,created_at").order("created_at", { ascending: false }).limit(5),
+      ]);
+      setStats({
+        programs: p.count ?? 0, subjects: s.count ?? 0, topics: tp.count ?? 0, resources: r.count ?? 0,
+        studentsTotal: sAll.count ?? 0, studentsPending: sPend.count ?? 0, studentsWeek: sWeek.count ?? 0,
+        tutorsTotal: tAll.count ?? 0, tutorsPending: tPend.count ?? 0,
+      });
+      const merged: RecentReg[] = [
+        ...(sRecent.data ?? []).map((x: any) => ({ ...x, kind: "student" as const })),
+        ...(tRecent.data ?? []).map((x: any) => ({ ...x, kind: "tutor" as const })),
+      ].sort((a, b) => (a.created_at < b.created_at ? 1 : -1)).slice(0, 8);
+      setRecent(merged);
+    })();
+  }, []);
+
+  if (!stats) return <div className="flex h-40 items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
+
+  return (
+    <div className="space-y-8">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <OverviewKpi icon={Users} tone="primary" value={stats.studentsTotal} label="Student registrations" hint={`${stats.studentsWeek} new this week`} />
+        <OverviewKpi icon={Clock} tone="orange" value={stats.studentsPending} label="Pending students" hint="Awaiting your decision" />
+        <OverviewKpi icon={UserCheck} tone="green" value={stats.tutorsTotal} label="Volunteer tutors" hint={`${stats.tutorsPending} awaiting review`} />
+        <OverviewKpi icon={FileText} tone="navy" value={stats.resources} label="Published resources" hint={`${stats.programs} programs · ${stats.subjects} subjects`} />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <section className="rounded-3xl border bg-card p-6 shadow-soft">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-display text-xl font-bold">Recent registrations</h2>
+              <p className="text-sm text-muted-foreground">Latest submissions across students and volunteer tutors.</p>
+            </div>
+            <Activity className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <ul className="mt-5 divide-y">
+            {recent.length === 0 && <li className="py-8 text-center text-sm text-muted-foreground">No submissions yet.</li>}
+            {recent.map((r) => (
+              <li key={r.kind + r.id} className="flex items-center gap-4 py-3">
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${r.kind === "student" ? "bg-primary/10 text-primary" : "bg-[#FF6B12]/10 text-[#FF6B12]"}`}>
+                  {r.kind === "student" ? <GraduationCap className="h-5 w-5" /> : <UserCheck className="h-5 w-5" />}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-semibold">{r.full_name}</p>
+                  <p className="truncate text-xs text-muted-foreground">{r.email} · {r.kind}</p>
+                </div>
+                <div className="text-right">
+                  <StatusBadge status={r.status} />
+                  <p className="mt-1 text-[11px] text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <aside className="space-y-4">
+          <div className="rounded-3xl border bg-card p-6 shadow-soft">
+            <h3 className="font-display text-lg font-bold">Content library</h3>
+            <div className="mt-4 space-y-3 text-sm">
+              <LibraryRow icon={GraduationCap} label="Programs" value={stats.programs} />
+              <LibraryRow icon={BookOpen} label="Subjects" value={stats.subjects} />
+              <LibraryRow icon={FolderTree} label="Topics" value={stats.topics} />
+              <LibraryRow icon={FileText} label="Resources" value={stats.resources} />
+            </div>
+          </div>
+          <div className="rounded-3xl border bg-gradient-to-br from-brand-navy to-[#000E2E] p-6 text-hero-foreground shadow-lift">
+            <TrendingUp className="h-6 w-6 text-[#FF6B12]" />
+            <h3 className="mt-3 font-display text-lg font-bold">Growth this week</h3>
+            <p className="mt-1 text-3xl font-bold">{stats.studentsWeek}</p>
+            <p className="text-sm text-hero-foreground/70">new student registrations in the last 7 days.</p>
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+function OverviewKpi({ icon: Icon, value, label, hint, tone }: { icon: typeof Users; value: number | string; label: string; hint?: string; tone: "primary" | "orange" | "green" | "navy" }) {
+  const map = {
+    primary: "text-primary from-primary/15",
+    orange: "text-[#FF6B12] from-[#FF6B12]/15",
+    green: "text-emerald-600 from-emerald-500/15",
+    navy: "text-brand-navy from-brand-navy/15",
+  } as const;
+  return (
+    <article className="relative overflow-hidden rounded-2xl border bg-card p-5 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-lift">
+      <div className={`absolute inset-0 bg-gradient-to-br ${map[tone]} to-transparent opacity-70`} aria-hidden />
+      <div className="relative">
+        <div className={`inline-flex h-10 w-10 items-center justify-center rounded-xl bg-background ring-1 ring-border ${map[tone].split(" ")[0]}`}>
+          <Icon className="h-5 w-5" />
+        </div>
+        <p className="mt-4 font-display text-3xl font-bold">{value}</p>
+        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+        {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
+      </div>
+    </article>
+  );
+}
+
+function LibraryRow({ icon: Icon, label, value }: { icon: typeof GraduationCap; label: string; value: number }) {
+  return (
+    <div className="flex items-center justify-between rounded-xl bg-muted/40 px-4 py-2.5">
+      <span className="flex items-center gap-2 font-semibold"><Icon className="h-4 w-4 text-primary" /> {label}</span>
+      <span className="font-display text-lg font-bold">{value}</span>
+    </div>
+  );
+}
+
+/* ---------- Registrations ---------- */
 
 function RegistrationsTab() {
   const [kind, setKind] = useState<"student" | "tutor">("student");
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-2">
-        <Button variant={kind === "student" ? "default" : "outline"} onClick={() => setKind("student")}>Students</Button>
-        <Button variant={kind === "tutor" ? "default" : "outline"} onClick={() => setKind("tutor")}>Volunteer tutors</Button>
+      <div className="inline-flex rounded-xl border bg-card p-1 shadow-soft">
+        <button
+          onClick={() => setKind("student")}
+          className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition ${kind === "student" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          <GraduationCap className="h-4 w-4" /> Students
+        </button>
+        <button
+          onClick={() => setKind("tutor")}
+          className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition ${kind === "tutor" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          <UserCheck className="h-4 w-4" /> Volunteer tutors
+        </button>
       </div>
       {kind === "student" ? <StudentRegTable /> : <TutorRegTable />}
     </div>
@@ -544,56 +705,146 @@ function useRegs<T extends { id: string; status: string; created_at: string }>(t
   return { rows, loading, reload, updateStatus, remove };
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, string> = {
-    pending: "bg-amber-100 text-amber-800 border-amber-200",
-    approved: "bg-emerald-100 text-emerald-800 border-emerald-200",
-    waitlisted: "bg-blue-100 text-blue-800 border-blue-200",
-    rejected: "bg-red-100 text-red-800 border-red-200",
+type SortDir = "asc" | "desc";
+function useSort<T>(initialKey: keyof T, initialDir: SortDir = "desc") {
+  const [key, setKey] = useState<keyof T>(initialKey);
+  const [dir, setDir] = useState<SortDir>(initialDir);
+  const toggle = (k: keyof T) => {
+    if (k === key) setDir(dir === "asc" ? "desc" : "asc");
+    else { setKey(k); setDir("asc"); }
   };
-  return <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-semibold capitalize ${map[status] ?? "bg-muted"}`}>{status}</span>;
+  const sort = (rows: T[]) => [...rows].sort((a, b) => {
+    const av = a[key] as unknown; const bv = b[key] as unknown;
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    if (av < bv) return dir === "asc" ? -1 : 1;
+    if (av > bv) return dir === "asc" ? 1 : -1;
+    return 0;
+  });
+  return { key, dir, toggle, sort };
+}
+
+function SortHeader<T>({ label, k, sort }: { label: string; k: keyof T; sort: ReturnType<typeof useSort<T>> }) {
+  const active = sort.key === k;
+  return (
+    <th className="px-4 py-3">
+      <button onClick={() => sort.toggle(k)} className="inline-flex items-center gap-1 font-bold uppercase tracking-wider hover:text-foreground">
+        {label}
+        {!active && <ArrowUpDown className="h-3 w-3 opacity-40" />}
+        {active && (sort.dir === "asc" ? <ArrowUp className="h-3 w-3 text-primary" /> : <ArrowDown className="h-3 w-3 text-primary" />)}
+      </button>
+    </th>
+  );
+}
+
+function StatusStrip({ rows }: { rows: { status: string }[] }) {
+  const counts = REG_STATUSES.map((s) => ({ s, n: rows.filter((r) => r.status === s).length }));
+  return (
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      {counts.map(({ s, n }) => (
+        <div key={s} className="flex items-center justify-between rounded-xl border bg-card px-4 py-3">
+          <StatusBadge status={s} />
+          <span className="font-display text-xl font-bold">{n}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function downloadCsv(filename: string, headers: string[], rows: (string | number | null | undefined)[][]) {
+  const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const csv = [headers.map(esc).join(","), ...rows.map((r) => r.map(esc).join(","))].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+const DATE_RANGES = { all: 0, "7d": 7, "30d": 30, "90d": 90 } as const;
+type DateRangeKey = keyof typeof DATE_RANGES;
+
+function FilterBar({ q, setQ, statusFilter, setStatusFilter, range, setRange, reload, onExport, count, total, placeholder }: {
+  q: string; setQ: (v: string) => void; statusFilter: string; setStatusFilter: (v: string) => void;
+  range: DateRangeKey; setRange: (v: DateRangeKey) => void;
+  reload: () => void; onExport: () => void; count: number; total: number; placeholder: string;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-2xl border bg-card p-3 shadow-soft">
+      <div className="relative min-w-[220px] flex-1">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input placeholder={placeholder} value={q} onChange={(e) => setQ(e.target.value)} className="pl-9" />
+      </div>
+      <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All statuses</SelectItem>
+          {REG_STATUSES.map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
+        </SelectContent>
+      </Select>
+      <Select value={range} onValueChange={(v) => setRange(v as DateRangeKey)}>
+        <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All time</SelectItem>
+          <SelectItem value="7d">Last 7 days</SelectItem>
+          <SelectItem value="30d">Last 30 days</SelectItem>
+          <SelectItem value="90d">Last 90 days</SelectItem>
+        </SelectContent>
+      </Select>
+      <Button variant="outline" size="sm" onClick={reload}>Refresh</Button>
+      <Button variant="outline" size="sm" onClick={onExport}><Download className="h-4 w-4" /> Export CSV</Button>
+      <span className="ml-auto text-xs text-muted-foreground">{count} of {total}</span>
+    </div>
+  );
 }
 
 function StudentRegTable() {
   const { rows, loading, updateStatus, remove, reload } = useRegs<StudentReg>("summer_student_registrations");
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [range, setRange] = useState<DateRangeKey>("all");
+  const [details, setDetails] = useState<StudentReg | null>(null);
+  const sort = useSort<StudentReg>("created_at", "desc");
+
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
-    return rows.filter((r) => {
+    const cutoff = range === "all" ? 0 : Date.now() - DATE_RANGES[range] * 864e5;
+    return sort.sort(rows.filter((r) => {
       if (statusFilter !== "all" && r.status !== statusFilter) return false;
+      if (cutoff && new Date(r.created_at).getTime() < cutoff) return false;
       if (!s) return true;
       return [r.full_name, r.email, r.phone, r.parent_name, r.current_class, r.department ?? "", (r.target_exams ?? []).join(" ")]
         .join(" ").toLowerCase().includes(s);
-    });
-  }, [rows, q, statusFilter]);
+    }));
+  }, [rows, q, statusFilter, range, sort]);
+
+  const exportCsv = () => downloadCsv(
+    `student-registrations-${new Date().toISOString().slice(0, 10)}.csv`,
+    ["Name", "Email", "Phone", "Gender", "Age", "Parent", "Class", "Department", "Exams", "Status", "Submitted"],
+    filtered.map((r) => [r.full_name, r.email, r.phone, r.gender, r.age, r.parent_name, r.current_class, r.department, (r.target_exams ?? []).join("; "), r.status, r.created_at]),
+  );
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <Input placeholder="Search name, email, phone, class, exam…" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-sm" />
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            {REG_STATUSES.map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Button variant="outline" onClick={reload}>Refresh</Button>
-        <span className="ml-auto text-sm text-muted-foreground">{filtered.length} of {rows.length}</span>
-      </div>
+      <StatusStrip rows={rows} />
+      <FilterBar q={q} setQ={setQ} statusFilter={statusFilter} setStatusFilter={setStatusFilter} range={range} setRange={setRange} reload={reload} onExport={exportCsv} count={filtered.length} total={rows.length} placeholder="Search name, email, phone, class, exam…" />
       {loading ? <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" /></div> : (
-        <div className="overflow-x-auto rounded-xl border">
+        <div className="overflow-x-auto rounded-2xl border bg-card shadow-soft">
           <table className="min-w-full text-sm">
             <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
               <tr>
-                <th className="px-4 py-3">Student</th><th className="px-4 py-3">Contact</th><th className="px-4 py-3">Class</th>
-                <th className="px-4 py-3">Exams</th><th className="px-4 py-3">Submitted</th><th className="px-4 py-3">Status</th><th className="px-4 py-3"></th>
+                <SortHeader label="Student" k="full_name" sort={sort} />
+                <th className="px-4 py-3">Contact</th>
+                <SortHeader label="Class" k="current_class" sort={sort} />
+                <th className="px-4 py-3">Exams</th>
+                <SortHeader label="Submitted" k="created_at" sort={sort} />
+                <SortHeader label="Status" k="status" sort={sort} />
+                <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {filtered.map((r) => (
-                <tr key={r.id} className="align-top">
+                <tr key={r.id} className="cursor-pointer align-top transition-colors hover:bg-muted/30" onClick={() => setDetails(r)}>
                   <td className="px-4 py-3">
                     <div className="font-semibold">{r.full_name}</div>
                     <div className="text-xs text-muted-foreground">{r.gender} · {r.age ?? "—"} yrs</div>
@@ -602,7 +853,6 @@ function StudentRegTable() {
                   <td className="px-4 py-3">
                     <div>{r.email}</div>
                     <div className="text-xs text-muted-foreground">{r.phone}</div>
-                    <div className="text-xs text-muted-foreground line-clamp-2 max-w-[220px]">{r.home_address}</div>
                   </td>
                   <td className="px-4 py-3">
                     <div>{r.current_class}</div>
@@ -614,21 +864,55 @@ function StudentRegTable() {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <Select value={r.status} onValueChange={(v) => updateStatus(r.id, v)}>
                       <SelectTrigger className="h-8 w-32"><StatusBadge status={r.status} /></SelectTrigger>
                       <SelectContent>{REG_STATUSES.map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}</SelectContent>
                     </Select>
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                     <Button variant="ghost" size="icon" onClick={() => remove(r.id)} aria-label="Delete"><Trash2 className="h-4 w-4 text-destructive" /></Button>
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && <tr><td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">No registrations match.</td></tr>}
+              {filtered.length === 0 && <tr><td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">No registrations match your filters.</td></tr>}
             </tbody>
           </table>
         </div>
+      )}
+      {details && (
+        <Dialog open onOpenChange={(o) => !o && setDetails(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>{details.full_name}</DialogTitle>
+              <DialogDescription>Submitted {new Date(details.created_at).toLocaleString()}</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 text-sm sm:grid-cols-2">
+              <DetailRow label="Email" value={details.email} />
+              <DetailRow label="Phone" value={details.phone} />
+              <DetailRow label="Gender" value={details.gender} />
+              <DetailRow label="Age" value={details.age ?? "—"} />
+              <DetailRow label="Class" value={details.current_class} />
+              <DetailRow label="Department" value={details.department ?? "—"} />
+              <DetailRow label="Parent / Guardian" value={details.parent_name} />
+              <DetailRow label="Status" value={<StatusBadge status={details.status} />} />
+              <div className="sm:col-span-2"><DetailRow label="Home address" value={details.home_address} /></div>
+              <div className="sm:col-span-2">
+                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Target exams</p>
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {(details.target_exams ?? []).map((e) => <Badge key={e} variant="secondary">{e}</Badge>)}
+                </div>
+              </div>
+            </div>
+            <DialogFooter className="gap-2">
+              <Select value={details.status} onValueChange={(v) => { updateStatus(details.id, v); setDetails({ ...details, status: v }); }}>
+                <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                <SelectContent>{REG_STATUSES.map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}</SelectContent>
+              </Select>
+              <Button variant="ghost" onClick={() => setDetails(null)}>Close</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
@@ -638,45 +922,53 @@ function TutorRegTable() {
   const { rows, loading, updateStatus, remove, reload } = useRegs<TutorReg>("summer_tutor_volunteers");
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [range, setRange] = useState<DateRangeKey>("all");
+  const [details, setDetails] = useState<TutorReg | null>(null);
+  const sort = useSort<TutorReg>("created_at", "desc");
+
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
-    return rows.filter((r) => {
+    const cutoff = range === "all" ? 0 : Date.now() - DATE_RANGES[range] * 864e5;
+    return sort.sort(rows.filter((r) => {
       if (statusFilter !== "all" && r.status !== statusFilter) return false;
+      if (cutoff && new Date(r.created_at).getTime() < cutoff) return false;
       if (!s) return true;
       return [r.full_name, r.email, r.phone, r.qualification, (r.subjects ?? []).join(" "), r.availability]
         .join(" ").toLowerCase().includes(s);
-    });
-  }, [rows, q, statusFilter]);
+    }));
+  }, [rows, q, statusFilter, range, sort]);
+
+  const exportCsv = () => downloadCsv(
+    `tutor-volunteers-${new Date().toISOString().slice(0, 10)}.csv`,
+    ["Name", "Email", "Phone", "Gender", "Qualification", "Experience yrs", "Subjects", "Availability", "Status", "Submitted"],
+    filtered.map((r) => [r.full_name, r.email, r.phone, r.gender, r.qualification, r.experience_years, (r.subjects ?? []).join("; "), r.availability, r.status, r.created_at]),
+  );
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <Input placeholder="Search name, email, subject, availability…" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-sm" />
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            {REG_STATUSES.map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Button variant="outline" onClick={reload}>Refresh</Button>
-        <span className="ml-auto text-sm text-muted-foreground">{filtered.length} of {rows.length}</span>
-      </div>
+      <StatusStrip rows={rows} />
+      <FilterBar q={q} setQ={setQ} statusFilter={statusFilter} setStatusFilter={setStatusFilter} range={range} setRange={setRange} reload={reload} onExport={exportCsv} count={filtered.length} total={rows.length} placeholder="Search name, email, subject, availability…" />
       {loading ? <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" /></div> : (
-        <div className="overflow-x-auto rounded-xl border">
+        <div className="overflow-x-auto rounded-2xl border bg-card shadow-soft">
           <table className="min-w-full text-sm">
             <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
               <tr>
-                <th className="px-4 py-3">Volunteer</th><th className="px-4 py-3">Contact</th><th className="px-4 py-3">Qualification</th>
-                <th className="px-4 py-3">Subjects</th><th className="px-4 py-3">Availability</th><th className="px-4 py-3">Status</th><th className="px-4 py-3"></th>
+                <SortHeader label="Volunteer" k="full_name" sort={sort} />
+                <th className="px-4 py-3">Contact</th>
+                <SortHeader label="Qualification" k="qualification" sort={sort} />
+                <th className="px-4 py-3">Subjects</th>
+                <SortHeader label="Experience" k="experience_years" sort={sort} />
+                <SortHeader label="Submitted" k="created_at" sort={sort} />
+                <SortHeader label="Status" k="status" sort={sort} />
+                <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {filtered.map((r) => (
-                <tr key={r.id} className="align-top">
+                <tr key={r.id} className="cursor-pointer align-top transition-colors hover:bg-muted/30" onClick={() => setDetails(r)}>
                   <td className="px-4 py-3">
                     <div className="font-semibold">{r.full_name}</div>
-                    <div className="text-xs text-muted-foreground">{r.gender} · {r.experience_years ?? 0} yrs exp</div>
+                    <div className="text-xs text-muted-foreground">{r.gender}</div>
                   </td>
                   <td className="px-4 py-3">
                     <div>{r.email}</div>
@@ -688,23 +980,67 @@ function TutorRegTable() {
                       {(r.subjects ?? []).map((s) => <Badge key={s} variant="secondary" className="text-[10px]">{s}</Badge>)}
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-xs">{r.availability}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 text-xs">{r.experience_years ?? 0} yrs</td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</td>
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <Select value={r.status} onValueChange={(v) => updateStatus(r.id, v)}>
                       <SelectTrigger className="h-8 w-32"><StatusBadge status={r.status} /></SelectTrigger>
                       <SelectContent>{REG_STATUSES.map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}</SelectContent>
                     </Select>
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                     <Button variant="ghost" size="icon" onClick={() => remove(r.id)} aria-label="Delete"><Trash2 className="h-4 w-4 text-destructive" /></Button>
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && <tr><td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">No volunteers match.</td></tr>}
+              {filtered.length === 0 && <tr><td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">No volunteers match your filters.</td></tr>}
             </tbody>
           </table>
         </div>
       )}
+      {details && (
+        <Dialog open onOpenChange={(o) => !o && setDetails(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>{details.full_name}</DialogTitle>
+              <DialogDescription>Submitted {new Date(details.created_at).toLocaleString()}</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 text-sm sm:grid-cols-2">
+              <DetailRow label="Email" value={details.email} />
+              <DetailRow label="Phone" value={details.phone} />
+              <DetailRow label="Gender" value={details.gender} />
+              <DetailRow label="Experience" value={`${details.experience_years ?? 0} yrs`} />
+              <DetailRow label="Qualification" value={details.qualification} />
+              <DetailRow label="Availability" value={details.availability} />
+              <DetailRow label="Status" value={<StatusBadge status={details.status} />} />
+              <div className="sm:col-span-2">
+                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Subjects</p>
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {(details.subjects ?? []).map((s) => <Badge key={s} variant="secondary">{s}</Badge>)}
+                </div>
+              </div>
+              <div className="sm:col-span-2"><DetailRow label="Motivation" value={details.motivation} /></div>
+            </div>
+            <DialogFooter className="gap-2">
+              <Select value={details.status} onValueChange={(v) => { updateStatus(details.id, v); setDetails({ ...details, status: v }); }}>
+                <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                <SelectContent>{REG_STATUSES.map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}</SelectContent>
+              </Select>
+              <Button variant="ghost" onClick={() => setDetails(null)}>Close</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
+
+function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div>
+      <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-1 text-sm">{value}</p>
+    </div>
+  );
+}
+
