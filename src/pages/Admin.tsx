@@ -3,7 +3,12 @@ import { Helmet } from "react-helmet-async";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { CheckCircle2, Edit3, Eye, EyeOff, Loader2, Plus, ShieldCheck, Trash2, X } from "lucide-react";
+import {
+  CheckCircle2, Edit3, Eye, EyeOff, Loader2, Plus, ShieldCheck, Trash2, X,
+  LayoutDashboard, GraduationCap, BookOpen, FolderTree, FileText, ClipboardList,
+  Users, UserCheck, Clock, TrendingUp, ArrowUp, ArrowDown, ArrowUpDown, Download, Search,
+  Activity,
+} from "lucide-react";
 import { SiteShell } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,30 +60,42 @@ function AdminPage() {
 
   return (
     <SiteShell>
-      <section className="border-b bg-card">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Admin console</p>
-          <h1 className="mt-2 font-display text-4xl font-bold">Content & curriculum</h1>
-          <p className="mt-2 max-w-2xl text-muted-foreground">Create, edit and publish programs, subjects, topics, yearly papers and topic-based past questions. All changes appear instantly across the resource library.</p>
+      <section className="border-b bg-gradient-to-br from-brand-navy via-brand-navy to-[#000E2E] text-hero-foreground">
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#FF6B12]">Admin console</p>
+          <h1 className="mt-2 font-display text-4xl font-bold sm:text-5xl">Operations dashboard</h1>
+          <p className="mt-3 max-w-2xl text-sm text-hero-foreground/75 sm:text-base">
+            Manage curriculum, resources and summer program registrations. Every change is live for students the moment you save.
+          </p>
         </div>
       </section>
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <Tabs defaultValue="programs">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5">
-            <TabsTrigger value="programs">Programs</TabsTrigger>
-            <TabsTrigger value="subjects">Subjects</TabsTrigger>
-            <TabsTrigger value="topics">Topics</TabsTrigger>
-            <TabsTrigger value="resources">Past questions</TabsTrigger>
-            <TabsTrigger value="registrations">Summer registrations</TabsTrigger>
+        <Tabs defaultValue="overview">
+          <TabsList className="grid w-full grid-cols-3 gap-1 rounded-2xl bg-muted/60 p-1 md:grid-cols-6">
+            <AdminTab value="overview" icon={LayoutDashboard} label="Overview" />
+            <AdminTab value="registrations" icon={ClipboardList} label="Registrations" />
+            <AdminTab value="programs" icon={GraduationCap} label="Programs" />
+            <AdminTab value="subjects" icon={BookOpen} label="Subjects" />
+            <AdminTab value="topics" icon={FolderTree} label="Topics" />
+            <AdminTab value="resources" icon={FileText} label="Resources" />
           </TabsList>
+          <TabsContent value="overview" className="mt-8"><OverviewTab /></TabsContent>
+          <TabsContent value="registrations" className="mt-8"><RegistrationsTab /></TabsContent>
           <TabsContent value="programs" className="mt-8"><ProgramsTab /></TabsContent>
           <TabsContent value="subjects" className="mt-8"><SubjectsTab /></TabsContent>
           <TabsContent value="topics" className="mt-8"><TopicsTab /></TabsContent>
           <TabsContent value="resources" className="mt-8"><ResourcesTab /></TabsContent>
-          <TabsContent value="registrations" className="mt-8"><RegistrationsTab /></TabsContent>
         </Tabs>
       </section>
     </SiteShell>
+  );
+}
+
+function AdminTab({ value, icon: Icon, label }: { value: string; icon: typeof LayoutDashboard; label: string }) {
+  return (
+    <TabsTrigger value={value} className="gap-2 rounded-xl text-xs data-[state=active]:bg-background data-[state=active]:shadow sm:text-sm">
+      <Icon className="h-4 w-4" /> <span className="hidden sm:inline">{label}</span>
+    </TabsTrigger>
   );
 }
 
