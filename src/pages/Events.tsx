@@ -18,14 +18,14 @@ const UPCOMING = [
 ];
 
 const PAST = [
-  { title: "Summer Academy 2025 — Closing Ceremony", when: "Sep 2025", img: g1, note: "120 students · 18 volunteer tutors · certificates and gift bags for every scholar." },
-  { title: "WAEC Prep Bootcamp", when: "Apr 2025", img: g2, note: "Two-week intensive that lifted average mock scores by 21%." },
-  { title: "Mathematics Olympiad", when: "Feb 2025", img: g3, note: "Top three winners received scholarships and Casio scientific calculators." },
+  { title: "Summer Lesson 2025 — Class Group Photo", when: "Sep 2025", img: summerGroup.url, note: "Our secondary-school scholars and volunteer tutors at Al-Bayan High School, Ilorin — a full house of learners on closing day." },
+  { title: "Scholarship Award — Abdulrahman Ahmad", when: "Sep 2025", img: summerPrize2.url, note: "₦10,000 cash prize presented to Abdulrahman Ahmad for outstanding performance during the 2025 Summer Lesson." },
+  { title: "NECO Sponsorship — Abdulateef S. Arewa", when: "Sep 2025", img: summerPrize1.url, note: "Free NECO registration awarded to Abdulateef S. Arewa as best-performing student of the 2025 cohort." },
 ];
 
 const NEWS = [
-  { title: "Awards & Gift Presentations 2025", img: classroom, blurb: "Best-in-subject prizes and full stationery kits handed to the 2025 Summer Academy scholars." },
-  { title: "Featured in Kwara Community News", img: g2, blurb: "Local coverage of our free tutoring drive for JAMB and WAEC candidates across Ilorin." },
+  { title: "Awards & Gift Presentations 2025", img: summerPrize2.url, blurb: "Cash prizes, free NECO/WAEC registration and gift items presented to the top-performing students of the 2025 Summer Lesson." },
+  { title: "Free Summer Lesson Campaign — Ilorin", img: summerBanner.url, blurb: "Community outreach for the free summer academy at Al-Bayan High School, Akerebiate, Ilorin — sponsored by Jimoh Habibullahi Initiative." },
 ];
 
 export default function Events() {
