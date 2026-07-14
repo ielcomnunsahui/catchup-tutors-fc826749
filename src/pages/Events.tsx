@@ -67,7 +67,7 @@ export default function Events() {
 
         <div className="overflow-hidden rounded-3xl border bg-card shadow-soft">
           <div className="relative aspect-[16/7] w-full overflow-hidden bg-brand-navy">
-            <img src={flyer} alt="CatchUp Tutors Summer Academy 2026 flyer" className="h-full w-full object-cover opacity-80" />
+            <img src={summerBanner.url} alt="Catch-Up Tutors Free Summer Lesson banner" className="h-full w-full object-cover opacity-80" />
             <div className="absolute inset-0 bg-gradient-to-r from-brand-navy/90 via-brand-navy/40 to-transparent" />
             <div className="absolute inset-0 flex flex-col justify-end p-6 text-white sm:p-10">
               <Badge className="w-fit bg-[#FF6B12] text-white hover:bg-[#FF6B12]">Registration open</Badge>
