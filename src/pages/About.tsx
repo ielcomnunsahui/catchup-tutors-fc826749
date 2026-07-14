@@ -10,9 +10,9 @@ import { Badge } from "@/components/ui/badge";
 const founderPortrait = { url: "/founder-ahmed.jpeg" };
 
 const VALUES = [
-  { icon: HandHeart, emoji: "💡", title: "Empathy without judgement", desc: "We meet students exactly where they are. No shame in falling behind — only a safe space to breathe, learn and grow.", accent: "from-rose-500/15 to-rose-500/0", ring: "ring-rose-500/30", text: "text-rose-500" },
+  { icon: HandHeart, emoji: "💡", title: "Empathy without judgement", desc: "We meet students exactly where they are. No shame in falling behind only a safe space to breathe, learn and grow.", accent: "from-rose-500/15 to-rose-500/0", ring: "ring-rose-500/30", text: "text-rose-500" },
   { icon: Zap, emoji: "⚙️", title: "No wasted time", desc: "We skip generic worksheets. We find the exact missing puzzle piece, fix it, and get your child moving forward.", accent: "from-amber-500/15 to-amber-500/0", ring: "ring-amber-500/30", text: "text-amber-500" },
-  { icon: ShieldCheck, emoji: "🛡️", title: "Safe space to make mistakes", desc: "A calm online classroom with zero silly questions and zero judgment — only patient, expert support.", accent: "from-emerald-500/15 to-emerald-500/0", ring: "ring-emerald-500/30", text: "text-emerald-500" },
+  { icon: ShieldCheck, emoji: "🛡️", title: "Safe space to make mistakes", desc: "A calm online classroom with zero silly questions and zero judgment only patient, expert support.", accent: "from-emerald-500/15 to-emerald-500/0", ring: "ring-emerald-500/30", text: "text-emerald-500" },
   { icon: TrendingUp, emoji: "📈", title: "Skills for life", desc: "We teach students how to study, organise their thinking and tackle hard problems so they can eventually thrive on their own.", accent: "from-sky-500/15 to-sky-500/0", ring: "ring-sky-500/30", text: "text-sky-500" },
   { icon: Trophy, emoji: "⚡", title: "Celebrating small wins", desc: "Every breakthrough matters. Stringing together tiny victories is exactly how we build unstoppable confidence.", accent: "from-[#FF6B12]/15 to-[#FF6B12]/0", ring: "ring-[#FF6B12]/30", text: "text-[#FF6B12]" },
 ];
@@ -30,14 +30,14 @@ const UNIS = ["Harvard", "Oxford", "Cambridge", "Imperial", "UCL", "Toronto"];
 const STORY_PILLARS = [
   { icon: Target, title: "Vision", body: "To foster an educational landscape where academic setbacks are viewed merely as setups for greater comebacks, cultivated through accessible digital guidance." },
   { icon: Rocket, title: "Mission", body: "To give every student a customised learning plan that finds their specific weak spots, fixes them, and equips them with the tools and confidence to skip past where they got stuck and thrive." },
-  { icon: Award, title: "Motto", body: "Bridging Gaps, Building Excellence — the promise behind every lesson, every session, every scholar." },
+  { icon: Award, title: "Motto", body: "Bridging Gaps, Building Excellence the promise behind every lesson, every session, every scholar." },
 ];
 
 const FOUNDER_CREDS = [
   { icon: GraduationCap, label: "MSc Mathematics · top-ranking, distinction" },
   { icon: BookOpen, label: "Published in Complex Analysis journals" },
   { icon: Award, label: "Certified Cambridge instructor" },
-  { icon: Users, label: "Director, education & scholarships — GYEF" },
+  { icon: Users, label: "Director, education & scholarships GYEF" },
 ];
 
 export default function About() {
@@ -59,14 +59,14 @@ export default function About() {
     <SiteShell>
       <Seo
         title="About CatchUp Tutors | Bridging Gaps, Building Excellence"
-        description="Meet founder Ahmed Thaoban and discover the mission, values and story behind CatchUp Tutors — from Ilorin to Harvard, Oxford and beyond."
+        description="Meet founder Ahmed Thaoban and discover the mission, values and story behind CatchUp Tutors from Ilorin to Harvard, Oxford and beyond."
         path="/about"
         jsonLd={jsonLd}
       />
       <PageHero
         eyebrow="Our story"
         title="Turning learning gaps into lasting confidence."
-        description="Since 2018, CatchUp Tutors has helped brilliant students master IGCSE, Cambridge A-Level, SAT, GRE and university-entrance exams — and step onto the world stage."
+        description="Since 2018, CatchUp Tutors has helped brilliant students master IGCSE, Cambridge A-Level, SAT, GRE and university-entrance exams and step onto the world stage."
       >
         <div className="flex flex-wrap gap-2 pt-2">
           {["Bridging Gaps", "Building Excellence"].map((t, i) => (
@@ -105,7 +105,7 @@ export default function About() {
             <div className="space-y-5 text-base leading-8 text-muted-foreground sm:text-lg lg:col-span-8">
               <p>
                 We started CatchUp Tutors because we noticed a quiet, heavy burden that so many students carry in modern classrooms.
-                Every single day, brilliant kids find themselves falling behind — not from a lack of effort, but because the fast-paced
+                Every single day, brilliant kids find themselves falling behind not from a lack of effort, but because the fast-paced
                 school system does not stop to let them catch their breath.
               </p>
               <p>
@@ -114,7 +114,7 @@ export default function About() {
                 <span className="ml-1 font-semibold text-foreground">We knew there had to be a better way.</span>
               </p>
               <p>
-                We built this platform to be a sanctuary from that pressure — a stress-free digital space where mistakes are welcomed
+                We built this platform to be a sanctuary from that pressure a stress-free digital space where mistakes are welcomed
                 as progress, gaps are filled with patience, and the anxiety of being behind is replaced with the joy of moving forward.
                 We are not just here to fix grades. We are here to restore a child's belief in themselves.
               </p>
@@ -155,19 +155,19 @@ export default function About() {
               </h2>
               <p className="mt-6 text-base leading-8 text-muted-foreground sm:text-lg">
                 Since 2018, CatchUp Tutors has served as a premier tutorial platform dedicated to transforming academic challenges
-                into global success stories. We are much more than a standard tutoring service — we are partners who believe that
+                into global success stories. We are much more than a standard tutoring service we are partners who believe that
                 the current grade of a student never defines their ultimate destination.
               </p>
               <p className="mt-4 text-base leading-8 text-muted-foreground sm:text-lg">
-                True mastery cannot be achieved through memorisation or cramming. Our approach — especially in STEM subjects like
-                Mathematics, Physics, Chemistry, Further Mathematics and Biology — is built on deep practical understanding. We take
+                True mastery cannot be achieved through memorisation or cramming. Our approach especially in STEM subjects like
+                Mathematics, Physics, Chemistry, Further Mathematics and Biology is built on deep practical understanding. We take
                 complex formulas off the chalkboard and anchor them to real-world applications.
               </p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               {[
-                { icon: Lightbulb, title: "Deep understanding", body: "Concepts anchored to real-world use — not memorised formulas." },
+                { icon: Lightbulb, title: "Deep understanding", body: "Concepts anchored to real-world use not memorised formulas." },
                 { icon: Target, title: "Personal diagnostics", body: "We find the exact gap that's holding a student back, then patch it." },
                 { icon: BookOpen, title: "STEM specialism", body: "Maths, Physics, Chemistry, Further Maths and Biology at their core." },
                 { icon: Globe2, title: "Global exam boards", body: "IGCSE, Cambridge, Edexcel, SAT, GRE, TMUA and beyond." },
@@ -197,7 +197,7 @@ export default function About() {
               <Globe2 className="h-3.5 w-3.5" /> From gaps to global classrooms
             </div>
             <h2 className="mt-6 font-display text-4xl font-bold leading-tight text-brand-navy sm:text-5xl">
-              We teach students how to <em className="not-italic text-[#FF6B12]">think</em> — not just what to write.
+              We teach students how to <em className="not-italic text-[#FF6B12]">think</em> not just what to write.
             </h2>
             <p className="mt-6 text-base leading-8 text-muted-foreground sm:text-lg">
               We specialise in decoding and mastering the world's most demanding examinations, then giving students the competitive
@@ -320,7 +320,7 @@ export default function About() {
 
               <div className="mt-8 space-y-5 text-base leading-8 text-muted-foreground sm:text-lg">
                 <p>
-                  At the heart of CatchUp Tutors is <b className="text-foreground">Mr. Ahmed Thaoban</b> — a visionary educator who
+                  At the heart of CatchUp Tutors is <b className="text-foreground">Mr. Ahmed Thaoban</b> a visionary educator who
                   believes mathematics is not just a subject to be memorised, but a language of opportunity to be mastered.
                 </p>
                 <p>
@@ -331,7 +331,7 @@ export default function About() {
                 <p>
                   With more than a decade of teaching experience, he has spent years perfecting methods that transform intricate mathematical
                   theories into clear, approachable, engaging lessons. Beyond the classroom, he directed the education and scholarship division
-                  at the Global Youth Empowerment Forum and now hosts free annual summer boot camps for secondary students in his community —
+                  at the Global Youth Empowerment Forum and now hosts free annual summer boot camps for secondary students in his community
                   awarding scholarships that cover tuition and external exam costs so financial constraints never hinder brilliant young minds.
                 </p>
               </div>
@@ -342,7 +342,7 @@ export default function About() {
                   "The current grade of a student never defines their ultimate destination. Our job is to bridge the gap between where
                   they are and where they were always meant to be."
                 </blockquote>
-                <figcaption className="mt-3 text-xs uppercase tracking-wider text-muted-foreground">— Mr. Ahmed Thaoban</figcaption>
+                <figcaption className="mt-3 text-xs uppercase tracking-wider text-muted-foreground" Mr. Ahmed Thaoban</figcaption>
               </figure>
             </div>
           </div>
@@ -364,7 +364,7 @@ export default function About() {
                   Build the next generation of leaders with us.
                 </h2>
                 <p className="mt-4 max-w-2xl text-base text-hero-foreground/80">
-                  Corporate sponsors, NGOs, community leaders and individuals — join us in expanding educational access across Nigeria and beyond.
+                  Corporate sponsors, NGOs, community leaders and individuals join us in expanding educational access across Nigeria and beyond.
                 </p>
                 <div className="mt-6 flex flex-wrap gap-2 text-xs">
                   {["Program sponsorship", "Facility support", "CSR partnerships", "Scholarships"].map((t) => (
@@ -389,7 +389,7 @@ export default function About() {
             <CheckCircle2 className="h-6 w-6" />
           </div>
           <h2 className="mt-6 font-display text-3xl font-bold text-brand-navy sm:text-4xl">
-            We don't just prepare students for exams — we prepare them to own their future.
+            We don't just prepare students for exams we prepare them to own their future.
           </h2>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Button asChild size="lg"><Link to="/contact">Talk to our team <ArrowRight /></Link></Button>

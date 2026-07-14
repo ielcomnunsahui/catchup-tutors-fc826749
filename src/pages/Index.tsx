@@ -14,17 +14,17 @@ type Testimonial = { quote: string; name: string; role: string; image?: string }
 
 const TESTIMONIALS: Testimonial[] = [
   { quote: "I went from struggling with Paper 3 to a confident A. Every concept finally clicked, and revision stopped feeling like punishment.", name: "Aisha O.", role: "Cambridge A-Level Mathematics", image: studentPhoto },
-  { quote: "The walkthroughs are the clearest I've ever seen. My tutor tailored every single session to my weak areas — no filler, no wasted time.", name: "Daniel K.", role: "IGCSE Additional Mathematics", image: studentPhoto },
+  { quote: "The walkthroughs are the clearest I've ever seen. My tutor tailored every single session to my weak areas no filler, no wasted time.", name: "Daniel K.", role: "IGCSE Additional Mathematics", image: studentPhoto },
   { quote: "Past questions sorted by topic saved me hours. I walked into the exam hall knowing exactly what to expect.", name: "Chiamaka E.", role: "Cambridge Further Mathematics", image: studentPhoto },
-  { quote: "Finally a platform that treats Maths like a craft. Premium was worth every Naira — I'd recommend it to any serious student.", name: "Yusuf A.", role: "IGCSE Mathematics", image: studentPhoto },
+  { quote: "Finally a platform that treats Maths like a craft. Premium was worth every Naira I'd recommend it to any serious student.", name: "Yusuf A.", role: "IGCSE Mathematics", image: studentPhoto },
 ];
 
 const VALUES = [
-  { icon: "💡", title: "Empathy without judgement", desc: "We meet students exactly where they are — no shame, only a safe space to learn." },
+  { icon: "💡", title: "Empathy without judgement", desc: "We meet students exactly where they are no shame, only a safe space to learn." },
   { icon: "⚙️", title: "No wasted time", desc: "We pinpoint the missing foundation, fix it, and get your child moving forward." },
   { icon: "🛡️", title: "Room to make mistakes", desc: "A calm online classroom where there are zero silly questions and zero judgment." },
   { icon: "📈", title: "Skills for life", desc: "We teach students how to study and think, not just how to pass tonight's homework." },
-  { icon: "⚡", title: "Celebrating small wins", desc: "Every breakthrough matters — tiny victories build unstoppable confidence." },
+  { icon: "⚡", title: "Celebrating small wins", desc: "Every breakthrough matters tiny victories build unstoppable confidence." },
 ];
 
 const STATS: [string, string][] = [
@@ -90,7 +90,7 @@ function Testimonials() {
               transition={{ duration: 0.5, ease: EASE }}
               className="contents"
             >
-              {/* Quote — left */}
+              {/* Quote left */}
               <div className="order-2 flex flex-col justify-center lg:order-1 lg:col-span-7">
                 <Quote className="h-10 w-10 text-brand-orange" aria-hidden="true" />
                 <blockquote className="mt-6 font-display text-2xl leading-relaxed text-brand-navy sm:text-3xl md:text-[2rem]">
@@ -125,7 +125,7 @@ function Testimonials() {
                 </div>
               </div>
 
-              {/* Photo — right */}
+              {/* Photo right */}
               <div className="order-1 lg:order-2 lg:col-span-5">
                 <div className="relative mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden rounded-3xl bg-muted shadow-lift lg:max-w-none">
                   {t.image ? (
@@ -197,7 +197,7 @@ export default function Index() {
               Where falling behind becomes the setup for a comeback.
             </h1>
             <p className="mt-6 max-w-xl text-base leading-8 text-hero-foreground/85 sm:mt-8 sm:text-lg">
-              Since 2018, we've guided students through IGCSE, Cambridge A-Level, SAT and beyond — turning quiet struggle into confident mastery.
+              Since 2018, we've guided students through IGCSE, Cambridge A-Level, SAT and beyond turning quiet struggle into confident mastery.
             </p>
             <div className="mt-8 flex flex-wrap gap-3 sm:mt-10">
               <Button asChild size="lg" className="bg-hero-foreground text-brand-navy hover:bg-hero-foreground/90 focus-visible:ring-2 focus-visible:ring-hero-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-brand-navy">
@@ -235,10 +235,10 @@ export default function Index() {
           <Reveal delay={0.1} className="lg:col-span-7 lg:pt-4">
             <div className="space-y-6 text-base leading-8 text-muted-foreground sm:text-lg">
               <p>
-                We started Catch-Up Tutors because we watched brilliant students carry a heavy, invisible burden — falling behind not for lack of effort, but because the classroom never paused to let them breathe.
+                We started Catch-Up Tutors because we watched brilliant students carry a heavy, invisible burden falling behind not for lack of effort, but because the classroom never paused to let them breathe.
               </p>
               <p>
-                Miss one foundational concept, and school stops being a place of discovery. We built this platform to reverse that — a space where mistakes are welcomed, gaps are filled with patience, and children rediscover just how capable they've always been.
+                Miss one foundational concept, and school stops being a place of discovery. We built this platform to reverse that a space where mistakes are welcomed, gaps are filled with patience, and children rediscover just how capable they've always been.
               </p>
             </div>
             <dl className="mt-10 grid gap-8 border-t border-border pt-10 sm:grid-cols-2">
@@ -269,7 +269,7 @@ export default function Index() {
               Academic strategists, not just tutors.
             </h2>
             <p className="mt-6 max-w-3xl text-base leading-8 text-muted-foreground sm:text-lg">
-              Mastery isn't built on cramming. In Mathematics, Physics, Chemistry, Further Mathematics and Biology, we anchor every concept to real-world application — so anxiety fades and confidence takes its place. Our students have earned perfect 800/800 SAT Math scores, the Cambridge High Achievement Award, and places at Harvard, Oxford and beyond.
+              Mastery isn't built on cramming. In Mathematics, Physics, Chemistry, Further Mathematics and Biology, we anchor every concept to real-world application so anxiety fades and confidence takes its place. Our students have earned perfect 800/800 SAT Math scores, the Cambridge High Achievement Award, and places at Harvard, Oxford and beyond.
             </p>
           </Reveal>
           <div className="mt-14 grid gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
@@ -325,10 +325,10 @@ export default function Index() {
           </Reveal>
           <Reveal delay={0.1} className="space-y-6 text-base leading-8 text-muted-foreground sm:text-lg lg:col-span-7">
             <p>
-              A visionary educator who believes mathematics is a language of opportunity to be mastered — not memorised. He earned both his BSc and MSc in Mathematics, graduating top of his class with distinction.
+              A visionary educator who believes mathematics is a language of opportunity to be mastered not memorised. He earned both his BSc and MSc in Mathematics, graduating top of his class with distinction.
             </p>
             <p>
-              With over a decade of experience across international exam boards, he now leads Catch-Up Tutors while running free summer lessons for secondary students in his community — awarding scholarships that cover external exam fees and school tuition.
+              With over a decade of experience across international exam boards, he now leads Catch-Up Tutors while running free summer lessons for secondary students in his community awarding scholarships that cover external exam fees and school tuition.
             </p>
             <Link to="/about" className="inline-flex items-center gap-2 border-b border-brand-navy pb-1 text-sm font-semibold text-brand-navy transition-all hover:gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-navy focus-visible:ring-offset-2">
               More about the founder <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
@@ -364,9 +364,9 @@ export default function Index() {
                 <h3 className="mt-6 font-display text-xl font-bold text-brand-navy sm:text-2xl">Premium Resources</h3>
                 <p className="mt-4 leading-7 text-muted-foreground">Unlimited study materials, practice exams and platform resources.</p>
                 <ul className="mt-6 space-y-2 text-sm text-muted-foreground">
-                  <li>Monthly — $20 / ₦30,000</li>
-                  <li>Quarterly — $70 / ₦100,000</li>
-                  <li>Annual — $200 / ₦300,000 <span className="text-brand-navy">(best value)</span></li>
+                  <li>Monthly $20 / ₦30,000</li>
+                  <li>Quarterly $70 / ₦100,000</li>
+                  <li>Annual $200 / ₦300,000 <span className="text-brand-navy">(best value)</span></li>
                 </ul>
               </div>
             </Reveal>

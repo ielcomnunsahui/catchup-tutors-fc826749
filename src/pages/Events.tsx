@@ -18,14 +18,14 @@ const UPCOMING = [
 ];
 
 const PAST = [
-  { title: "Summer Lesson 2025 — Class Group Photo", when: "Sep 2025", img: summerGroup.url, note: "Our secondary-school scholars and volunteer tutors at Al-Bayan High School, Ilorin — a full house of learners on closing day." },
-  { title: "Scholarship Award — Abdulrahman Ahmad", when: "Sep 2025", img: summerPrize2.url, note: "₦10,000 cash prize presented to Abdulrahman Ahmad for outstanding performance during the 2025 Summer Lesson." },
-  { title: "NECO Sponsorship — Abdulateef S. Arewa", when: "Sep 2025", img: summerPrize1.url, note: "Free NECO registration awarded to Abdulateef S. Arewa as best-performing student of the 2025 cohort." },
+  { title: "Summer Lesson 2025 Class Group Photo", when: "Sep 2025", img: summerGroup.url, note: "Our secondary-school scholars and volunteer tutors at Al-Bayan High School, Ilorin a full house of learners on closing day." },
+  { title: "Scholarship Award Abdulrahman Ahmad", when: "Sep 2025", img: summerPrize2.url, note: "₦10,000 cash prize presented to Abdulrahman Ahmad for outstanding performance during the 2025 Summer Lesson." },
+  { title: "NECO Sponsorship Abdulateef S. Arewa", when: "Sep 2025", img: summerPrize1.url, note: "Free NECO registration awarded to Abdulateef S. Arewa as best-performing student of the 2025 cohort." },
 ];
 
 const NEWS = [
   { title: "Awards & Gift Presentations 2025", img: summerPrize2.url, blurb: "Cash prizes, free NECO/WAEC registration and gift items presented to the top-performing students of the 2025 Summer Lesson." },
-  { title: "Free Summer Lesson Campaign — Ilorin", img: summerBanner.url, blurb: "Community outreach for the free summer academy at Al-Bayan High School, Akerebiate, Ilorin — sponsored by Jimoh Habibullahi Initiative." },
+  { title: "Free Summer Lesson Campaign Ilorin", img: summerBanner.url, blurb: "Community outreach for the free summer academy at Al-Bayan High School, Akerebiate, Ilorin sponsored by Jimoh Habibullahi Initiative." },
 ];
 
 export default function Events() {
@@ -38,14 +38,14 @@ export default function Events() {
     <SiteShell>
       <Seo
         title="Events & Community | CatchUp Tutors"
-        description="Upcoming and past CatchUp Tutors events — including the free Summer Lessons programme at Al-Bayan High School, Ilorin."
+        description="Upcoming and past CatchUp Tutors events including the free Summer Lessons programme at Al-Bayan High School, Ilorin."
         path="/events"
         jsonLd={jsonLd}
       />
       <PageHero
         eyebrow="Events & Community"
         title="Where CatchUp Tutors meets in real life"
-        description="Summer academies, olympiads, orientation days and community programmes — all in one place."
+        description="Summer academies, olympiads, orientation days and community programmes all in one place."
       >
         <div className="flex flex-wrap gap-4 text-sm text-hero-foreground/80">
           <span className="inline-flex items-center gap-2"><MapPin className="h-4 w-4" /> Ilorin, Kwara State</span>
@@ -58,7 +58,7 @@ export default function Events() {
         <div className="mb-6 flex items-end justify-between gap-4">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#FF6B12]">Featured event</p>
-            <h2 className="mt-2 font-display text-3xl font-bold text-brand-navy sm:text-4xl">Free Summer Lessons — Ilorin</h2>
+            <h2 className="mt-2 font-display text-3xl font-bold text-brand-navy sm:text-4xl">Free Summer Lessons Ilorin</h2>
           </div>
           <Link to="/summerlessons" className="hidden text-sm font-semibold text-primary hover:underline sm:inline-flex">
             View full page <ArrowRight className="ml-1 h-4 w-4" />

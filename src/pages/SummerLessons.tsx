@@ -26,7 +26,7 @@ export default function SummerLessons() {
       />
       <PageHero
         eyebrow="Community programme"
-        title="Free Summer Lessons — Ilorin"
+        title="Free Summer Lessons, Ilorin"
         description="A fully-funded, in-person summer academy for secondary students. Taught by volunteer tutors from across the country, hosted at Al-Bayan High School."
       >
         <div className="flex flex-wrap gap-4 text-sm text-hero-foreground/80">
