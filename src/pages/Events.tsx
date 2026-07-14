@@ -3,7 +3,7 @@ import { MapPin, CalendarDays, GraduationCap, HeartHandshake, ArrowRight, Sparkl
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import flyer from "@/assets/hero-campus.jpg";
+
 import summerBanner from "@/assets/summer-banner.jpeg.asset.json";
 import summerGroup from "@/assets/summer-group.jpeg.asset.json";
 import summerPrize1 from "@/assets/summer-prize-1.jpeg.asset.json";
