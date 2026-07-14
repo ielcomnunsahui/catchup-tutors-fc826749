@@ -4,10 +4,10 @@ import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import flyer from "@/assets/hero-campus.jpg";
-import g1 from "@/assets/gallery-1.jpg";
-import g2 from "@/assets/gallery-2.jpg";
-import g3 from "@/assets/gallery-3.jpg";
-import classroom from "@/assets/about-classroom.jpg";
+import summerBanner from "@/assets/summer-banner.jpeg.asset.json";
+import summerGroup from "@/assets/summer-group.jpeg.asset.json";
+import summerPrize1 from "@/assets/summer-prize-1.jpeg.asset.json";
+import summerPrize2 from "@/assets/summer-prize-2.jpeg.asset.json";
 
 const VENUE = "Al-Bayan High School, Ilorin, Kwara State";
 
