@@ -3,11 +3,11 @@ import { MapPin, CalendarDays, GraduationCap, HeartHandshake, ArrowRight, Sparkl
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import flyer from "@/assets/hero-campus.jpg";
-import g1 from "@/assets/gallery-1.jpg";
-import g2 from "@/assets/gallery-2.jpg";
-import g3 from "@/assets/gallery-3.jpg";
-import classroom from "@/assets/about-classroom.jpg";
+
+import summerBanner from "@/assets/summer-banner.jpeg.asset.json";
+import summerGroup from "@/assets/summer-group.jpeg.asset.json";
+import summerPrize1 from "@/assets/summer-prize-1.jpeg.asset.json";
+import summerPrize2 from "@/assets/summer-prize-2.jpeg.asset.json";
 
 const VENUE = "Al-Bayan High School, Ilorin, Kwara State";
 
@@ -18,14 +18,14 @@ const UPCOMING = [
 ];
 
 const PAST = [
-  { title: "Summer Academy 2025 — Closing Ceremony", when: "Sep 2025", img: g1, note: "120 students · 18 volunteer tutors · certificates and gift bags for every scholar." },
-  { title: "WAEC Prep Bootcamp", when: "Apr 2025", img: g2, note: "Two-week intensive that lifted average mock scores by 21%." },
-  { title: "Mathematics Olympiad", when: "Feb 2025", img: g3, note: "Top three winners received scholarships and Casio scientific calculators." },
+  { title: "Summer Lesson 2025 — Class Group Photo", when: "Sep 2025", img: summerGroup.url, note: "Our secondary-school scholars and volunteer tutors at Al-Bayan High School, Ilorin — a full house of learners on closing day." },
+  { title: "Scholarship Award — Abdulrahman Ahmad", when: "Sep 2025", img: summerPrize2.url, note: "₦10,000 cash prize presented to Abdulrahman Ahmad for outstanding performance during the 2025 Summer Lesson." },
+  { title: "NECO Sponsorship — Abdulateef S. Arewa", when: "Sep 2025", img: summerPrize1.url, note: "Free NECO registration awarded to Abdulateef S. Arewa as best-performing student of the 2025 cohort." },
 ];
 
 const NEWS = [
-  { title: "Awards & Gift Presentations 2025", img: classroom, blurb: "Best-in-subject prizes and full stationery kits handed to the 2025 Summer Academy scholars." },
-  { title: "Featured in Kwara Community News", img: g2, blurb: "Local coverage of our free tutoring drive for JAMB and WAEC candidates across Ilorin." },
+  { title: "Awards & Gift Presentations 2025", img: summerPrize2.url, blurb: "Cash prizes, free NECO/WAEC registration and gift items presented to the top-performing students of the 2025 Summer Lesson." },
+  { title: "Free Summer Lesson Campaign — Ilorin", img: summerBanner.url, blurb: "Community outreach for the free summer academy at Al-Bayan High School, Akerebiate, Ilorin — sponsored by Jimoh Habibullahi Initiative." },
 ];
 
 export default function Events() {
@@ -67,7 +67,7 @@ export default function Events() {
 
         <div className="overflow-hidden rounded-3xl border bg-card shadow-soft">
           <div className="relative aspect-[16/7] w-full overflow-hidden bg-brand-navy">
-            <img src={flyer} alt="CatchUp Tutors Summer Academy 2026 flyer" className="h-full w-full object-cover opacity-80" />
+            <img src={summerBanner.url} alt="Catch-Up Tutors Free Summer Lesson banner" className="h-full w-full object-cover opacity-80" />
             <div className="absolute inset-0 bg-gradient-to-r from-brand-navy/90 via-brand-navy/40 to-transparent" />
             <div className="absolute inset-0 flex flex-col justify-end p-6 text-white sm:p-10">
               <Badge className="w-fit bg-[#FF6B12] text-white hover:bg-[#FF6B12]">Registration open</Badge>
