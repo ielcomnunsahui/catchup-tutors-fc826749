@@ -156,10 +156,10 @@ export default function SummerStudentRegister() {
           </div>
 
           <fieldset className="mt-8 space-y-3 rounded-2xl bg-muted/50 p-5">
-            <legend className="px-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Student commitments</legend>
-            <Commit label="I commit to excellence — attending consistently and giving my best." checked={form.commit_excellence} onChange={(v) => setForm({ ...form, commit_excellence: v })} />
-            <Commit label="I commit to good character — respecting tutors, peers, and the venue." checked={form.commit_character} onChange={(v) => setForm({ ...form, commit_character: v })} />
-            <Commit label="I confirm I can attend physically at Al-Bayan High School, Ilorin." checked={form.commit_proximity} onChange={(v) => setForm({ ...form, commit_proximity: v })} />
+            <legend className="px-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Intentional & Moral Confirmation (Parent & Student Affirmation)</legend>
+            <Commit label="Commitment to Excellence: We understand that this free program is a valuable opportunity. We pledge to maintain excellent attendance, arrive on time daily, and take all assignments and assessments seriously." checked={form.commit_excellence} onChange={(v) => setForm({ ...form, commit_excellence: v })} />
+            <Commit label="Character & Discipline: We affirm that the student will adhere to the highest standards of moral conduct, respecting teachers, peers, and the facility. We understand that disruptive behavior or dishonesty will result in immediate removal from the program." checked={form.commit_character} onChange={(v) => setForm({ ...form, commit_character: v })} />
+            <Commit label="Proximity & Safety: We confirm that the student resides within a safe, commutable distance to the center and has reliable transportation to attend every session physically." checked={form.commit_proximity} onChange={(v) => setForm({ ...form, commit_proximity: v })} />
           </fieldset>
 
           <Button onClick={submit} disabled={submitting} size="lg" className="mt-8 w-full sm:w-auto">
