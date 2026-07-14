@@ -4,10 +4,10 @@ import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-import summerBanner from "@/assets/summer-banner.jpeg.asset.json";
-import summerGroup from "@/assets/summer-group.jpeg.asset.json";
-import summerPrize1 from "@/assets/summer-prize-1.jpeg.asset.json";
-import summerPrize2 from "@/assets/summer-prize-2.jpeg.asset.json";
+const summerBanner = { url: "/summer-banner.jpeg" };
+const summerGroup = { url: "/summer-group.jpeg" };
+const summerPrize1 = { url: "/summer-prize-1.jpeg" };
+const summerPrize2 = { url: "/summer-prize-2.jpeg" };
 
 const VENUE = "Al-Bayan High School, Ilorin, Kwara State";
 
