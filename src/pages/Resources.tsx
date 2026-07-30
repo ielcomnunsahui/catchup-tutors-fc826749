@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { usePremium } from "@/hooks/use-premium";
+import { SESSIONS, PAPER_NUMBERS, type Session, fetchPastPapers, indexPapers, paperKey, type PastPaper } from "@/lib/past-papers";
+
 
 // ---------- helpers ----------
 type ViewerState =
@@ -48,8 +50,7 @@ const SUBJECTS: Subject[] = [
 const subjectsByProgram = (pid: string) => SUBJECTS.filter((s) => s.programId === pid);
 
 const YEARS = [2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018];
-const SESSIONS = ["Feb / March", "May / June", "Oct / Nov"] as const;
-type Session = typeof SESSIONS[number];
+
 
 const TOPICS: Record<string, string[]> = {
   "math-9709": ["Quadratics", "Functions", "Coordinate Geometry", "Circular Measure", "Trigonometry", "Series", "Differentiation", "Integration", "Vectors", "Numerical Solutions", "Probability", "Statistics"],
@@ -555,48 +556,115 @@ function ChoiceCard({ icon, badge, title, description, onClick }: { icon: React.
 }
 
 function YearlyView({ program, subject, premium, onBack, onOpenPdf }: { program: Program; subject: Subject; premium: ReturnType<typeof usePremium>; onBack: () => void; onOpenPdf: OpenPdf }) {
+  const [papers, setPapers] = useState<Map<string, PastPaper>>(new Map());
+  const [loading, setLoading] = useState(true);
+  const [openYear, setOpenYear] = useState<number | null>(YEARS[0]);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    fetchPastPapers(subject.id)
+      .then((rows) => { if (active) setPapers(indexPapers(rows)); })
+      .catch(() => { if (active) setPapers(new Map()); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [subject.id]);
+
   return (
     <div>
       <BackBar onBack={onBack} label="Back to practice options" />
       <div className="mt-6 flex items-center gap-3">
         <CalendarDays className="text-primary" />
-        <div><h2 className="font-display text-3xl font-bold">Yearly past questions</h2><p className="text-sm text-muted-foreground">{program.name} · {subject.name} ({subject.code})</p></div>
+        <div>
+          <h2 className="font-display text-3xl font-bold">Yearly past questions</h2>
+          <p className="text-sm text-muted-foreground">{program.name} · {subject.name} ({subject.code})</p>
+        </div>
       </div>
-      <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {YEARS.map((y) => (
-          <article key={y} className="rounded-2xl border bg-card p-5">
-            <p className="text-xs font-bold uppercase tracking-wide text-primary">{subject.code} · {y}</p>
-            <h3 className="mt-2 font-display text-2xl font-bold">{y} Papers</h3>
-            <div className="mt-5 grid gap-2">
-              {SESSIONS.map((session) => {
-                const a = getYearlyAssets(subject.id, y, session);
-                const paper = a.paper ?? SAMPLE_PDF;
-                const scheme = a.scheme ?? SAMPLE_PDF;
-                const real = !!a.paper || !!a.scheme;
-                return (
-                  <div key={session} className="rounded-xl border p-3">
-                    <div className="mb-2 flex items-center justify-between">
-                      <p className="text-sm font-semibold">{session}</p>
-                      {real && <FreeBadge />}
+      <p className="mt-3 text-sm text-muted-foreground">
+        Every year is split into Feb/March, May/June and Oct/Nov — each with Question Papers and Mark Schemes 12, 22, 32, 42, 52 and 62.
+      </p>
+
+      <div className="mt-8 space-y-4">
+        {YEARS.map((y) => {
+          const open = openYear === y;
+          const yearCount = SESSIONS.reduce((n, s) => n + PAPER_NUMBERS.reduce((m, p) =>
+            m + (papers.has(paperKey(subject.id, y, s, p, "question_paper")) ? 1 : 0)
+              + (papers.has(paperKey(subject.id, y, s, p, "mark_scheme")) ? 1 : 0), 0), 0);
+          return (
+            <article key={y} className="overflow-hidden rounded-2xl border bg-card">
+              <button
+                onClick={() => setOpenYear(open ? null : y)}
+                aria-expanded={open}
+                className="flex w-full items-center gap-4 px-5 py-4 text-left transition hover:bg-muted/40"
+              >
+                <div className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary"><CalendarDays className="size-5" /></div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold uppercase tracking-wide text-primary">{subject.code} · {y}</p>
+                  <h3 className="font-display text-xl font-bold">{y} Papers</h3>
+                </div>
+                <span className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
+                  {loading ? "Loading…" : `${yearCount} file${yearCount === 1 ? "" : "s"} available`}
+                  <ChevronRight className={cn("size-4 transition", open && "rotate-90")} />
+                </span>
+              </button>
+
+              {open && (
+                <div className="grid gap-4 border-t bg-muted/20 p-4 lg:grid-cols-3">
+                  {SESSIONS.map((session) => (
+                    <div key={session} className="rounded-xl border bg-card p-4">
+                      <p className="font-display text-sm font-bold">{session}</p>
+                      <div className="mt-4 space-y-4">
+                        {(["question_paper", "mark_scheme"] as const).map((doc) => (
+                          <div key={doc}>
+                            <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                              {doc === "question_paper" ? "Question Papers" : "Mark Schemes"}
+                            </p>
+                            <div className="mt-2 grid grid-cols-3 gap-2">
+                              {PAPER_NUMBERS.map((num) => {
+                                const rec = papers.get(paperKey(subject.id, y, session, num, doc));
+                                const locked = !!rec && rec.access_level === "premium" && !premium.isPremium;
+                                if (!rec) {
+                                  return (
+                                    <Button key={num} size="sm" variant="outline" disabled className="justify-center text-xs opacity-50" title="Not uploaded yet">
+                                      {num}
+                                    </Button>
+                                  );
+                                }
+                                if (locked) {
+                                  return (
+                                    <Button key={num} asChild size="sm" variant="outline" className="justify-center border-dashed text-xs text-muted-foreground">
+                                      <Link to="/pricing" title="Premium"><LockKeyhole className="size-3" /> {num}</Link>
+                                    </Button>
+                                  );
+                                }
+                                return (
+                                  <Button
+                                    key={num}
+                                    size="sm"
+                                    variant="outline"
+                                    className="justify-center text-xs"
+                                    onClick={() => onOpenPdf(rec.file_url, rec.title || `${subject.code} ${y} ${session} — ${doc === "question_paper" ? "Question Paper" : "Mark Scheme"} ${num}`, false)}
+                                  >
+                                    {num}
+                                  </Button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button size="sm" variant="outline" onClick={() => onOpenPdf(paper, `${subject.code} ${y} ${session} — Paper`, false)}>
-                        <BookMarked /> Paper
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => onOpenPdf(scheme, `${subject.code} ${y} ${session} — Mark Scheme`, false)}>
-                        <BookMarked /> Scheme
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </article>
-        ))}
+                  ))}
+                </div>
+              )}
+            </article>
+          );
+        })}
       </div>
     </div>
   );
 }
+
 
 function TopicsView({ program, subject, premium, onBack, onOpenPdf, onOpenVideo }: { program: Program; subject: Subject; premium: ReturnType<typeof usePremium>; onBack: () => void; onOpenPdf: OpenPdf; onOpenVideo: OpenVideo }) {
   const topics = TOPICS[subject.id] ?? [];
