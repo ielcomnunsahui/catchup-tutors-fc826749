@@ -48,8 +48,7 @@ const SUBJECTS: Subject[] = [
 const subjectsByProgram = (pid: string) => SUBJECTS.filter((s) => s.programId === pid);
 
 const YEARS = [2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018];
-const SESSIONS = ["Feb / March", "May / June", "Oct / Nov"] as const;
-type Session = typeof SESSIONS[number];
+
 
 const TOPICS: Record<string, string[]> = {
   "math-9709": ["Quadratics", "Functions", "Coordinate Geometry", "Circular Measure", "Trigonometry", "Series", "Differentiation", "Integration", "Vectors", "Numerical Solutions", "Probability", "Statistics"],
