@@ -342,7 +342,7 @@ export default function About() {
                   "The current grade of a student never defines their ultimate destination. Our job is to bridge the gap between where
                   they are and where they were always meant to be."
                 </blockquote>
-                <figcaption className="mt-3 text-xs uppercase tracking-wider text-muted-foreground" Mr. Ahmed Thaoban</figcaption>
+                <figcaption className="mt-3 text-xs uppercase tracking-wider text-muted-foreground">— Mr. Ahmed Thaoban</figcaption>
               </figure>
             </div>
           </div>
