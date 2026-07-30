@@ -41,3 +41,12 @@ export function indexPapers(rows: PastPaper[]) {
   for (const r of rows) map.set(paperKey(r.subject_key, r.year, r.session, r.paper_number, r.doc_type), r);
   return map;
 }
+
+export const SUBJECT_OPTIONS = [
+  { id: "math-9709", label: "Cambridge · Mathematics (9709)" },
+  { id: "fmath-9231", label: "Cambridge · Further Mathematics (9231)" },
+  { id: "math-0580", label: "IGCSE · Mathematics (0580)" },
+  { id: "fmath-0606", label: "IGCSE · Additional Mathematics (0606)" },
+];
+
+export const PAPER_YEARS = [2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018];
