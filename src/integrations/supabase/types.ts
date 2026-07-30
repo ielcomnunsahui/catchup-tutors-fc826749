@@ -367,6 +367,51 @@ export type Database = {
         }
         Relationships: []
       }
+      past_papers: {
+        Row: {
+          access_level: Database["public"]["Enums"]["access_level"]
+          created_at: string
+          doc_type: string
+          file_url: string
+          id: string
+          is_published: boolean
+          paper_number: string
+          session: string
+          subject_key: string
+          title: string | null
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          access_level?: Database["public"]["Enums"]["access_level"]
+          created_at?: string
+          doc_type: string
+          file_url: string
+          id?: string
+          is_published?: boolean
+          paper_number: string
+          session: string
+          subject_key: string
+          title?: string | null
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          access_level?: Database["public"]["Enums"]["access_level"]
+          created_at?: string
+          doc_type?: string
+          file_url?: string
+          id?: string
+          is_published?: boolean
+          paper_number?: string
+          session?: string
+          subject_key?: string
+          title?: string | null
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
