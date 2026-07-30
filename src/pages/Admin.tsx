@@ -71,13 +71,14 @@ function AdminPage() {
       </section>
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <Tabs defaultValue="overview">
-          <TabsList className="grid w-full grid-cols-3 gap-1 rounded-2xl bg-muted/60 p-1 md:grid-cols-6">
+          <TabsList className="grid w-full grid-cols-3 gap-1 rounded-2xl bg-muted/60 p-1 md:grid-cols-7">
             <AdminTab value="overview" icon={LayoutDashboard} label="Overview" />
             <AdminTab value="registrations" icon={ClipboardList} label="Registrations" />
             <AdminTab value="programs" icon={GraduationCap} label="Programs" />
             <AdminTab value="subjects" icon={BookOpen} label="Subjects" />
             <AdminTab value="topics" icon={FolderTree} label="Topics" />
             <AdminTab value="resources" icon={FileText} label="Resources" />
+            <AdminTab value="past-papers" icon={CalendarDays} label="Past papers" />
           </TabsList>
           <TabsContent value="overview" className="mt-8"><OverviewTab /></TabsContent>
           <TabsContent value="registrations" className="mt-8"><RegistrationsTab /></TabsContent>
@@ -85,7 +86,9 @@ function AdminPage() {
           <TabsContent value="subjects" className="mt-8"><SubjectsTab /></TabsContent>
           <TabsContent value="topics" className="mt-8"><TopicsTab /></TabsContent>
           <TabsContent value="resources" className="mt-8"><ResourcesTab /></TabsContent>
+          <TabsContent value="past-papers" className="mt-8"><PastPapersTab /></TabsContent>
         </Tabs>
+
       </section>
     </SiteShell>
   );
