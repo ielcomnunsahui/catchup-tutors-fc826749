@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { usePremium } from "@/hooks/use-premium";
+import { SESSIONS, PAPER_NUMBERS, type Session, fetchPastPapers, indexPapers, paperKey, type PastPaper } from "@/lib/past-papers";
+
 
 // ---------- helpers ----------
 type ViewerState =
