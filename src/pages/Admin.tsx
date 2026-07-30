@@ -7,7 +7,7 @@ import {
   CheckCircle2, Edit3, Eye, EyeOff, Loader2, Plus, ShieldCheck, Trash2, X,
   LayoutDashboard, GraduationCap, BookOpen, FolderTree, FileText, ClipboardList,
   Users, UserCheck, Clock, TrendingUp, ArrowUp, ArrowDown, ArrowUpDown, Download, Search,
-  Activity,
+  Activity, CalendarDays,
 } from "lucide-react";
 import { SiteShell } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
