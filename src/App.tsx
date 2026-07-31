@@ -10,6 +10,8 @@ import Resources from "./pages/Resources";
 import Terms from "./pages/Terms";
 import Testimonials from "./pages/Testimonials";
 import Tutors from "./pages/Tutors";
+import TutorApply from "./pages/TutorApply";
+import PaymentCallback from "./pages/PaymentCallback";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
@@ -35,6 +37,8 @@ export default function App() {
       <Route path="/terms" element={<Terms />} />
       <Route path="/testimonials" element={<Testimonials />} />
       <Route path="/tutors" element={<Tutors />} />
+      <Route path="/tutors/apply" element={<TutorApply />} />
+      <Route path="/payment/callback" element={<PaymentCallback />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/dashboard" element={<Dashboard />} />

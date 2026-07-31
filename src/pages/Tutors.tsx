@@ -72,6 +72,14 @@ export default function Tutors() {
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search tutors by subject or topic" aria-label="Search tutors" className="h-14 flex-1 bg-transparent outline-none" />
         </div>
 
+        <div className="mt-6 flex flex-wrap items-center gap-4 rounded-2xl border bg-muted/40 p-5">
+          <BadgeCheck className="text-primary" />
+          <p className="flex-1 text-sm text-muted-foreground">
+            Are you a teacher or subject expert? Join our team of Cambridge, Edexcel, IB, TMUA and SAT tutors.
+          </p>
+          <Button asChild variant="outline"><Link to="/tutors/apply">Apply as a tutor</Link></Button>
+        </div>
+
         {loading ? (
           <div className="mt-10 flex justify-center py-16 text-muted-foreground"><Loader2 className="animate-spin" /></div>
         ) : filtered.length === 0 ? (
@@ -79,7 +87,7 @@ export default function Tutors() {
             <BadgeCheck className="mx-auto h-10 w-10 text-primary" />
             <h2 className="mt-4 font-display text-2xl font-bold">No tutors match that search</h2>
             <p className="mx-auto mt-3 max-w-lg text-muted-foreground">Try a different subject or topic, or apply as a tutor.</p>
-            <Button asChild className="mt-6"><Link to="/auth">Apply as a tutor</Link></Button>
+            <Button asChild className="mt-6"><Link to="/tutors/apply">Apply as a tutor</Link></Button>
           </div>
         ) : (
           <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
