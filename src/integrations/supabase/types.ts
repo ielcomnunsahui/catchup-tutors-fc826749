@@ -372,6 +372,8 @@ export type Database = {
           access_level: Database["public"]["Enums"]["access_level"]
           created_at: string
           doc_type: string
+          file_name: string | null
+          file_size_kb: number | null
           file_url: string
           id: string
           is_published: boolean
@@ -386,6 +388,8 @@ export type Database = {
           access_level?: Database["public"]["Enums"]["access_level"]
           created_at?: string
           doc_type: string
+          file_name?: string | null
+          file_size_kb?: number | null
           file_url: string
           id?: string
           is_published?: boolean
@@ -400,6 +404,8 @@ export type Database = {
           access_level?: Database["public"]["Enums"]["access_level"]
           created_at?: string
           doc_type?: string
+          file_name?: string | null
+          file_size_kb?: number | null
           file_url?: string
           id?: string
           is_published?: boolean
@@ -1012,59 +1018,101 @@ export type Database = {
       tutor_applications: {
         Row: {
           admin_feedback: string | null
+          availability: string[]
           biography: string
           created_at: string
+          curricula: string[]
           cv_path: string | null
           email: string
+          experience_band: string | null
+          field_of_study: string | null
           full_name: string
+          has_equipment: boolean
+          highest_qualification: string | null
+          hours_per_week: string | null
           id: string
+          intro_video_url: string | null
+          location: string | null
+          occupation: string | null
           phone: string
           photo_path: string | null
           pricing: Json
           qualifications: string
+          sample_video_url: string | null
           status: Database["public"]["Enums"]["application_status"]
           subjects: string[]
+          teaching_philosophy: string | null
+          tools: string[]
           topics: string[]
           updated_at: string
           user_id: string
+          video_experience: string | null
           years_experience: number
         }
         Insert: {
           admin_feedback?: string | null
-          biography: string
+          availability?: string[]
+          biography?: string
           created_at?: string
+          curricula?: string[]
           cv_path?: string | null
           email: string
+          experience_band?: string | null
+          field_of_study?: string | null
           full_name: string
+          has_equipment?: boolean
+          highest_qualification?: string | null
+          hours_per_week?: string | null
           id?: string
+          intro_video_url?: string | null
+          location?: string | null
+          occupation?: string | null
           phone: string
           photo_path?: string | null
           pricing?: Json
-          qualifications: string
+          qualifications?: string
+          sample_video_url?: string | null
           status?: Database["public"]["Enums"]["application_status"]
           subjects?: string[]
+          teaching_philosophy?: string | null
+          tools?: string[]
           topics?: string[]
           updated_at?: string
           user_id: string
-          years_experience: number
+          video_experience?: string | null
+          years_experience?: number
         }
         Update: {
           admin_feedback?: string | null
+          availability?: string[]
           biography?: string
           created_at?: string
+          curricula?: string[]
           cv_path?: string | null
           email?: string
+          experience_band?: string | null
+          field_of_study?: string | null
           full_name?: string
+          has_equipment?: boolean
+          highest_qualification?: string | null
+          hours_per_week?: string | null
           id?: string
+          intro_video_url?: string | null
+          location?: string | null
+          occupation?: string | null
           phone?: string
           photo_path?: string | null
           pricing?: Json
           qualifications?: string
+          sample_video_url?: string | null
           status?: Database["public"]["Enums"]["application_status"]
           subjects?: string[]
+          teaching_philosophy?: string | null
+          tools?: string[]
           topics?: string[]
           updated_at?: string
           user_id?: string
+          video_experience?: string | null
           years_experience?: number
         }
         Relationships: []
