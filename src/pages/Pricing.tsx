@@ -1,9 +1,15 @@
-import { Link } from "react-router-dom";
-import { Check, Sparkles, GraduationCap, BookOpen, Star } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { Check, Sparkles, GraduationCap, BookOpen, Star, Loader2 } from "lucide-react";
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+
+type DbPlan = { id: string; slug: string; name: string; price_ngn: number; price_usd: number | null };
 
 type Plan = {
+  slug: string;
   name: string;
   usd: string;
   ngn: string;
@@ -16,6 +22,7 @@ type Plan = {
 
 const RESOURCE_PLANS: Plan[] = [
   {
+    slug: "premium-monthly",
     name: "Monthly",
     usd: "$20",
     ngn: "₦30,000",
@@ -30,6 +37,7 @@ const RESOURCE_PLANS: Plan[] = [
     cta: { label: "Start Monthly", to: "/auth" },
   },
   {
+    slug: "premium-quarterly",
     name: "Quarterly",
     usd: "$70",
     ngn: "₦100,000",
@@ -45,6 +53,7 @@ const RESOURCE_PLANS: Plan[] = [
     cta: { label: "Start Quarterly", to: "/auth" },
   },
   {
+    slug: "premium-annual",
     name: "Annually",
     usd: "$200",
     ngn: "₦300,000",
@@ -73,6 +82,41 @@ const COMPARE: [string, boolean, boolean, boolean, boolean][] = [
 ];
 
 export default function Pricing() {
+  const navigate = useNavigate();
+  const [dbPlans, setDbPlans] = useState<DbPlan[]>([]);
+  const [paystackEnabled, setPaystackEnabled] = useState(false);
+  const [busySlug, setBusySlug] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const [plansRes, settingRes] = await Promise.all([
+        supabase.from("subscription_plans").select("id,slug,name,price_ngn,price_usd").eq("is_active", true),
+        supabase.from("settings").select("value").eq("key", "paystack").maybeSingle(),
+      ]);
+      setDbPlans((plansRes.data as DbPlan[]) ?? []);
+      setPaystackEnabled(Boolean((settingRes.data?.value as { enabled?: boolean } | null)?.enabled));
+    })();
+  }, []);
+
+  const subscribe = async (slug: string) => {
+    const plan = dbPlans.find((p) => p.slug === slug);
+    if (!plan) { toast.error("This plan is not available right now."); return; }
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) { navigate(`/auth?redirect=/pricing`); return; }
+    setBusySlug(slug);
+    try {
+      const { data, error } = await supabase.functions.invoke("paystack-init", {
+        body: { planId: plan.id, callbackUrl: `${window.location.origin}/payment/callback` },
+      });
+      const res = data as { authorization_url?: string; error?: string } | null;
+      if (error || res?.error || !res?.authorization_url) throw new Error(res?.error ?? error?.message ?? "Could not start checkout");
+      window.location.href = res.authorization_url;
+    } catch (e) {
+      toast.error((e as Error).message);
+      setBusySlug(null);
+    }
+  };
+
   const jsonLd = RESOURCE_PLANS.map((p) => ({
     "@context": "https://schema.org",
     "@type": "Product",
@@ -168,13 +212,24 @@ export default function Pricing() {
                   </li>
                 ))}
               </ul>
-              <Button
-                asChild
-                className={`mt-8 w-full ${p.featured ? "bg-[#FF6B12] text-white hover:bg-[#FF6B12]/90" : ""}`}
-                variant={p.featured ? "default" : "outline"}
-              >
-                <Link to={p.cta.to}>{p.cta.label}</Link>
-              </Button>
+              {paystackEnabled ? (
+                <Button
+                  className={`mt-8 w-full ${p.featured ? "bg-[#FF6B12] text-white hover:bg-[#FF6B12]/90" : ""}`}
+                  variant={p.featured ? "default" : "outline"}
+                  disabled={busySlug === p.slug}
+                  onClick={() => subscribe(p.slug)}
+                >
+                  {busySlug === p.slug ? <Loader2 className="animate-spin" /> : null} Pay with Paystack
+                </Button>
+              ) : (
+                <Button
+                  asChild
+                  className={`mt-8 w-full ${p.featured ? "bg-[#FF6B12] text-white hover:bg-[#FF6B12]/90" : ""}`}
+                  variant={p.featured ? "default" : "outline"}
+                >
+                  <Link to={p.cta.to}>{p.cta.label}</Link>
+                </Button>
+              )}
             </article>
           ))}
         </div>
@@ -225,7 +280,9 @@ export default function Pricing() {
             <Button asChild size="lg" variant="outline"><Link to="/tutors">Find a Tutor</Link></Button>
           </div>
           <p className="mx-auto mt-8 flex max-w-xl items-center justify-center gap-2 rounded-xl bg-muted/50 px-4 py-3 text-xs text-muted-foreground">
-            <Sparkles className="h-3.5 w-3.5 text-[#FF6B12]" /> USD & NGN pricing shown. Payments via Paystack, Flutterwave and card — activated after provider onboarding.
+            <Sparkles className="h-3.5 w-3.5 text-[#FF6B12]" /> {paystackEnabled
+              ? "Secure card, bank transfer and USSD payments in Naira, powered by Paystack."
+              : "USD & NGN pricing shown. Paystack checkout activates once the team completes provider onboarding."}
           </p>
         </div>
       </section>
