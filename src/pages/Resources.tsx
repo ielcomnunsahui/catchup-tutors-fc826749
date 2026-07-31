@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { usePremium } from "@/hooks/use-premium";
-import { SESSIONS, PAPER_NUMBERS, type Session, fetchPastPapers, indexPapers, paperKey, type PastPaper } from "@/lib/past-papers";
+import { SESSIONS, PAPER_NUMBERS, type Session, fetchPastPapers, indexPapers, paperKey, paperFileName, type PastPaper } from "@/lib/past-papers";
 
 
 // ---------- helpers ----------
@@ -648,6 +648,63 @@ function YearlyView({ program, subject, premium, onBack, onOpenPdf }: { program:
   );
 }
 
+
+function PaperPreview({ rec, num, doc, label, premium, onOpenPdf }: {
+  rec?: PastPaper; num: string; doc: "question_paper" | "mark_scheme"; label: string;
+  premium: ReturnType<typeof usePremium>; onOpenPdf: OpenPdf;
+}) {
+  if (!rec) {
+    return (
+      <div className="flex items-center gap-3 rounded-lg border border-dashed px-3 py-2 opacity-60">
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-[11px] font-bold">{num}</span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xs font-semibold">{doc === "question_paper" ? "Question Paper" : "Mark Scheme"} {num}</p>
+          <p className="text-[11px] text-muted-foreground">Not uploaded yet</p>
+        </div>
+      </div>
+    );
+  }
+
+  const locked = rec.access_level === "premium" && !premium.isPremium;
+  const fileName = paperFileName(rec);
+  const uploaded = rec.created_at ? new Date(rec.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : null;
+
+  return (
+    <div className="rounded-lg border bg-card px-3 py-2.5 transition hover:border-primary/40 hover:shadow-soft">
+      <div className="flex items-start gap-3">
+        <span className={cn("flex size-7 shrink-0 items-center justify-center rounded-md text-[11px] font-bold",
+          doc === "question_paper" ? "bg-primary/10 text-primary" : "bg-brand-orange/10 text-brand-orange")}>{num}</span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xs font-semibold" title={fileName}>{fileName}</p>
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-muted-foreground">
+            {uploaded && <span className="inline-flex items-center gap-1"><CalendarDays className="size-3" /> {uploaded}</span>}
+            {rec.file_size_kb ? <span>{rec.file_size_kb} KB</span> : null}
+            {locked ? <span className="font-semibold text-brand-orange">Premium</span> : <span className="font-semibold text-brand-green">Free</span>}
+          </p>
+        </div>
+      </div>
+      <div className="mt-2 flex gap-2">
+        {locked ? (
+          <Button asChild size="sm" variant="outline" className="h-7 flex-1 text-[11px]">
+            <Link to="/pricing"><LockKeyhole className="size-3" /> Unlock with Premium</Link>
+          </Button>
+        ) : (
+          <>
+            <Button size="sm" variant="outline" className="h-7 flex-1 text-[11px]"
+              onClick={() => onOpenPdf(rec.file_url, rec.title || label, false)}>
+              <ExternalLink className="size-3" /> Open in viewer
+            </Button>
+            <Button asChild size="sm" variant="ghost" className="h-7 px-2 text-[11px]">
+              <a href={driveDownload(rec.file_url)} target="_blank" rel="noopener" download={fileName} title={`Download ${fileName}`}>
+                <Download className="size-3" /> Download
+              </a>
+            </Button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function TopicsView({ program, subject, premium, onBack, onOpenPdf, onOpenVideo }: { program: Program; subject: Subject; premium: ReturnType<typeof usePremium>; onBack: () => void; onOpenPdf: OpenPdf; onOpenVideo: OpenVideo }) {
   const topics = TOPICS[subject.id] ?? [];

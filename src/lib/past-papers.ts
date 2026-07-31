@@ -22,7 +22,23 @@ export type PastPaper = {
   file_url: string;
   access_level: "free" | "premium";
   is_published: boolean;
+  file_name?: string | null;
+  file_size_kb?: number | null;
+  created_at?: string;
+  updated_at?: string;
 };
+
+/** Best-effort readable file name for a stored paper. */
+export function paperFileName(p: PastPaper) {
+  if (p.file_name?.trim()) return p.file_name.trim();
+  try {
+    const last = decodeURIComponent(new URL(p.file_url).pathname.split("/").filter(Boolean).pop() ?? "");
+    if (last && /\.[a-z0-9]{2,5}$/i.test(last)) return last;
+  } catch { /* not a parseable URL */ }
+  const doc = p.doc_type === "question_paper" ? "qp" : "ms";
+  const session = p.session.replace(/[^a-z]/gi, "").slice(0, 3).toLowerCase();
+  return `${p.subject_key}_${session}${String(p.year).slice(2)}_${doc}_${p.paper_number}.pdf`;
+}
 
 /** key: `${subject_key}|${year}|${session}|${paper_number}|${doc_type}` */
 export const paperKey = (subjectKey: string, year: number, session: string, paper: string, doc: string) =>
