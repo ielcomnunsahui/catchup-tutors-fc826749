@@ -25,10 +25,47 @@ const SOCIAL = {
   youtube:   { url: "https://youtube.com/@catch-uptutors2691?si=9YKS7NsmOUOdU96f", handle: "@catch-uptutors2691" },
 } as const;
 
+type NavUser = { id: string; email: string; name: string };
+
 export function SiteShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  // undefined = still resolving, null = signed out
+  const [session, setSession] = useState<NavUser | null | undefined>(undefined);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const resolve = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (cancelled) return;
+      if (!user) { setSession(null); setIsAdmin(false); return; }
+      setSession({
+        id: user.id,
+        email: user.email ?? "",
+        name: (user.user_metadata?.full_name as string) ?? user.email?.split("@")[0] ?? "Account",
+      });
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+      if (!cancelled) setIsAdmin(!!roles?.some((r) => r.role === "admin"));
+    };
+    resolve();
+    const { data: sub } = supabase.auth.onAuthStateChange(() => resolve());
+    return () => { cancelled = true; sub.subscription.unsubscribe(); };
+  }, []);
+
+  const displayName = session?.name ?? "";
+  const initials = displayName.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase() || "CU";
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setSession(null);
+    setIsAdmin(false);
+    navigate("/");
+  };
+
   return (
+
     <div className="min-h-screen bg-background text-foreground">
       {/* Utility topbar */}
       <div className="hidden bg-brand-navy text-hero-foreground md:block">
