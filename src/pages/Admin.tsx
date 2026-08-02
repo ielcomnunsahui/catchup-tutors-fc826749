@@ -23,6 +23,9 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import PastPapersTab from "@/components/admin/past-papers-tab";
 import SettingsTab from "@/components/admin/settings-tab";
+import StudentsTab from "@/components/admin/students-tab";
+import TutorApplicationsTab from "@/components/admin/tutor-applications-tab";
+
 
 
 export default function Admin() {
