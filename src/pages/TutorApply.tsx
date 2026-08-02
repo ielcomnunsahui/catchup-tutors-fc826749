@@ -104,6 +104,15 @@ export default function TutorApply() {
   const [availability, setAvailability] = useState<string[]>([]);
   const [cv, setCv] = useState<File | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!photo) { setPhotoPreview(null); return; }
+    const url = URL.createObjectURL(photo);
+    setPhotoPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [photo]);
+
 
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setF((s) => ({ ...s, [k]: e.target.value }));
