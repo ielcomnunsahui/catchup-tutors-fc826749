@@ -67,8 +67,32 @@ export function SiteShell({ children }: { children: ReactNode }) {
             ))}
           </nav>
           <div className="hidden items-center gap-2 lg:flex">
-            <Button asChild variant="ghost"><Link to="/auth">Sign in</Link></Button>
-            <Button asChild><Link to="/dashboard">Dashboard</Link></Button>
+            {session === null ? (
+              <>
+                <Button asChild variant="ghost"><Link to="/auth">Sign in</Link></Button>
+                <Button asChild><Link to="/auth?mode=signup">Get started</Link></Button>
+              </>
+            ) : session ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="gap-2">
+                    <span className="grid size-7 place-items-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                      {initials}
+                    </span>
+                    <span className="max-w-[140px] truncate text-sm font-medium">{displayName}</span>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 bg-popover">
+                  <DropdownMenuLabel className="truncate font-normal text-muted-foreground">{session.email}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild><Link to="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard</Link></DropdownMenuItem>
+                  {isAdmin && <DropdownMenuItem asChild><Link to="/admin"><ShieldCheck className="mr-2 h-4 w-4" /> Admin</Link></DropdownMenuItem>}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={signOut}><LogOut className="mr-2 h-4 w-4" /> Sign out</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
           </div>
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen((v) => !v)} aria-label="Toggle navigation" aria-expanded={open}>
             {open ? <X /> : <Menu />}
@@ -80,9 +104,20 @@ export function SiteShell({ children }: { children: ReactNode }) {
               <Link key={to} to={to} onClick={() => setOpen(false)} className="block rounded-lg px-4 py-3 font-medium hover:bg-muted">{label}</Link>
             ))}
             <div className="mt-3 grid grid-cols-2 gap-2">
-              <Button asChild variant="outline"><Link to="/auth">Sign in</Link></Button>
-              <Button asChild><Link to="/dashboard">Dashboard</Link></Button>
+              {session ? (
+                <>
+                  <Button asChild variant="outline" onClick={() => setOpen(false)}><Link to="/dashboard">Dashboard</Link></Button>
+                  {isAdmin && <Button asChild variant="outline" onClick={() => setOpen(false)}><Link to="/admin">Admin</Link></Button>}
+                  <Button onClick={() => { setOpen(false); signOut(); }}><LogOut className="h-4 w-4" /> Sign out</Button>
+                </>
+              ) : (
+                <>
+                  <Button asChild variant="outline"><Link to="/auth">Sign in</Link></Button>
+                  <Button asChild><Link to="/auth?mode=signup">Get started</Link></Button>
+                </>
+              )}
             </div>
+
             <div className="mt-4 flex items-center gap-4 border-t pt-4 text-muted-foreground">
               <a href={SOCIAL.instagram.url} aria-label="Instagram" target="_blank" rel="noopener"><Instagram className="h-5 w-5" /></a>
               <a href={SOCIAL.facebook.url} aria-label="Facebook" target="_blank" rel="noopener"><Facebook className="h-5 w-5" /></a>
