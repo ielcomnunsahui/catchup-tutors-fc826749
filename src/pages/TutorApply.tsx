@@ -283,7 +283,18 @@ export default function TutorApply() {
           <div className="grid gap-1.5">
             <Label>Passport photograph (JPG or PNG)</Label>
             <Input type="file" accept="image/*" onChange={(e) => setPhoto(e.target.files?.[0] ?? null)} />
+            {photoPreview && (
+              <div className="mt-2 flex items-center gap-4 rounded-2xl border bg-muted/30 p-3">
+                <img src={photoPreview} alt="Passport photograph preview" className="h-24 w-24 rounded-xl object-cover" />
+                <div className="min-w-0 text-sm">
+                  <p className="truncate font-medium">{photo?.name}</p>
+                  <p className="text-xs text-muted-foreground">{((photo?.size ?? 0) / 1024).toFixed(0)} KB</p>
+                  <Button type="button" variant="ghost" size="sm" className="mt-1 px-0 text-destructive" onClick={() => setPhoto(null)}>Remove</Button>
+                </div>
+              </div>
+            )}
           </div>
+
           <div className="grid gap-1.5">
             <Label>Optional: link to a 2–3 minute introduction or demo teaching video</Label>
             <Input value={f.introVideoUrl} onChange={set("introVideoUrl")} placeholder="https://" />
