@@ -23,6 +23,9 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import PastPapersTab from "@/components/admin/past-papers-tab";
 import SettingsTab from "@/components/admin/settings-tab";
+import StudentsTab from "@/components/admin/students-tab";
+import TutorApplicationsTab from "@/components/admin/tutor-applications-tab";
+
 
 
 export default function Admin() {
@@ -75,9 +78,11 @@ function AdminPage() {
       </section>
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <Tabs defaultValue="overview">
-          <TabsList className="grid w-full grid-cols-3 gap-1 rounded-2xl bg-muted/60 p-1 md:grid-cols-8">
+          <TabsList className="grid w-full grid-cols-3 gap-1 rounded-2xl bg-muted/60 p-1 md:grid-cols-5 lg:grid-cols-10">
             <AdminTab value="overview" icon={LayoutDashboard} label="Overview" />
-            <AdminTab value="registrations" icon={ClipboardList} label="Registrations" />
+            <AdminTab value="registrations" icon={ClipboardList} label="Summer registrations" />
+            <AdminTab value="students" icon={Users} label="Students" />
+            <AdminTab value="tutor-apps" icon={UserCheck} label="Tutor applications" />
             <AdminTab value="programs" icon={GraduationCap} label="Programs" />
             <AdminTab value="subjects" icon={BookOpen} label="Subjects" />
             <AdminTab value="topics" icon={FolderTree} label="Topics" />
@@ -87,12 +92,15 @@ function AdminPage() {
           </TabsList>
           <TabsContent value="overview" className="mt-8"><OverviewTab /></TabsContent>
           <TabsContent value="registrations" className="mt-8"><RegistrationsTab /></TabsContent>
+          <TabsContent value="students" className="mt-8"><StudentsTab /></TabsContent>
+          <TabsContent value="tutor-apps" className="mt-8"><TutorApplicationsTab /></TabsContent>
           <TabsContent value="programs" className="mt-8"><ProgramsTab /></TabsContent>
           <TabsContent value="subjects" className="mt-8"><SubjectsTab /></TabsContent>
           <TabsContent value="topics" className="mt-8"><TopicsTab /></TabsContent>
           <TabsContent value="resources" className="mt-8"><ResourcesTab /></TabsContent>
           <TabsContent value="past-papers" className="mt-8"><PastPapersTab /></TabsContent>
           <TabsContent value="settings" className="mt-8"><SettingsTab /></TabsContent>
+
         </Tabs>
 
       </section>

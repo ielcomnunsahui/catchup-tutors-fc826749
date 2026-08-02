@@ -1,11 +1,18 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import {
   Menu, X, GraduationCap, Instagram, Facebook, Youtube, Mail, Phone, MapPin, MessageCircle, ArrowUpRight,
+  ChevronDown, LayoutDashboard, LogOut, ShieldCheck,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
+  DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { supabase } from "@/integrations/supabase/client";
 import logoUrl from "@/assets/catchup-logo.png";
+
 
 const navigation = [
   ["About", "/about"], ["Programs", "/programs"], ["Resources", "/resources"], ["Tutors", "/tutors"],
@@ -18,10 +25,47 @@ const SOCIAL = {
   youtube:   { url: "https://youtube.com/@catch-uptutors2691?si=9YKS7NsmOUOdU96f", handle: "@catch-uptutors2691" },
 } as const;
 
+type NavUser = { id: string; email: string; name: string };
+
 export function SiteShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  // undefined = still resolving, null = signed out
+  const [session, setSession] = useState<NavUser | null | undefined>(undefined);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const resolve = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (cancelled) return;
+      if (!user) { setSession(null); setIsAdmin(false); return; }
+      setSession({
+        id: user.id,
+        email: user.email ?? "",
+        name: (user.user_metadata?.full_name as string) ?? user.email?.split("@")[0] ?? "Account",
+      });
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+      if (!cancelled) setIsAdmin(!!roles?.some((r) => r.role === "admin"));
+    };
+    resolve();
+    const { data: sub } = supabase.auth.onAuthStateChange(() => resolve());
+    return () => { cancelled = true; sub.subscription.unsubscribe(); };
+  }, []);
+
+  const displayName = session?.name ?? "";
+  const initials = displayName.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase() || "CU";
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setSession(null);
+    setIsAdmin(false);
+    navigate("/");
+  };
+
   return (
+
     <div className="min-h-screen bg-background text-foreground">
       {/* Utility topbar */}
       <div className="hidden bg-brand-navy text-hero-foreground md:block">
@@ -67,8 +111,32 @@ export function SiteShell({ children }: { children: ReactNode }) {
             ))}
           </nav>
           <div className="hidden items-center gap-2 lg:flex">
-            <Button asChild variant="ghost"><Link to="/auth">Sign in</Link></Button>
-            <Button asChild><Link to="/dashboard">Dashboard</Link></Button>
+            {session === null ? (
+              <>
+                <Button asChild variant="ghost"><Link to="/auth">Sign in</Link></Button>
+                <Button asChild><Link to="/auth?mode=signup">Get started</Link></Button>
+              </>
+            ) : session ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="gap-2">
+                    <span className="grid size-7 place-items-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                      {initials}
+                    </span>
+                    <span className="max-w-[140px] truncate text-sm font-medium">{displayName}</span>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 bg-popover">
+                  <DropdownMenuLabel className="truncate font-normal text-muted-foreground">{session.email}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild><Link to="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard</Link></DropdownMenuItem>
+                  {isAdmin && <DropdownMenuItem asChild><Link to="/admin"><ShieldCheck className="mr-2 h-4 w-4" /> Admin</Link></DropdownMenuItem>}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={signOut}><LogOut className="mr-2 h-4 w-4" /> Sign out</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
           </div>
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen((v) => !v)} aria-label="Toggle navigation" aria-expanded={open}>
             {open ? <X /> : <Menu />}
@@ -80,9 +148,20 @@ export function SiteShell({ children }: { children: ReactNode }) {
               <Link key={to} to={to} onClick={() => setOpen(false)} className="block rounded-lg px-4 py-3 font-medium hover:bg-muted">{label}</Link>
             ))}
             <div className="mt-3 grid grid-cols-2 gap-2">
-              <Button asChild variant="outline"><Link to="/auth">Sign in</Link></Button>
-              <Button asChild><Link to="/dashboard">Dashboard</Link></Button>
+              {session ? (
+                <>
+                  <Button asChild variant="outline" onClick={() => setOpen(false)}><Link to="/dashboard">Dashboard</Link></Button>
+                  {isAdmin && <Button asChild variant="outline" onClick={() => setOpen(false)}><Link to="/admin">Admin</Link></Button>}
+                  <Button onClick={() => { setOpen(false); signOut(); }}><LogOut className="h-4 w-4" /> Sign out</Button>
+                </>
+              ) : (
+                <>
+                  <Button asChild variant="outline"><Link to="/auth">Sign in</Link></Button>
+                  <Button asChild><Link to="/auth?mode=signup">Get started</Link></Button>
+                </>
+              )}
             </div>
+
             <div className="mt-4 flex items-center gap-4 border-t pt-4 text-muted-foreground">
               <a href={SOCIAL.instagram.url} aria-label="Instagram" target="_blank" rel="noopener"><Instagram className="h-5 w-5" /></a>
               <a href={SOCIAL.facebook.url} aria-label="Facebook" target="_blank" rel="noopener"><Facebook className="h-5 w-5" /></a>
