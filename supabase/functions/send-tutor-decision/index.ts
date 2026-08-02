@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
 
     const { data: app } = await db
       .from("tutor_applications")
-      .select("id, full_name, email, subjects")
+      .select("id, user_id, full_name, email, phone, subjects, topics, qualifications, highest_qualification, years_experience, biography, teaching_philosophy, pricing, photo_path")
       .eq("id", applicationId)
       .maybeSingle();
     if (!app) return json({ error: "Application not found" }, 404);
@@ -54,6 +54,49 @@ Deno.serve(async (req) => {
     await db.from("tutor_applications")
       .update({ status: decision, admin_feedback: message ?? null })
       .eq("id", applicationId);
+
+    // Approval provisions the tutor: profile + tutor role. Access is granted only here.
+    if (decision === "approved" && app.user_id) {
+      const { data: existing } = await db
+        .from("tutor_profiles").select("id").eq("user_id", app.user_id).maybeSingle();
+
+      let photoUrl: string | null = null;
+      if (app.photo_path) {
+        const { data: signed } = await db.storage
+          .from("tutor-uploads").createSignedUrl(app.photo_path, 60 * 60 * 24 * 365);
+        photoUrl = signed?.signedUrl ?? null;
+      }
+
+      const payload = {
+        user_id: app.user_id,
+        application_id: app.id,
+        display_name: app.full_name,
+        photo_url: photoUrl,
+        bio: app.biography ?? app.teaching_philosophy ?? "",
+        subjects: app.subjects ?? [],
+        topics: app.topics ?? [],
+        qualifications: app.highest_qualification ? [app.highest_qualification] : (app.qualifications ?? []),
+        years_experience: app.years_experience ?? 0,
+        pricing: app.pricing ?? {},
+        is_approved: true,
+        is_visible: true,
+      };
+
+      if (existing?.id) await db.from("tutor_profiles").update(payload).eq("id", existing.id);
+      else await db.from("tutor_profiles").insert(payload);
+
+      await db.from("user_roles").upsert(
+        { user_id: app.user_id, role: "tutor" },
+        { onConflict: "user_id,role", ignoreDuplicates: true },
+      );
+    }
+
+    // Rejection / changes requested removes any previously granted tutor access.
+    if (decision !== "approved" && app.user_id) {
+      await db.from("tutor_profiles").update({ is_approved: false, is_visible: false }).eq("user_id", app.user_id);
+      await db.from("user_roles").delete().eq("user_id", app.user_id).eq("role", "tutor");
+    }
+
 
     let subject: string;
     let inner: string;
