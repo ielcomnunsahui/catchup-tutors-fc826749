@@ -3,8 +3,18 @@ import { supabase } from "@/integrations/supabase/client";
 export const SESSIONS = ["Feb / March", "May / June", "Oct / Nov"] as const;
 export type Session = (typeof SESSIONS)[number];
 
-export const PAPER_NUMBERS = ["12", "22", "32", "42", "52", "62"] as const;
-export type PaperNumber = (typeof PAPER_NUMBERS)[number];
+/** Paper components 1–6 shown per session. */
+export const PAPER_GROUPS = ["1", "2", "3", "4", "5", "6"] as const;
+export type PaperGroup = (typeof PAPER_GROUPS)[number];
+
+/** Variants within each component: paper 1 -> 11, 12, 13. */
+export const PAPER_VARIANTS = ["1", "2", "3"] as const;
+
+export const variantsOf = (group: string) => PAPER_VARIANTS.map((v) => `${group}${v}`);
+
+/** All 18 paper codes (11,12,13,21,…,63). */
+export const PAPER_NUMBERS = PAPER_GROUPS.flatMap((g) => variantsOf(g));
+export type PaperNumber = string;
 
 export const DOC_TYPES = ["question_paper", "mark_scheme"] as const;
 export type DocType = (typeof DOC_TYPES)[number];
