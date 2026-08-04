@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  PAPER_NUMBERS, PAPER_YEARS, SESSIONS, SUBJECT_OPTIONS,
+  PAPER_GROUPS, variantsOf, PAPER_YEARS, SESSIONS, SUBJECT_OPTIONS,
   fetchPastPapers, indexPapers, paperKey, type PastPaper,
 } from "@/lib/past-papers";
 
