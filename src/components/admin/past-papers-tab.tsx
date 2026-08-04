@@ -142,45 +142,50 @@ export default function PastPapersTab() {
                   <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
                     {doc === "question_paper" ? "Question Papers" : "Mark Schemes"}
                   </p>
-                  <div className="mt-3 space-y-2">
-                    {PAPER_NUMBERS.map((num) => {
-                      const c = cellFor(session, num, doc);
-                      return (
-                        <div key={num} className="flex items-center gap-2">
-                          <span className="w-8 shrink-0 text-xs font-bold text-primary">{num}</span>
-                          <Input
-                            value={c.url}
-                            placeholder="https://drive.google.com/file/d/…"
-                            onChange={(e) => setDraft(c.k, { url: e.target.value }, { url: c.url, access: c.access as Draft["access"] })}
-                            className={c.dirty ? "border-primary" : ""}
-                          />
-                          <Select
-                            value={c.access}
-                            onValueChange={(v) => setDraft(c.k, { access: v as Draft["access"] }, { url: c.url, access: c.access as Draft["access"] })}
-                          >
-                            <SelectTrigger className="w-[104px] shrink-0"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="free">Free</SelectItem>
-                              <SelectItem value="premium">Premium</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          {c.existing && (
-                            <>
-                              <Button asChild size="icon" variant="ghost" className="shrink-0" title="Open link">
-                                <a href={c.existing.file_url} target="_blank" rel="noopener"><ExternalLink className="h-4 w-4" /></a>
-                              </Button>
-                              <Button
-                                size="icon" variant="ghost" className="shrink-0 text-destructive" title="Remove"
-                                onClick={() => setDraft(c.k, { url: "" }, { url: "", access: c.access as Draft["access"] })}
+                  {PAPER_GROUPS.map((g) => (
+                    <div key={g} className="mt-3">
+                      <p className="text-[11px] font-semibold text-muted-foreground">Paper {g}</p>
+                      <div className="mt-2 space-y-2">
+                        {variantsOf(g).map((num) => {
+                          const c = cellFor(session, num, doc);
+                          return (
+                            <div key={num} className="flex items-center gap-2">
+                              <span className="w-8 shrink-0 text-xs font-bold text-primary">{num}</span>
+                              <Input
+                                value={c.url}
+                                placeholder="https://drive.google.com/file/d/…"
+                                onChange={(e) => setDraft(c.k, { url: e.target.value }, { url: c.url, access: c.access as Draft["access"] })}
+                                className={c.dirty ? "border-primary" : ""}
+                              />
+                              <Select
+                                value={c.access}
+                                onValueChange={(v) => setDraft(c.k, { access: v as Draft["access"] }, { url: c.url, access: c.access as Draft["access"] })}
                               >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+                                <SelectTrigger className="w-[104px] shrink-0"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="free">Free</SelectItem>
+                                  <SelectItem value="premium">Premium</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              {c.existing && (
+                                <>
+                                  <Button asChild size="icon" variant="ghost" className="shrink-0" title="Open link">
+                                    <a href={c.existing.file_url} target="_blank" rel="noopener"><ExternalLink className="h-4 w-4" /></a>
+                                  </Button>
+                                  <Button
+                                    size="icon" variant="ghost" className="shrink-0 text-destructive" title="Remove"
+                                    onClick={() => setDraft(c.k, { url: "" }, { url: "", access: c.access as Draft["access"] })}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ))}
             </section>
