@@ -227,7 +227,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
               </div>
             </div>
 
-            <FooterCol title="Learn" links={[["Programs","/programs"],["Resources","/resources"],["Tutors","/tutors"],["Pricing","/pricing"]]} />
+            <FooterCol title="Learn" links={[["Programs","/programs"],["Resources","/resources"],["Premium","/premium"],["Tutors","/tutors"],["Pricing","/pricing"]]} />
             <FooterCol title="Company" links={[["About","/about"],["Events","/events"],["Testimonials","/testimonials"],["FAQ","/faq"]]} />
             <FooterCol title="Support" links={[["Contact","/contact"],["Sign in","/auth"],["Privacy","/privacy"],["Terms","/terms"]]} />
           </div>
