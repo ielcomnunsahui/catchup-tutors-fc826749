@@ -581,7 +581,7 @@ function YearlyView({ program, subject, premium, onBack, onOpenPdf }: { program:
         </div>
       </div>
       <p className="mt-3 text-sm text-muted-foreground">
-        Every year is split into Feb/March, May/June and Oct/Nov — each with Question Papers and Mark Schemes 12, 22, 32, 42, 52 and 62.
+        Every year is split into Feb/March, May/June and Oct/Nov. Pick a paper (1–6) to see its variants — e.g. Paper 11, 12, 13 — each shown with its matching mark scheme.
       </p>
 
       <div className="mt-8 space-y-4">
