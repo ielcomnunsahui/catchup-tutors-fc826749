@@ -611,31 +611,15 @@ function YearlyView({ program, subject, premium, onBack, onOpenPdf }: { program:
               {open && (
                 <div className="grid gap-4 border-t bg-muted/20 p-4 lg:grid-cols-3">
                   {SESSIONS.map((session) => (
-                    <div key={session} className="rounded-xl border bg-card p-4">
-                      <p className="font-display text-sm font-bold">{session}</p>
-                      <div className="mt-4 space-y-5">
-                        {(["question_paper", "mark_scheme"] as const).map((doc) => (
-                          <div key={doc}>
-                            <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                              {doc === "question_paper" ? "Question Papers" : "Mark Schemes"}
-                            </p>
-                            <div className="mt-2 space-y-2">
-                              {PAPER_NUMBERS.map((num) => (
-                                <PaperPreview
-                                  key={num}
-                                  rec={papers.get(paperKey(subject.id, y, session, num, doc))}
-                                  num={num}
-                                  doc={doc}
-                                  label={`${subject.code} ${y} ${session} — ${doc === "question_paper" ? "Question Paper" : "Mark Scheme"} ${num}`}
-                                  premium={premium}
-                                  onOpenPdf={onOpenPdf}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                    <SessionCard
+                      key={session}
+                      session={session}
+                      year={y}
+                      subject={subject}
+                      papers={papers}
+                      premium={premium}
+                      onOpenPdf={onOpenPdf}
+                    />
                   ))}
                 </div>
               )}
