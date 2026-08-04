@@ -7,6 +7,7 @@ import Pricing from "./pages/Pricing";
 import Privacy from "./pages/Privacy";
 import Programs from "./pages/Programs";
 import Resources from "./pages/Resources";
+import Premium from "./pages/Premium";
 import Terms from "./pages/Terms";
 import Testimonials from "./pages/Testimonials";
 import Tutors from "./pages/Tutors";
