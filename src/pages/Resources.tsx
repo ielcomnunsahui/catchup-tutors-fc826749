@@ -632,6 +632,68 @@ function YearlyView({ program, subject, premium, onBack, onOpenPdf }: { program:
   );
 }
 
+function SessionCard({ session, year, subject, papers, premium, onOpenPdf }: {
+  session: Session; year: number; subject: Subject; papers: Map<string, PastPaper>;
+  premium: ReturnType<typeof usePremium>; onOpenPdf: OpenPdf;
+}) {
+  const [group, setGroup] = useState<string | null>(null);
+
+  const groupCount = (g: string) => variantsOf(g).reduce((n, v) =>
+    n + (papers.has(paperKey(subject.id, year, session, v, "question_paper")) ? 1 : 0)
+      + (papers.has(paperKey(subject.id, year, session, v, "mark_scheme")) ? 1 : 0), 0);
+
+  return (
+    <div className="rounded-xl border bg-card p-4">
+      <p className="font-display text-sm font-bold">{session}</p>
+      <p className="mt-1 text-[11px] text-muted-foreground">Select a paper to see its variants</p>
+
+      <div className="mt-3 grid grid-cols-3 gap-2">
+        {PAPER_GROUPS.map((g) => {
+          const active = group === g;
+          const count = groupCount(g);
+          return (
+            <button
+              key={g}
+              onClick={() => setGroup(active ? null : g)}
+              aria-pressed={active}
+              className={cn(
+                "rounded-lg border px-2 py-2 text-center transition hover:border-primary/50",
+                active ? "border-primary bg-primary/10" : "bg-muted/30",
+              )}
+            >
+              <span className="block text-xs font-bold">Paper {g}</span>
+              <span className="block text-[10px] text-muted-foreground">{count} file{count === 1 ? "" : "s"}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {group && (
+        <div className="mt-4 space-y-3">
+          {variantsOf(group).map((num) => (
+            <div key={num} className="rounded-lg border bg-muted/20 p-2">
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Paper {num}</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {(["question_paper", "mark_scheme"] as const).map((doc) => (
+                  <PaperPreview
+                    key={doc}
+                    rec={papers.get(paperKey(subject.id, year, session, num, doc))}
+                    num={num}
+                    doc={doc}
+                    label={`${subject.code} ${year} ${session} — ${doc === "question_paper" ? "Question Paper" : "Mark Scheme"} ${num}`}
+                    premium={premium}
+                    onOpenPdf={onOpenPdf}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 function PaperPreview({ rec, num, doc, label, premium, onOpenPdf }: {
   rec?: PastPaper; num: string; doc: "question_paper" | "mark_scheme"; label: string;
