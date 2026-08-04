@@ -35,6 +35,7 @@ export default function App() {
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/programs" element={<Programs />} />
       <Route path="/resources" element={<Resources />} />
+      <Route path="/premium" element={<Premium />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/testimonials" element={<Testimonials />} />
       <Route path="/tutors" element={<Tutors />} />
