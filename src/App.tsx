@@ -7,6 +7,7 @@ import Pricing from "./pages/Pricing";
 import Privacy from "./pages/Privacy";
 import Programs from "./pages/Programs";
 import Resources from "./pages/Resources";
+import Premium from "./pages/Premium";
 import Terms from "./pages/Terms";
 import Testimonials from "./pages/Testimonials";
 import Tutors from "./pages/Tutors";
@@ -34,6 +35,7 @@ export default function App() {
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/programs" element={<Programs />} />
       <Route path="/resources" element={<Resources />} />
+      <Route path="/premium" element={<Premium />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/testimonials" element={<Testimonials />} />
       <Route path="/tutors" element={<Tutors />} />

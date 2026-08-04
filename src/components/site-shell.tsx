@@ -183,7 +183,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-hero-foreground/60">Email us</p>
                 <p className="mt-1 text-sm font-medium">Catchuptutors01@gmail.com</p>
-                <p className="text-xs text-hero-foreground/60">support@catchuptutors.com</p>
+                <p className="text-xs text-hero-foreground/60">We reply within 24 hours</p>
               </div>
             </a>
             <a href="https://wa.me/2348101804411" target="_blank" rel="noopener" className="group flex items-start gap-4 rounded-xl p-4 -m-4 transition-colors hover:bg-hero-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hero-foreground">
@@ -227,7 +227,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
               </div>
             </div>
 
-            <FooterCol title="Learn" links={[["Programs","/programs"],["Resources","/resources"],["Tutors","/tutors"],["Pricing","/pricing"]]} />
+            <FooterCol title="Learn" links={[["Programs","/programs"],["Resources","/resources"],["Premium","/premium"],["Tutors","/tutors"],["Pricing","/pricing"]]} />
             <FooterCol title="Company" links={[["About","/about"],["Events","/events"],["Testimonials","/testimonials"],["FAQ","/faq"]]} />
             <FooterCol title="Support" links={[["Contact","/contact"],["Sign in","/auth"],["Privacy","/privacy"],["Terms","/terms"]]} />
           </div>
