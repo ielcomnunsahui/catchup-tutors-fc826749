@@ -127,6 +127,8 @@ export default function SettingsTab() {
         </div>
       </section>
 
+      <PremiumContentSection />
+
       <section className="rounded-2xl border bg-card p-6 text-sm">
         <h3 className="font-display text-lg font-bold">How the flow works</h3>
         <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-muted-foreground">
