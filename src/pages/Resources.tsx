@@ -645,21 +645,16 @@ function SessionCard({ session, year, subject, papers, premium, onOpenPdf }: {
   return (
     <div className="rounded-xl border bg-card p-4">
       <p className="font-display text-sm font-bold">{session}</p>
-      <p className="mt-1 text-[11px] text-muted-foreground">Select a paper to see its variants</p>
+      <p className="mt-1 text-[11px] text-muted-foreground">Tap a paper to choose its variant</p>
 
       <div className="mt-3 grid grid-cols-3 gap-2">
         {PAPER_GROUPS.map((g) => {
-          const active = group === g;
           const count = groupCount(g);
           return (
             <button
               key={g}
-              onClick={() => setGroup(active ? null : g)}
-              aria-pressed={active}
-              className={cn(
-                "rounded-lg border px-2 py-2 text-center transition hover:border-primary/50",
-                active ? "border-primary bg-primary/10" : "bg-muted/30",
-              )}
+              onClick={() => setGroup(g)}
+              className="rounded-lg border bg-muted/30 px-2 py-2 text-center transition hover:-translate-y-0.5 hover:border-primary/50 hover:bg-primary/5"
             >
               <span className="block text-xs font-bold">Paper {g}</span>
               <span className="block text-[10px] text-muted-foreground">{count} file{count === 1 ? "" : "s"}</span>
@@ -668,28 +663,38 @@ function SessionCard({ session, year, subject, papers, premium, onOpenPdf }: {
         })}
       </div>
 
-      {group && (
-        <div className="mt-4 space-y-3">
-          {variantsOf(group).map((num) => (
-            <div key={num} className="rounded-lg border bg-muted/20 p-2">
-              <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Paper {num}</p>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {(["question_paper", "mark_scheme"] as const).map((doc) => (
-                  <PaperPreview
-                    key={doc}
-                    rec={papers.get(paperKey(subject.id, year, session, num, doc))}
-                    num={num}
-                    doc={doc}
-                    label={`${subject.code} ${year} ${session} — ${doc === "question_paper" ? "Question Paper" : "Mark Scheme"} ${num}`}
-                    premium={premium}
-                    onOpenPdf={onOpenPdf}
-                  />
-                ))}
+      <Dialog open={!!group} onOpenChange={(o) => !o && setGroup(null)}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="font-display">
+              {subject.code} · {year} · {session} — Paper {group}
+            </DialogTitle>
+          </DialogHeader>
+          <p className="-mt-2 text-xs text-muted-foreground">
+            Choose a variant. Each question paper is shown with its matching mark scheme.
+          </p>
+          <div className="mt-2 space-y-3">
+            {group && variantsOf(group).map((num) => (
+              <div key={num} className="rounded-xl border bg-muted/20 p-3">
+                <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Variant · Paper {num}</p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {(["question_paper", "mark_scheme"] as const).map((doc) => (
+                    <PaperPreview
+                      key={doc}
+                      rec={papers.get(paperKey(subject.id, year, session, num, doc))}
+                      num={num}
+                      doc={doc}
+                      label={`${subject.code} ${year} ${session} — ${doc === "question_paper" ? "Question Paper" : "Mark Scheme"} ${num}`}
+                      premium={premium}
+                      onOpenPdf={onOpenPdf}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
