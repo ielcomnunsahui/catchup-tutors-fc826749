@@ -171,7 +171,7 @@ export default function Index() {
           src={hero1600}
           srcSet={`${hero768} 768w, ${hero1200} 1200w, ${hero1600} 1600w`}
           sizes="100vw"
-          alt="Students working through Mathematics problems together in a bright classroom"
+          alt="Catch-Up Tutors tutor teaching Nigerian secondary school students Mathematics at a whiteboard"
           width={1600}
           height={1000}
           fetchPriority="high"

@@ -52,12 +52,40 @@ const subjectsByProgram = (pid: string) => SUBJECTS.filter((s) => s.programId ==
 const YEARS = [2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018];
 
 
-const TOPICS: Record<string, string[]> = {
-  "math-9709": ["Quadratics", "Functions", "Coordinate Geometry", "Circular Measure", "Trigonometry", "Series", "Differentiation", "Integration", "Vectors", "Numerical Solutions", "Probability", "Statistics"],
-  "fmath-9231": ["Roots of Polynomials", "Rational Functions", "Summation of Series", "Matrices", "Polar Coordinates", "Vectors", "Proof by Induction", "Differential Equations", "Complex Numbers", "Hyperbolic Functions"],
-  "math-0580": ["Number", "Algebra", "Coordinate Geometry", "Geometry", "Mensuration", "Trigonometry", "Vectors & Transformations", "Statistics", "Probability"],
-  "fmath-0606": ["Sets", "Functions", "Quadratic Functions", "Indices & Surds", "Factors of Polynomials", "Logarithmic & Exponential", "Straight Line Graphs", "Circular Measure", "Trigonometry", "Permutations & Combinations", "Series", "Vectors", "Differentiation", "Integration", "Kinematics"],
+/** Topic past questions are organised per paper component, in syllabus order. */
+type TopicPaper = { paper: string; label: string; topics: string[] };
+
+const TOPIC_PAPERS: Record<string, TopicPaper[]> = {
+  "math-9709": [
+    { paper: "1", label: "Pure Mathematics 1", topics: ["Quadratics", "Functions", "Coordinate Geometry", "Circular Measure", "Trigonometry", "Series", "Differentiation", "Integration"] },
+    { paper: "2", label: "Pure Mathematics 2", topics: ["Algebra", "Logarithmic & Exponential Functions", "Trigonometry", "Differentiation", "Integration", "Numerical Solutions"] },
+    { paper: "3", label: "Pure Mathematics 3", topics: ["Algebra", "Logarithmic & Exponential Functions", "Trigonometry", "Differentiation", "Integration", "Numerical Solutions", "Vectors", "Differential Equations", "Complex Numbers"] },
+    { paper: "4", label: "Mechanics", topics: ["Forces & Equilibrium", "Kinematics of Motion in a Straight Line", "Momentum", "Newton's Laws of Motion", "Energy, Work & Power"] },
+    { paper: "5", label: "Probability & Statistics 1", topics: ["Representation of Data", "Permutations & Combinations", "Probability", "Discrete Random Variables", "The Normal Distribution"] },
+    { paper: "6", label: "Probability & Statistics 2", topics: ["The Poisson Distribution", "Linear Combinations of Random Variables", "Continuous Random Variables", "Sampling & Estimation", "Hypothesis Tests"] },
+  ],
+  "fmath-9231": [
+    { paper: "1", label: "Further Pure Mathematics 1", topics: ["Roots of Polynomials", "Rational Functions", "Summation of Series", "Matrices", "Polar Coordinates", "Vectors", "Proof by Induction", "Conics"] },
+    { paper: "2", label: "Further Pure Mathematics 2", topics: ["Hyperbolic Functions", "Complex Numbers", "Differentiation & Integration", "Differential Equations", "Series", "Matrices & Linear Spaces"] },
+    { paper: "3", label: "Further Mechanics", topics: ["Motion of a Projectile", "Equilibrium of a Rigid Body", "Circular Motion", "Hooke's Law", "Linear Motion under a Variable Force", "Momentum & Impulse"] },
+    { paper: "4", label: "Further Probability & Statistics", topics: ["Continuous Random Variables", "Inference using Normal & t-Distributions", "Chi-squared Tests", "Non-parametric Tests", "Probability Generating Functions"] },
+  ],
+  "math-0580": [
+    { paper: "1", label: "Core — Non-calculator", topics: ["Number", "Algebra", "Coordinate Geometry", "Geometry", "Mensuration"] },
+    { paper: "2", label: "Extended — Non-calculator", topics: ["Number", "Algebra & Graphs", "Coordinate Geometry", "Geometry", "Mensuration", "Trigonometry"] },
+    { paper: "3", label: "Core — Calculator", topics: ["Mensuration", "Trigonometry", "Vectors & Transformations", "Statistics", "Probability"] },
+    { paper: "4", label: "Extended — Calculator", topics: ["Algebra & Graphs", "Trigonometry", "Vectors & Transformations", "Statistics", "Probability", "Functions"] },
+  ],
+  "fmath-0606": [
+    { paper: "1", label: "Additional Mathematics — Paper 1", topics: ["Sets", "Functions", "Quadratic Functions", "Indices & Surds", "Factors of Polynomials", "Logarithmic & Exponential", "Straight Line Graphs", "Circular Measure"] },
+    { paper: "2", label: "Additional Mathematics — Paper 2", topics: ["Trigonometry", "Permutations & Combinations", "Series", "Vectors", "Differentiation", "Integration", "Kinematics"] },
+  ],
 };
+
+const TOPICS: Record<string, string[]> = Object.fromEntries(
+  Object.entries(TOPIC_PAPERS).map(([id, papers]) => [id, [...new Set(papers.flatMap((p) => p.topics))]]),
+);
+
 
 // ---------- real assets ----------
 const SAMPLE_PDF = "https://www.africau.edu/images/default/sample.pdf";
@@ -758,48 +786,80 @@ function PaperPreview({ rec, num, doc, label, premium, onOpenPdf }: {
 }
 
 function TopicsView({ program, subject, premium, onBack, onOpenPdf, onOpenVideo }: { program: Program; subject: Subject; premium: ReturnType<typeof usePremium>; onBack: () => void; onOpenPdf: OpenPdf; onOpenVideo: OpenVideo }) {
-  const topics = TOPICS[subject.id] ?? [];
+  const papers = TOPIC_PAPERS[subject.id] ?? [];
+  const [selected, setSelected] = useState<string | null>(null);
+  const active = papers.find((p) => p.paper === selected) ?? null;
+
   return (
     <div>
-      <BackBar onBack={onBack} label="Back to practice options" />
+      <BackBar onBack={active ? () => setSelected(null) : onBack} label={active ? "Back to papers" : "Back to practice options"} />
       <div className="mt-6 flex items-center gap-3">
-        <Layers3 className="text-brand-orange" />
-        <div><h2 className="font-display text-3xl font-bold">Topic-based past questions</h2><p className="text-sm text-muted-foreground">{program.name} · {subject.name} ({subject.code})</p></div>
+        <Layers3 className="shrink-0 text-brand-orange" />
+        <div>
+          <h2 className="font-display text-2xl font-bold sm:text-3xl">
+            {active ? `Paper ${active.paper} · ${active.label}` : "Topic-based past questions"}
+          </h2>
+          <p className="text-sm text-muted-foreground">{program.name} · {subject.name} ({subject.code})</p>
+        </div>
       </div>
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {topics.map((topic, i) => {
-          const a = getTopicAssets(subject.id, topic);
-          const hasReal = !!(a.questions || a.solutions || a.videoUrl);
-          const isFree = !!a.isFree;
-          const lockedNonFree = hasReal && !isFree && !premium.isPremium;
-          return (
-            <article key={topic} className="group flex flex-col rounded-2xl border bg-card p-5 transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-soft">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Topic {String(i + 1).padStart(2, "0")}</span>
-                {hasReal ? (isFree ? <FreeBadge /> : <PremiumBadge />) : <span className="text-[10px] font-semibold uppercase text-muted-foreground/70">Coming soon</span>}
-              </div>
-              <h3 className="mt-2 font-display text-lg font-bold">{topic}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">Past questions · Worked solutions · Video lesson</p>
-              <div className="mt-4 grid gap-2">
-                <Button size="sm" variant="outline" className="justify-start" disabled={!a.questions && !hasReal}
-                  onClick={() => onOpenPdf(a.questions ?? SAMPLE_PDF, `${topic} — Past Questions`, false)}>
-                  <BookMarked /> View past questions
-                </Button>
-                <LockableButton locked={lockedNonFree} onClick={() => onOpenPdf(a.solutions ?? SAMPLE_PDF, `${topic} — Worked Solutions`, !isFree && hasReal)}>
-                  <BookMarked /> {lockedNonFree ? "Solutions (Premium)" : "View solutions"}
-                </LockableButton>
-                {a.videoUrl ? (
-                  <LockableButton locked={lockedNonFree} onClick={() => onOpenVideo(a.videoUrl!, `${topic} — Video Solution`, !isFree)}>
-                    <PlayCircle /> {lockedNonFree ? "Video (Premium)" : "Watch video"}
+
+      {!active ? (
+        <>
+          <p className="mt-6 max-w-2xl text-sm text-muted-foreground">Choose a paper component — you'll then see its topics in syllabus order.</p>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {papers.map((p) => (
+              <button
+                key={p.paper}
+                onClick={() => setSelected(p.paper)}
+                className="group flex items-start gap-4 rounded-2xl border bg-card p-5 text-left transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-soft"
+              >
+                <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 font-display text-lg font-bold text-primary">{p.paper}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-display text-lg font-bold">Paper {p.paper}</span>
+                  <span className="block text-sm text-muted-foreground">{p.label}</span>
+                  <span className="mt-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground/80">{p.topics.length} topics</span>
+                </span>
+                <ChevronRight className="mt-1 size-5 shrink-0 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-primary" />
+              </button>
+            ))}
+          </div>
+        </>
+      ) : (
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {active.topics.map((topic, i) => {
+            const a = getTopicAssets(subject.id, topic);
+            const hasReal = !!(a.questions || a.solutions || a.videoUrl);
+            const isFree = !!a.isFree;
+            const lockedNonFree = hasReal && !isFree && !premium.isPremium;
+            return (
+              <article key={topic} className="group flex flex-col rounded-2xl border bg-card p-5 transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-soft">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Topic {String(i + 1).padStart(2, "0")}</span>
+                  {hasReal ? (isFree ? <FreeBadge /> : <PremiumBadge />) : <span className="text-[10px] font-semibold uppercase text-muted-foreground/70">Coming soon</span>}
+                </div>
+                <h3 className="mt-2 break-words font-display text-lg font-bold leading-snug">{topic}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">Past questions · Worked solutions · Video lesson</p>
+                <div className="mt-4 grid gap-2">
+                  <Button size="sm" variant="outline" className="justify-start" disabled={!a.questions && !hasReal}
+                    onClick={() => onOpenPdf(a.questions ?? SAMPLE_PDF, `${topic} — Past Questions`, false)}>
+                    <BookMarked /> View past questions
+                  </Button>
+                  <LockableButton locked={lockedNonFree} onClick={() => onOpenPdf(a.solutions ?? SAMPLE_PDF, `${topic} — Worked Solutions`, !isFree && hasReal)}>
+                    <BookMarked /> {lockedNonFree ? "Solutions (Premium)" : "View solutions"}
                   </LockableButton>
-                ) : (
-                  <Button size="sm" variant="outline" className="justify-start" disabled><PlayCircle /> Video coming soon</Button>
-                )}
-              </div>
-            </article>
-          );
-        })}
-      </div>
+                  {a.videoUrl ? (
+                    <LockableButton locked={lockedNonFree} onClick={() => onOpenVideo(a.videoUrl!, `${topic} — Video Solution`, !isFree)}>
+                      <PlayCircle /> {lockedNonFree ? "Video (Premium)" : "Watch video"}
+                    </LockableButton>
+                  ) : (
+                    <Button size="sm" variant="outline" className="justify-start" disabled><PlayCircle /> Video coming soon</Button>
+                  )}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -831,3 +891,4 @@ export function TutorCTA() {
     </aside>
   );
 }
+
