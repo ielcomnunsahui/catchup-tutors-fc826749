@@ -24,8 +24,10 @@ export default function PaymentCallback() {
         return;
       }
       setState("paid");
+      notifyPremiumChanged();
       if (res.endsAt) setDetail(`Your premium access runs until ${new Date(res.endsAt).toLocaleDateString()}.`);
     })();
+
   }, [reference]);
 
   return (
