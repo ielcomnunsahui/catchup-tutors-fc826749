@@ -91,13 +91,13 @@ export default function Premium() {
 
       <div className="mx-auto max-w-7xl px-4 pb-24 sm:px-6 lg:px-8">
         {/* Status / CTA banner */}
-        <div className="-mt-8 rounded-2xl border bg-card p-6 shadow-soft">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className={`flex size-12 items-center justify-center rounded-xl ${unlocked ? "bg-brand-green/10 text-brand-green" : "bg-brand-orange/10 text-brand-orange"}`}>
+        <div className="-mt-8 rounded-2xl border bg-card p-5 shadow-soft sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className={`flex size-12 shrink-0 items-center justify-center rounded-xl ${unlocked ? "bg-brand-green/10 text-brand-green" : "bg-brand-orange/10 text-brand-orange"}`}>
               {unlocked ? <Unlock /> : <Crown />}
             </div>
             <div className="min-w-0 flex-1">
-              <h2 className="font-display text-xl font-bold">
+              <h2 className="font-display text-lg font-bold sm:text-xl">
                 {unlocked ? "Your premium access is active" : "These resources are locked"}
               </h2>
               <p className="text-sm text-muted-foreground">
@@ -107,7 +107,7 @@ export default function Premium() {
               </p>
             </div>
             {!unlocked && (
-              <Button asChild size="lg">
+              <Button asChild size="lg" className="w-full sm:w-auto sm:shrink-0">
                 <Link to="/pricing"><Sparkles /> {settings.cta_label}</Link>
               </Button>
             )}
@@ -115,11 +115,12 @@ export default function Premium() {
           <ul className="mt-5 grid gap-2 sm:grid-cols-3">
             {settings.perks.map((perk) => (
               <li key={perk} className="flex items-start gap-2 rounded-xl border bg-muted/30 p-3 text-sm">
-                <Sparkles className="mt-0.5 size-4 shrink-0 text-primary" /> {perk}
+                <Sparkles className="mt-0.5 size-4 shrink-0 text-primary" /> <span className="min-w-0 break-words">{perk}</span>
               </li>
             ))}
           </ul>
         </div>
+
 
         {/* Search */}
         <div className="mt-10 flex flex-wrap items-center gap-3">
