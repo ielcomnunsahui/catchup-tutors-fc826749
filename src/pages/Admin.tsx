@@ -78,18 +78,21 @@ function AdminPage() {
       </section>
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <Tabs defaultValue="overview">
-          <TabsList className="grid w-full grid-cols-3 gap-1 rounded-2xl bg-muted/60 p-1 md:grid-cols-5 lg:grid-cols-10">
-            <AdminTab value="overview" icon={LayoutDashboard} label="Overview" />
-            <AdminTab value="registrations" icon={ClipboardList} label="Summer registrations" />
-            <AdminTab value="students" icon={Users} label="Students" />
-            <AdminTab value="tutor-apps" icon={UserCheck} label="Tutor applications" />
-            <AdminTab value="programs" icon={GraduationCap} label="Programs" />
-            <AdminTab value="subjects" icon={BookOpen} label="Subjects" />
-            <AdminTab value="topics" icon={FolderTree} label="Topics" />
-            <AdminTab value="resources" icon={FileText} label="Resources" />
-            <AdminTab value="past-papers" icon={CalendarDays} label="Past papers" />
-            <AdminTab value="settings" icon={Settings} label="Settings" />
-          </TabsList>
+          <div className="-mx-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <TabsList className="inline-flex w-max min-w-full gap-1 rounded-2xl bg-muted/60 p-1 lg:grid lg:grid-cols-10">
+              <AdminTab value="overview" icon={LayoutDashboard} label="Overview" />
+              <AdminTab value="registrations" icon={ClipboardList} label="Summer registrations" />
+              <AdminTab value="students" icon={Users} label="Students" />
+              <AdminTab value="tutor-apps" icon={UserCheck} label="Tutor applications" />
+              <AdminTab value="programs" icon={GraduationCap} label="Programs" />
+              <AdminTab value="subjects" icon={BookOpen} label="Subjects" />
+              <AdminTab value="topics" icon={FolderTree} label="Topics" />
+              <AdminTab value="resources" icon={FileText} label="Resources" />
+              <AdminTab value="past-papers" icon={CalendarDays} label="Past papers" />
+              <AdminTab value="settings" icon={Settings} label="Settings" />
+            </TabsList>
+          </div>
+
           <TabsContent value="overview" className="mt-8"><OverviewTab /></TabsContent>
           <TabsContent value="registrations" className="mt-8"><RegistrationsTab /></TabsContent>
           <TabsContent value="students" className="mt-8"><StudentsTab /></TabsContent>
