@@ -786,48 +786,80 @@ function PaperPreview({ rec, num, doc, label, premium, onOpenPdf }: {
 }
 
 function TopicsView({ program, subject, premium, onBack, onOpenPdf, onOpenVideo }: { program: Program; subject: Subject; premium: ReturnType<typeof usePremium>; onBack: () => void; onOpenPdf: OpenPdf; onOpenVideo: OpenVideo }) {
-  const topics = TOPICS[subject.id] ?? [];
+  const papers = TOPIC_PAPERS[subject.id] ?? [];
+  const [selected, setSelected] = useState<string | null>(null);
+  const active = papers.find((p) => p.paper === selected) ?? null;
+
   return (
     <div>
-      <BackBar onBack={onBack} label="Back to practice options" />
+      <BackBar onBack={active ? () => setSelected(null) : onBack} label={active ? "Back to papers" : "Back to practice options"} />
       <div className="mt-6 flex items-center gap-3">
-        <Layers3 className="text-brand-orange" />
-        <div><h2 className="font-display text-3xl font-bold">Topic-based past questions</h2><p className="text-sm text-muted-foreground">{program.name} · {subject.name} ({subject.code})</p></div>
+        <Layers3 className="shrink-0 text-brand-orange" />
+        <div>
+          <h2 className="font-display text-2xl font-bold sm:text-3xl">
+            {active ? `Paper ${active.paper} · ${active.label}` : "Topic-based past questions"}
+          </h2>
+          <p className="text-sm text-muted-foreground">{program.name} · {subject.name} ({subject.code})</p>
+        </div>
       </div>
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {topics.map((topic, i) => {
-          const a = getTopicAssets(subject.id, topic);
-          const hasReal = !!(a.questions || a.solutions || a.videoUrl);
-          const isFree = !!a.isFree;
-          const lockedNonFree = hasReal && !isFree && !premium.isPremium;
-          return (
-            <article key={topic} className="group flex flex-col rounded-2xl border bg-card p-5 transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-soft">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Topic {String(i + 1).padStart(2, "0")}</span>
-                {hasReal ? (isFree ? <FreeBadge /> : <PremiumBadge />) : <span className="text-[10px] font-semibold uppercase text-muted-foreground/70">Coming soon</span>}
-              </div>
-              <h3 className="mt-2 font-display text-lg font-bold">{topic}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">Past questions · Worked solutions · Video lesson</p>
-              <div className="mt-4 grid gap-2">
-                <Button size="sm" variant="outline" className="justify-start" disabled={!a.questions && !hasReal}
-                  onClick={() => onOpenPdf(a.questions ?? SAMPLE_PDF, `${topic} — Past Questions`, false)}>
-                  <BookMarked /> View past questions
-                </Button>
-                <LockableButton locked={lockedNonFree} onClick={() => onOpenPdf(a.solutions ?? SAMPLE_PDF, `${topic} — Worked Solutions`, !isFree && hasReal)}>
-                  <BookMarked /> {lockedNonFree ? "Solutions (Premium)" : "View solutions"}
-                </LockableButton>
-                {a.videoUrl ? (
-                  <LockableButton locked={lockedNonFree} onClick={() => onOpenVideo(a.videoUrl!, `${topic} — Video Solution`, !isFree)}>
-                    <PlayCircle /> {lockedNonFree ? "Video (Premium)" : "Watch video"}
+
+      {!active ? (
+        <>
+          <p className="mt-6 max-w-2xl text-sm text-muted-foreground">Choose a paper component — you'll then see its topics in syllabus order.</p>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {papers.map((p) => (
+              <button
+                key={p.paper}
+                onClick={() => setSelected(p.paper)}
+                className="group flex items-start gap-4 rounded-2xl border bg-card p-5 text-left transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-soft"
+              >
+                <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 font-display text-lg font-bold text-primary">{p.paper}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-display text-lg font-bold">Paper {p.paper}</span>
+                  <span className="block text-sm text-muted-foreground">{p.label}</span>
+                  <span className="mt-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground/80">{p.topics.length} topics</span>
+                </span>
+                <ChevronRight className="mt-1 size-5 shrink-0 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-primary" />
+              </button>
+            ))}
+          </div>
+        </>
+      ) : (
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {active.topics.map((topic, i) => {
+            const a = getTopicAssets(subject.id, topic);
+            const hasReal = !!(a.questions || a.solutions || a.videoUrl);
+            const isFree = !!a.isFree;
+            const lockedNonFree = hasReal && !isFree && !premium.isPremium;
+            return (
+              <article key={topic} className="group flex flex-col rounded-2xl border bg-card p-5 transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-soft">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Topic {String(i + 1).padStart(2, "0")}</span>
+                  {hasReal ? (isFree ? <FreeBadge /> : <PremiumBadge />) : <span className="text-[10px] font-semibold uppercase text-muted-foreground/70">Coming soon</span>}
+                </div>
+                <h3 className="mt-2 break-words font-display text-lg font-bold leading-snug">{topic}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">Past questions · Worked solutions · Video lesson</p>
+                <div className="mt-4 grid gap-2">
+                  <Button size="sm" variant="outline" className="justify-start" disabled={!a.questions && !hasReal}
+                    onClick={() => onOpenPdf(a.questions ?? SAMPLE_PDF, `${topic} — Past Questions`, false)}>
+                    <BookMarked /> View past questions
+                  </Button>
+                  <LockableButton locked={lockedNonFree} onClick={() => onOpenPdf(a.solutions ?? SAMPLE_PDF, `${topic} — Worked Solutions`, !isFree && hasReal)}>
+                    <BookMarked /> {lockedNonFree ? "Solutions (Premium)" : "View solutions"}
                   </LockableButton>
-                ) : (
-                  <Button size="sm" variant="outline" className="justify-start" disabled><PlayCircle /> Video coming soon</Button>
-                )}
-              </div>
-            </article>
-          );
-        })}
-      </div>
+                  {a.videoUrl ? (
+                    <LockableButton locked={lockedNonFree} onClick={() => onOpenVideo(a.videoUrl!, `${topic} — Video Solution`, !isFree)}>
+                      <PlayCircle /> {lockedNonFree ? "Video (Premium)" : "Watch video"}
+                    </LockableButton>
+                  ) : (
+                    <Button size="sm" variant="outline" className="justify-start" disabled><PlayCircle /> Video coming soon</Button>
+                  )}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -859,3 +891,4 @@ export function TutorCTA() {
     </aside>
   );
 }
+
