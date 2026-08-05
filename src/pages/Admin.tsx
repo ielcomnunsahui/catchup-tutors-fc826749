@@ -113,11 +113,13 @@ function AdminPage() {
 
 function AdminTab({ value, icon: Icon, label }: { value: string; icon: typeof LayoutDashboard; label: string }) {
   return (
-    <TabsTrigger value={value} className="gap-2 rounded-xl text-xs data-[state=active]:bg-background data-[state=active]:shadow sm:text-sm">
-      <Icon className="h-4 w-4" /> <span className="hidden sm:inline">{label}</span>
+    <TabsTrigger value={value} className="shrink-0 gap-2 whitespace-nowrap rounded-xl px-3 text-xs data-[state=active]:bg-background data-[state=active]:shadow sm:text-sm lg:px-2">
+      <Icon className="h-4 w-4 shrink-0" /> <span className="lg:hidden xl:inline">{label}</span>
+      <span className="hidden lg:inline xl:hidden">{label.split(" ")[0]}</span>
     </TabsTrigger>
   );
 }
+
 
 function useTable<T extends { id: string }>(table: "programs" | "subjects" | "topics" | "resources", orderBy = "sort_order") {
   const [rows, setRows] = useState<T[]>([]);
