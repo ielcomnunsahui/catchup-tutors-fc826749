@@ -171,10 +171,10 @@ export default function Premium() {
 
         {videos.length > 0 && (
           <>
-            <h2 className="mt-14 font-display text-2xl font-bold">Premium video lessons</h2>
-            <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <h2 className="mt-14 font-display text-xl font-bold sm:text-2xl">Premium video lessons</h2>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {videos.map((v) => (
-                <article key={v.id} className="overflow-hidden rounded-2xl border bg-card">
+                <article key={v.id} className="flex flex-col overflow-hidden rounded-2xl border bg-card">
                   <div className="relative aspect-video bg-muted">
                     {v.thumbnail_url && <img src={v.thumbnail_url} alt={v.title} loading="lazy" className="h-full w-full object-cover" />}
                     {!unlocked && (
@@ -184,15 +184,16 @@ export default function Premium() {
                     )}
                     {unlocked && <PlayCircle className="absolute inset-0 m-auto size-10 text-primary" />}
                   </div>
-                  <div className="p-4">
-                    <h3 className="font-display text-base font-bold">{v.title}</h3>
+                  <div className="flex flex-1 flex-col p-4">
+                    <h3 className="break-words font-display text-base font-bold leading-snug">{v.title}</h3>
                     <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{v.description}</p>
                     {!unlocked && (
-                      <Button asChild size="sm" variant="outline" className="mt-3 w-full">
-                        <Link to="/pricing"><LockKeyhole className="size-4" /> {settings.cta_label}</Link>
+                      <Button asChild size="sm" variant="outline" className="mt-3 h-auto w-full whitespace-normal py-2">
+                        <Link to="/pricing"><LockKeyhole className="size-4 shrink-0" /> {settings.cta_label}</Link>
                       </Button>
                     )}
                   </div>
+
                 </article>
               ))}
             </div>
