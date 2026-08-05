@@ -124,9 +124,9 @@ export default function Premium() {
 
         {/* Search */}
         <div className="mt-10 flex flex-wrap items-center gap-3">
-          <h2 className="font-display text-2xl font-bold">Premium past papers</h2>
+          <h2 className="font-display text-xl font-bold sm:text-2xl">Premium past papers</h2>
           <Badge variant="secondary">{filtered.length}</Badge>
-          <div className="relative ml-auto w-full max-w-xs">
+          <div className="relative w-full sm:ml-auto sm:w-auto sm:max-w-xs sm:flex-1">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search subject, year, session…" className="pl-9" />
           </div>
@@ -139,27 +139,27 @@ export default function Premium() {
             No premium papers published yet — check back soon.
           </p>
         ) : (
-          <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((p) => (
-              <article key={p.id} className="relative overflow-hidden rounded-2xl border bg-card p-5 transition hover:-translate-y-0.5 hover:shadow-soft">
+              <article key={p.id} className="flex flex-col overflow-hidden rounded-2xl border bg-card p-4 transition hover:-translate-y-0.5 hover:shadow-soft sm:p-5">
                 <div className="flex items-start gap-3">
-                  <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><FileText className="size-5" /></span>
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-bold uppercase tracking-wide text-primary">{subjectLabel(p.subject_key)}</p>
-                    <h3 className="truncate font-display text-base font-bold" title={p.title ?? paperFileName(p)}>
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><FileText className="size-5" /></span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-primary break-words">{subjectLabel(p.subject_key)}</p>
+                    <h3 className="break-words font-display text-base font-bold leading-snug" title={p.title ?? paperFileName(p)}>
                       {p.title ?? paperFileName(p)}
                     </h3>
-                    <p className="text-xs text-muted-foreground">{p.year} · {p.session} · Paper {p.paper_number}</p>
+                    <p className="mt-0.5 break-words text-xs text-muted-foreground">{p.year} · {p.session} · Paper {p.paper_number}</p>
                   </div>
                 </div>
                 <div className="mt-4">
                   {unlocked ? (
-                    <Button asChild size="sm" variant="outline" className="w-full">
-                      <a href={p.file_url} target="_blank" rel="noopener"><Unlock className="size-4" /> Open resource</a>
+                    <Button asChild size="sm" variant="outline" className="h-auto w-full whitespace-normal py-2 text-center">
+                      <a href={p.file_url} target="_blank" rel="noopener"><Unlock className="size-4 shrink-0" /> Open resource</a>
                     </Button>
                   ) : (
-                    <Button asChild size="sm" variant="outline" className="w-full">
-                      <Link to="/pricing"><LockKeyhole className="size-4" /> Locked · {settings.cta_label}</Link>
+                    <Button asChild size="sm" variant="outline" className="h-auto w-full whitespace-normal py-2 text-center">
+                      <Link to="/pricing"><LockKeyhole className="size-4 shrink-0" /> Locked · {settings.cta_label}</Link>
                     </Button>
                   )}
                 </div>
@@ -167,6 +167,7 @@ export default function Premium() {
             ))}
           </div>
         )}
+
 
         {videos.length > 0 && (
           <>
