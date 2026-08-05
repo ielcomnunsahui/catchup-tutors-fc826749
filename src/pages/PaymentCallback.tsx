@@ -4,6 +4,8 @@ import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { SiteShell, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { notifyPremiumChanged } from "@/hooks/use-premium";
+
 
 export default function PaymentCallback() {
   const [params] = useSearchParams();
