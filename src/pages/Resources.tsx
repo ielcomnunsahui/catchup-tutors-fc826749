@@ -52,12 +52,40 @@ const subjectsByProgram = (pid: string) => SUBJECTS.filter((s) => s.programId ==
 const YEARS = [2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018];
 
 
-const TOPICS: Record<string, string[]> = {
-  "math-9709": ["Quadratics", "Functions", "Coordinate Geometry", "Circular Measure", "Trigonometry", "Series", "Differentiation", "Integration", "Vectors", "Numerical Solutions", "Probability", "Statistics"],
-  "fmath-9231": ["Roots of Polynomials", "Rational Functions", "Summation of Series", "Matrices", "Polar Coordinates", "Vectors", "Proof by Induction", "Differential Equations", "Complex Numbers", "Hyperbolic Functions"],
-  "math-0580": ["Number", "Algebra", "Coordinate Geometry", "Geometry", "Mensuration", "Trigonometry", "Vectors & Transformations", "Statistics", "Probability"],
-  "fmath-0606": ["Sets", "Functions", "Quadratic Functions", "Indices & Surds", "Factors of Polynomials", "Logarithmic & Exponential", "Straight Line Graphs", "Circular Measure", "Trigonometry", "Permutations & Combinations", "Series", "Vectors", "Differentiation", "Integration", "Kinematics"],
+/** Topic past questions are organised per paper component, in syllabus order. */
+type TopicPaper = { paper: string; label: string; topics: string[] };
+
+const TOPIC_PAPERS: Record<string, TopicPaper[]> = {
+  "math-9709": [
+    { paper: "1", label: "Pure Mathematics 1", topics: ["Quadratics", "Functions", "Coordinate Geometry", "Circular Measure", "Trigonometry", "Series", "Differentiation", "Integration"] },
+    { paper: "2", label: "Pure Mathematics 2", topics: ["Algebra", "Logarithmic & Exponential Functions", "Trigonometry", "Differentiation", "Integration", "Numerical Solutions"] },
+    { paper: "3", label: "Pure Mathematics 3", topics: ["Algebra", "Logarithmic & Exponential Functions", "Trigonometry", "Differentiation", "Integration", "Numerical Solutions", "Vectors", "Differential Equations", "Complex Numbers"] },
+    { paper: "4", label: "Mechanics", topics: ["Forces & Equilibrium", "Kinematics of Motion in a Straight Line", "Momentum", "Newton's Laws of Motion", "Energy, Work & Power"] },
+    { paper: "5", label: "Probability & Statistics 1", topics: ["Representation of Data", "Permutations & Combinations", "Probability", "Discrete Random Variables", "The Normal Distribution"] },
+    { paper: "6", label: "Probability & Statistics 2", topics: ["The Poisson Distribution", "Linear Combinations of Random Variables", "Continuous Random Variables", "Sampling & Estimation", "Hypothesis Tests"] },
+  ],
+  "fmath-9231": [
+    { paper: "1", label: "Further Pure Mathematics 1", topics: ["Roots of Polynomials", "Rational Functions", "Summation of Series", "Matrices", "Polar Coordinates", "Vectors", "Proof by Induction", "Conics"] },
+    { paper: "2", label: "Further Pure Mathematics 2", topics: ["Hyperbolic Functions", "Complex Numbers", "Differentiation & Integration", "Differential Equations", "Series", "Matrices & Linear Spaces"] },
+    { paper: "3", label: "Further Mechanics", topics: ["Motion of a Projectile", "Equilibrium of a Rigid Body", "Circular Motion", "Hooke's Law", "Linear Motion under a Variable Force", "Momentum & Impulse"] },
+    { paper: "4", label: "Further Probability & Statistics", topics: ["Continuous Random Variables", "Inference using Normal & t-Distributions", "Chi-squared Tests", "Non-parametric Tests", "Probability Generating Functions"] },
+  ],
+  "math-0580": [
+    { paper: "1", label: "Core — Non-calculator", topics: ["Number", "Algebra", "Coordinate Geometry", "Geometry", "Mensuration"] },
+    { paper: "2", label: "Extended — Non-calculator", topics: ["Number", "Algebra & Graphs", "Coordinate Geometry", "Geometry", "Mensuration", "Trigonometry"] },
+    { paper: "3", label: "Core — Calculator", topics: ["Mensuration", "Trigonometry", "Vectors & Transformations", "Statistics", "Probability"] },
+    { paper: "4", label: "Extended — Calculator", topics: ["Algebra & Graphs", "Trigonometry", "Vectors & Transformations", "Statistics", "Probability", "Functions"] },
+  ],
+  "fmath-0606": [
+    { paper: "1", label: "Additional Mathematics — Paper 1", topics: ["Sets", "Functions", "Quadratic Functions", "Indices & Surds", "Factors of Polynomials", "Logarithmic & Exponential", "Straight Line Graphs", "Circular Measure"] },
+    { paper: "2", label: "Additional Mathematics — Paper 2", topics: ["Trigonometry", "Permutations & Combinations", "Series", "Vectors", "Differentiation", "Integration", "Kinematics"] },
+  ],
 };
+
+const TOPICS: Record<string, string[]> = Object.fromEntries(
+  Object.entries(TOPIC_PAPERS).map(([id, papers]) => [id, [...new Set(papers.flatMap((p) => p.topics))]]),
+);
+
 
 // ---------- real assets ----------
 const SAMPLE_PDF = "https://www.africau.edu/images/default/sample.pdf";
