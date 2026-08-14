@@ -194,7 +194,8 @@ export function SiteShell({ children }: { children: ReactNode }) {
               <span className="grid h-11 w-11 place-items-center rounded-lg bg-brand-orange/15 text-brand-orange"><MessageCircle className="h-5 w-5" aria-hidden="true" /></span>
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-hero-foreground/60">WhatsApp</p>
-                <p className="mt-1 text-sm font-medium">+234 810 180 4411</p>
+                <p className="mt-1 text-sm font-medium">+234 810 180 4411 <span className="text-hero-foreground/60">(NG)</span></p>
+                <p className="mt-0.5 text-sm font-medium">+44 7350 890668 <span className="text-hero-foreground/60">(UK)</span></p>
                 <p className="text-xs text-hero-foreground/60">Bookings & fast replies</p>
               </div>
             </a>
