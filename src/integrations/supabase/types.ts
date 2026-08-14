@@ -597,6 +597,108 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_attempts: {
+        Row: {
+          answers: Json
+          completed_at: string | null
+          created_at: string
+          exam_type: string | null
+          filters: Json
+          id: string
+          score: number
+          subject_key: string | null
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          completed_at?: string | null
+          created_at?: string
+          exam_type?: string | null
+          filters?: Json
+          id?: string
+          score?: number
+          subject_key?: string | null
+          total?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          completed_at?: string | null
+          created_at?: string
+          exam_type?: string | null
+          filters?: Json
+          id?: string
+          score?: number
+          subject_key?: string | null
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      quiz_questions: {
+        Row: {
+          access_level: Database["public"]["Enums"]["access_level"]
+          correct_index: number
+          created_at: string
+          difficulty: string
+          exam_type: string
+          explanation: string | null
+          id: string
+          image_url: string | null
+          is_published: boolean
+          options: Json
+          paper_number: string | null
+          question_text: string
+          session: string | null
+          subject_key: string
+          topic: string | null
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          access_level?: Database["public"]["Enums"]["access_level"]
+          correct_index?: number
+          created_at?: string
+          difficulty?: string
+          exam_type: string
+          explanation?: string | null
+          id?: string
+          image_url?: string | null
+          is_published?: boolean
+          options?: Json
+          paper_number?: string | null
+          question_text: string
+          session?: string | null
+          subject_key: string
+          topic?: string | null
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          access_level?: Database["public"]["Enums"]["access_level"]
+          correct_index?: number
+          created_at?: string
+          difficulty?: string
+          exam_type?: string
+          explanation?: string | null
+          id?: string
+          image_url?: string | null
+          is_published?: boolean
+          options?: Json
+          paper_number?: string | null
+          question_text?: string
+          session?: string | null
+          subject_key?: string
+          topic?: string | null
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
       resources: {
         Row: {
           access_level: Database["public"]["Enums"]["access_level"]
