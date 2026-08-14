@@ -15,7 +15,8 @@ import logoUrl from "@/assets/catchup-logo.png";
 
 
 const navigation = [
-  ["About", "/about"], ["Programs", "/programs"], ["Resources", "/resources"], ["Tutors", "/tutors"],
+  ["About", "/about"], ["Programs", "/programs"], ["Resources", "/resources"],
+  ["Premium Resources", "/premium"], ["Quiz", "/quiz"], ["Tutors", "/tutors"],
   ["Events", "/events"], ["Partnership", "/partnership"], ["Pricing", "/pricing"],
 ] as const;
 
@@ -76,6 +77,9 @@ export function SiteShell({ children }: { children: ReactNode }) {
             </a>
             <a href="https://wa.me/2348101804411" target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 transition-colors hover:text-brand-orange">
               <Phone className="h-3.5 w-3.5" aria-hidden="true" /> +234 810 180 4411
+            </a>
+            <a href="https://wa.me/447350890668" target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 transition-colors hover:text-brand-orange">
+              <Phone className="h-3.5 w-3.5" aria-hidden="true" /> +44 7350 890668 <span className="hidden lg:inline text-hero-foreground/60">(UK)</span>
             </a>
             <span className="inline-flex items-center gap-1.5 text-hero-foreground/70"><MapPin className="h-3.5 w-3.5" aria-hidden="true" /> Nigeria · UK</span>
           </div>
