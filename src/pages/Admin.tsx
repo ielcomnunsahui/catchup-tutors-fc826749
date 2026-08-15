@@ -8,7 +8,7 @@ import {
   CheckCircle2, Edit3, Eye, EyeOff, Loader2, Plus, ShieldCheck, Trash2, X,
   LayoutDashboard, GraduationCap, BookOpen, FolderTree, FileText, ClipboardList,
   Users, UserCheck, Clock, TrendingUp, ArrowUp, ArrowDown, ArrowUpDown, Download, Search,
-  Activity, CalendarDays,
+  Activity, CalendarDays, Brain,
 } from "lucide-react";
 import { SiteShell } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
@@ -80,7 +80,7 @@ function AdminPage() {
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <Tabs defaultValue="overview">
           <div className="-mx-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <TabsList className="inline-flex w-max min-w-full gap-1 rounded-2xl bg-muted/60 p-1 lg:grid lg:grid-cols-10">
+            <TabsList className="inline-flex w-max min-w-full gap-1 rounded-2xl bg-muted/60 p-1 lg:grid lg:grid-cols-11">
               <AdminTab value="overview" icon={LayoutDashboard} label="Overview" />
               <AdminTab value="registrations" icon={ClipboardList} label="Summer registrations" />
               <AdminTab value="students" icon={Users} label="Students" />
@@ -90,6 +90,7 @@ function AdminPage() {
               <AdminTab value="topics" icon={FolderTree} label="Topics" />
               <AdminTab value="resources" icon={FileText} label="Resources" />
               <AdminTab value="past-papers" icon={CalendarDays} label="Past papers" />
+              <AdminTab value="quiz" icon={Brain} label="Quiz bank" />
               <AdminTab value="settings" icon={Settings} label="Settings" />
             </TabsList>
           </div>
@@ -103,6 +104,7 @@ function AdminPage() {
           <TabsContent value="topics" className="mt-8"><TopicsTab /></TabsContent>
           <TabsContent value="resources" className="mt-8"><ResourcesTab /></TabsContent>
           <TabsContent value="past-papers" className="mt-8"><PastPapersTab /></TabsContent>
+          <TabsContent value="quiz" className="mt-8"><QuizBankTab /></TabsContent>
           <TabsContent value="settings" className="mt-8"><SettingsTab /></TabsContent>
 
         </Tabs>
