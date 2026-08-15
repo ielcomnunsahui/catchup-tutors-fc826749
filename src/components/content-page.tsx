@@ -1,6 +1,7 @@
 import { BookOpen, CheckCircle2, Facebook, HelpCircle, Instagram, LockKeyhole, Mail, MapPin, MessageCircle, ShieldCheck, Youtube } from "lucide-react";
 import { SiteShell, PageHero } from "./site-shell";
 import { Button } from "./ui/button";
+import { TESTIMONIALS } from "@/data/testimonials";
 
 type PageKind = "about" | "testimonials" | "contact" | "faq" | "privacy" | "terms";
 
