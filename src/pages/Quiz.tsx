@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  Brain, Shuffle, CheckCircle2, XCircle, Crown, Loader2, RotateCcw, ArrowLeft, ArrowRight, Trophy,
+  Brain, Timer, Shuffle, CheckCircle2, XCircle, Crown, Loader2, RotateCcw, ArrowLeft, ArrowRight, Trophy,
 } from "lucide-react";
 import { PageHero, Seo, SiteShell } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,13 @@ type Question = {
 
 const ANY = "__any__";
 const LENGTHS = [5, 10, 20, 40];
+const TIME_LIMITS = [0, 10, 20, 30, 60]; // minutes; 0 = no limit
+
+const fmtTime = (secs: number) => {
+  const m = Math.floor(Math.max(0, secs) / 60);
+  const s = Math.max(0, secs) % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+};
 
 const shuffle = <T,>(arr: T[]) => {
   const a = [...arr];
@@ -57,6 +64,8 @@ export default function Quiz() {
   const [year, setYear] = useState(ANY); // ANY = shuffle years
   const [topic, setTopic] = useState(ANY);
   const [length, setLength] = useState(10);
+  const [timeLimit, setTimeLimit] = useState(0); // minutes
+  const [remaining, setRemaining] = useState<number | null>(null);
 
   const [quiz, setQuiz] = useState<Question[] | null>(null);
   const [answers, setAnswers] = useState<Record<string, number>>({});
@@ -116,6 +125,7 @@ export default function Quiz() {
     setAnswers({});
     setCurrent(0);
     setSubmitted(false);
+    setRemaining(timeLimit > 0 ? timeLimit * 60 : null);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -124,6 +134,7 @@ export default function Quiz() {
     setSubmitted(false);
     setAnswers({});
     setCurrent(0);
+    setRemaining(null);
   };
 
   const score = useMemo(
@@ -131,8 +142,9 @@ export default function Quiz() {
     [quiz, answers],
   );
 
-  const submit = async () => {
+  const submit = async (autoSubmitted = false) => {
     setSubmitted(true);
+    setRemaining(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
     const { data: { user } } = await supabase.auth.getUser();
     if (!user || !quiz) return;
@@ -140,13 +152,27 @@ export default function Quiz() {
       user_id: user.id,
       exam_type: examType === ANY ? null : examType,
       subject_key: subject === ANY ? null : subject,
-      filters: { year: year === ANY ? "shuffled" : year, topic: topic === ANY ? "all" : topic, length },
+      filters: {
+        year: year === ANY ? "shuffled" : year,
+        topic: topic === ANY ? "all" : topic,
+        length,
+        time_limit_minutes: timeLimit || null,
+        auto_submitted: autoSubmitted,
+      },
       answers: quiz.map((q) => ({ id: q.id, chosen: answers[q.id] ?? null, correct: q.correct_index })),
       score,
       total: quiz.length,
       completed_at: new Date().toISOString(),
     });
   };
+
+  useEffect(() => {
+    if (remaining === null || submitted || !quiz) return;
+    if (remaining <= 0) { submit(true); return; }
+    const t = window.setTimeout(() => setRemaining((r) => (r === null ? null : r - 1)), 1000);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [remaining, submitted, quiz]);
 
   return (
     <SiteShell>
@@ -167,12 +193,13 @@ export default function Quiz() {
           </div>
         ) : !quiz ? (
           <SetupCard
-            {...{ examTypes, subjects, years, topics, examType, subject, year, topic, length, pool, lockedCount, isPremium, isAuthed }}
+            {...{ examTypes, subjects, years, topics, examType, subject, year, topic, length, timeLimit, pool, lockedCount, isPremium, isAuthed }}
             onExam={(v) => { setExamType(v); setSubject(ANY); setYear(ANY); setTopic(ANY); }}
             onSubject={(v) => { setSubject(v); setYear(ANY); setTopic(ANY); }}
             onYear={setYear}
             onTopic={setTopic}
             onLength={setLength}
+            onTimeLimit={setTimeLimit}
             onStart={start}
           />
         ) : submitted ? (
@@ -184,8 +211,9 @@ export default function Quiz() {
             answers={answers}
             onPick={(id, i) => setAnswers((a) => ({ ...a, [id]: i }))}
             onGo={setCurrent}
-            onSubmit={submit}
+            onSubmit={() => submit(false)}
             onQuit={reset}
+            remaining={remaining}
           />
         )}
       </section>
@@ -212,10 +240,10 @@ function Field({ label, value, onChange, options, anyLabel }: {
 
 function SetupCard(props: {
   examTypes: string[]; subjects: string[]; years: string[]; topics: string[];
-  examType: string; subject: string; year: string; topic: string; length: number;
+  examType: string; subject: string; year: string; topic: string; length: number; timeLimit: number;
   pool: Question[]; lockedCount: number; isPremium: boolean; isAuthed: boolean;
   onExam: (v: string) => void; onSubject: (v: string) => void; onYear: (v: string) => void;
-  onTopic: (v: string) => void; onLength: (n: number) => void; onStart: () => void;
+  onTopic: (v: string) => void; onLength: (n: number) => void; onTimeLimit: (n: number) => void; onStart: () => void;
 }) {
   const { pool, lockedCount, isPremium } = props;
   return (
@@ -246,6 +274,18 @@ function SetupCard(props: {
         </div>
       </div>
 
+      <div className="mt-6 space-y-2">
+        <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Time limit</Label>
+        <div className="flex flex-wrap gap-2">
+          {TIME_LIMITS.map((n) => (
+            <Button key={n} type="button" variant={props.timeLimit === n ? "default" : "outline"} size="sm" onClick={() => props.onTimeLimit(n)}>
+              {n === 0 ? "No limit" : `${n} min`}
+            </Button>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground">Timed sets auto-submit when the countdown reaches zero.</p>
+      </div>
+
       <div className="mt-6 flex flex-col gap-3 border-t pt-6 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
           <span className="font-semibold text-foreground">{pool.length}</span> question{pool.length === 1 ? "" : "s"} match your filters.
@@ -272,9 +312,10 @@ function SetupCard(props: {
   );
 }
 
-function Runner({ quiz, current, answers, onPick, onGo, onSubmit, onQuit }: {
+function Runner({ quiz, current, answers, onPick, onGo, onSubmit, onQuit, remaining }: {
   quiz: Question[]; current: number; answers: Record<string, number>;
   onPick: (id: string, i: number) => void; onGo: (i: number) => void; onSubmit: () => void; onQuit: () => void;
+  remaining: number | null;
 }) {
   const q = quiz[current];
   const answered = Object.keys(answers).length;
@@ -283,7 +324,18 @@ function Runner({ quiz, current, answers, onPick, onGo, onSubmit, onQuit }: {
       <div className="rounded-2xl border bg-card p-4 shadow-soft sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm font-medium">Question {current + 1} of {quiz.length}</p>
-          <p className="text-sm text-muted-foreground">{answered}/{quiz.length} answered</p>
+          <div className="flex items-center gap-3">
+            {remaining !== null && (
+              <span
+                role="timer"
+                aria-live="off"
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold tabular-nums ${remaining <= 60 ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}
+              >
+                <Timer className="size-4" /> {fmtTime(remaining)}
+              </span>
+            )}
+            <p className="text-sm text-muted-foreground">{answered}/{quiz.length} answered</p>
+          </div>
         </div>
         <Progress value={(answered / quiz.length) * 100} className="mt-3 h-2" />
       </div>

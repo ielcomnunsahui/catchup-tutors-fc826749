@@ -8,16 +8,8 @@ import { Button } from "@/components/ui/button";
 import hero1600 from "@/assets/hero-campus-1600.jpg";
 import hero1200 from "@/assets/hero-campus-1200.jpg";
 import hero768 from "@/assets/hero-campus-768.jpg";
-import studentPhoto from "@/assets/testimonial-student.jpg";
+import { TESTIMONIALS } from "@/data/testimonials";
 
-type Testimonial = { quote: string; name: string; role: string; image?: string };
-
-const TESTIMONIALS: Testimonial[] = [
-  { quote: "I went from struggling with Paper 3 to a confident A. Every concept finally clicked, and revision stopped feeling like punishment.", name: "Aisha O.", role: "Cambridge A-Level Mathematics", image: studentPhoto },
-  { quote: "The walkthroughs are the clearest I've ever seen. My tutor tailored every single session to my weak areas no filler, no wasted time.", name: "Daniel K.", role: "IGCSE Additional Mathematics", image: studentPhoto },
-  { quote: "Past questions sorted by topic saved me hours. I walked into the exam hall knowing exactly what to expect.", name: "Chiamaka E.", role: "Cambridge Further Mathematics", image: studentPhoto },
-  { quote: "Finally a platform that treats Maths like a craft. Premium was worth every Naira I'd recommend it to any serious student.", name: "Yusuf A.", role: "IGCSE Mathematics", image: studentPhoto },
-];
 
 const VALUES = [
   { icon: "💡", title: "Empathy without judgement", desc: "We meet students exactly where they are no shame, only a safe space to learn." },
