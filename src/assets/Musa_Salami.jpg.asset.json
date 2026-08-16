@@ -1,11 +1,11 @@
 {
-  "version": 1,
   "asset_id": "2299078f-905d-4081-8de2-65e2064e0b13",
-  "project_id": "7b67fd98-36d5-4de5-8725-965901718865",
-  "url": "/__l5e/assets-v1/2299078f-905d-4081-8de2-65e2064e0b13/Musa_Salami.jpg",
-  "r2_key": "a/v1/7b67fd98-36d5-4de5-8725-965901718865/2299078f-905d-4081-8de2-65e2064e0b13/Musa_Salami.jpg",
-  "original_filename": "Musa_Salami.jpg",
-  "size": 55968,
   "content_type": "image/jpeg",
-  "created_at": "2026-08-15T22:28:44Z"
+  "created_at": "2026-08-15T22:28:44Z",
+  "original_filename": "Musa_Salami.jpg",
+  "project_id": "bf8cfde8-d4e5-42cd-85cb-386d35bc5e8f",
+  "r2_key": "a/v1/bf8cfde8-d4e5-42cd-85cb-386d35bc5e8f/2299078f-905d-4081-8de2-65e2064e0b13/Musa_Salami.jpg",
+  "size": 55968,
+  "url": "/__l5e/assets-v1/2299078f-905d-4081-8de2-65e2064e0b13/Musa_Salami.jpg",
+  "version": 1
 }

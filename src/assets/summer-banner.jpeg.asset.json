@@ -1,11 +1,11 @@
 {
-  "version": 1,
   "asset_id": "7d0e762e-a5d5-418c-9c4f-22ef2bc1cc14",
-  "project_id": "7b67fd98-36d5-4de5-8725-965901718865",
-  "url": "/__l5e/assets-v1/7d0e762e-a5d5-418c-9c4f-22ef2bc1cc14/summer-banner.jpeg",
-  "r2_key": "a/v1/7b67fd98-36d5-4de5-8725-965901718865/7d0e762e-a5d5-418c-9c4f-22ef2bc1cc14/summer-banner.jpeg",
-  "original_filename": "summer-banner.jpeg",
-  "size": 143638,
   "content_type": "image/jpeg",
-  "created_at": "2026-07-14T20:58:42Z"
+  "created_at": "2026-07-14T20:58:42Z",
+  "original_filename": "summer-banner.jpeg",
+  "project_id": "bf8cfde8-d4e5-42cd-85cb-386d35bc5e8f",
+  "r2_key": "a/v1/bf8cfde8-d4e5-42cd-85cb-386d35bc5e8f/7d0e762e-a5d5-418c-9c4f-22ef2bc1cc14/summer-banner.jpeg",
+  "size": 143638,
+  "url": "/__l5e/assets-v1/7d0e762e-a5d5-418c-9c4f-22ef2bc1cc14/summer-banner.jpeg",
+  "version": 1
 }
