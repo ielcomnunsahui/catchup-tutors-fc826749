@@ -104,6 +104,10 @@ export type Database = {
       bookings: {
         Row: {
           admin_notes: string | null
+          available_days: string[]
+          available_times: string | null
+          bio_completed: boolean
+          bio_details: Json
           created_at: string
           currency: string
           duration_minutes: number
@@ -111,10 +115,15 @@ export type Database = {
           meeting_url: string | null
           preferred_start: string
           price_amount: number
+          programme: string | null
+          ref_code: string | null
           session_type: string
           status: Database["public"]["Enums"]["booking_status"]
+          student_email: string | null
           student_id: string
+          student_name: string | null
           student_notes: string | null
+          student_phone: string | null
           subject_id: string
           topic_id: string | null
           tutor_id: string
@@ -123,6 +132,10 @@ export type Database = {
         }
         Insert: {
           admin_notes?: string | null
+          available_days?: string[]
+          available_times?: string | null
+          bio_completed?: boolean
+          bio_details?: Json
           created_at?: string
           currency?: string
           duration_minutes?: number
@@ -130,10 +143,15 @@ export type Database = {
           meeting_url?: string | null
           preferred_start: string
           price_amount: number
+          programme?: string | null
+          ref_code?: string | null
           session_type: string
           status?: Database["public"]["Enums"]["booking_status"]
+          student_email?: string | null
           student_id: string
+          student_name?: string | null
           student_notes?: string | null
+          student_phone?: string | null
           subject_id: string
           topic_id?: string | null
           tutor_id: string
@@ -142,6 +160,10 @@ export type Database = {
         }
         Update: {
           admin_notes?: string | null
+          available_days?: string[]
+          available_times?: string | null
+          bio_completed?: boolean
+          bio_details?: Json
           created_at?: string
           currency?: string
           duration_minutes?: number
@@ -149,10 +171,15 @@ export type Database = {
           meeting_url?: string | null
           preferred_start?: string
           price_amount?: number
+          programme?: string | null
+          ref_code?: string | null
           session_type?: string
           status?: Database["public"]["Enums"]["booking_status"]
+          student_email?: string | null
           student_id?: string
+          student_name?: string | null
           student_notes?: string | null
+          student_phone?: string | null
           subject_id?: string
           topic_id?: string | null
           tutor_id?: string
@@ -1269,6 +1296,8 @@ export type Database = {
           bio: string
           created_at: string
           display_name: string
+          exam_track: string
+          highest_qualification: string | null
           id: string
           is_approved: boolean
           is_visible: boolean
@@ -1276,6 +1305,7 @@ export type Database = {
           pricing: Json
           qualifications: string[]
           rating: number
+          ref_code: string | null
           review_count: number
           subjects: string[]
           topics: string[]
@@ -1288,6 +1318,8 @@ export type Database = {
           bio: string
           created_at?: string
           display_name: string
+          exam_track?: string
+          highest_qualification?: string | null
           id?: string
           is_approved?: boolean
           is_visible?: boolean
@@ -1295,6 +1327,7 @@ export type Database = {
           pricing?: Json
           qualifications?: string[]
           rating?: number
+          ref_code?: string | null
           review_count?: number
           subjects?: string[]
           topics?: string[]
@@ -1307,6 +1340,8 @@ export type Database = {
           bio?: string
           created_at?: string
           display_name?: string
+          exam_track?: string
+          highest_qualification?: string | null
           id?: string
           is_approved?: boolean
           is_visible?: boolean
@@ -1314,6 +1349,7 @@ export type Database = {
           pricing?: Json
           qualifications?: string[]
           rating?: number
+          ref_code?: string | null
           review_count?: number
           subjects?: string[]
           topics?: string[]
