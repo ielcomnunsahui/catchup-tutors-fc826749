@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { BadgeCheck, Calendar, MessageCircle, Search, Star, Clock, Loader2 } from "lucide-react";
+import { BadgeCheck, Calendar, MessageCircle, Search, Star, Clock, Loader2, GraduationCap } from "lucide-react";
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -10,17 +10,30 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import BookingBioForm from "@/components/booking-bio-form";
+import BookingReceipt from "@/components/booking-receipt";
 
 const ADMIN_WHATSAPP = "2348101804411";
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const FULL_DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 type Tutor = {
   id: string; display_name: string; bio: string; photo_url: string | null;
   subjects: string[]; topics: string[]; qualifications: string[]; years_experience: number;
   pricing: { hourly?: { NGN?: number; GBP?: number } }; rating: number; review_count: number;
+  ref_code: string | null; highest_qualification: string | null;
 };
 type Slot = { tutor_id: string; day_of_week: number; start_time: string; end_time: string };
 type Subject = { id: string; name: string; program_id: string };
+
+/** Best available academic qualification label (BSc / MSc / PhD …). */
+function qualificationOf(t: Tutor): string | null {
+  if (t.highest_qualification?.trim()) return t.highest_qualification.trim();
+  const q = (t.qualifications ?? []).find((x) => /bsc|b\.sc|msc|m\.sc|phd|ph\.d|bachelor|master|doctor|b\.ed|m\.ed|pgce/i.test(x));
+  return q ?? (t.qualifications ?? [])[0] ?? null;
+}
+
+
 
 export default function Tutors() {
   const jsonLd = {
@@ -42,7 +55,7 @@ export default function Tutors() {
   useEffect(() => {
     (async () => {
       const [tRes, aRes, sRes] = await Promise.all([
-        supabase.from("tutor_profiles").select("id,display_name,bio,photo_url,subjects,topics,qualifications,years_experience,pricing,rating,review_count").eq("is_approved", true).eq("is_visible", true).order("rating", { ascending: false }),
+        supabase.from("tutor_profiles").select("id,display_name,bio,photo_url,subjects,topics,qualifications,years_experience,pricing,rating,review_count,ref_code,highest_qualification").eq("is_approved", true).eq("is_visible", true).order("rating", { ascending: false }),
         supabase.from("tutor_availability").select("tutor_id,day_of_week,start_time,end_time").eq("is_active", true),
         supabase.from("subjects").select("id,name,program_id"),
       ]);
@@ -100,9 +113,15 @@ export default function Tutors() {
                     <img src={t.photo_url ?? "https://i.pravatar.cc/200"} alt={t.display_name} className="size-16 rounded-full object-cover" />
                     <div>
                       <h2 className="font-display text-lg font-bold leading-tight">{t.display_name}</h2>
+                      {qualificationOf(t) && (
+                        <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-brand-green/10 px-2 py-0.5 text-xs font-bold text-brand-green">
+                          <GraduationCap className="size-3.5" /> {qualificationOf(t)}
+                        </p>
+                      )}
                       <p className="mt-0.5 flex items-center gap-1 text-sm text-muted-foreground">
                         <Star className="size-4 text-brand-orange" fill="currentColor" /> {Number(t.rating).toFixed(1)} · {t.review_count} reviews
                       </p>
+                      {t.ref_code && <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">ID: {t.ref_code}</p>}
                     </div>
                   </div>
                   <p className="mt-4 line-clamp-3 text-sm text-muted-foreground">{t.bio}</p>
@@ -110,6 +129,9 @@ export default function Tutors() {
                     {(t.subjects ?? []).map((s) => <span key={s} className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">{s}</span>)}
                   </div>
                   <div className="mt-4 space-y-1 text-xs text-muted-foreground">
+                    {(t.qualifications ?? []).length > 0 && (
+                      <p className="flex items-center gap-1.5"><GraduationCap className="size-3.5" /> {(t.qualifications ?? []).join(" · ")}</p>
+                    )}
                     <p className="flex items-center gap-1.5"><Clock className="size-3.5" /> {t.years_experience}+ years experience</p>
                     {sl.length > 0 && (
                       <p className="flex items-center gap-1.5"><Calendar className="size-3.5" /> {sl.slice(0, 3).map((s) => `${DAY_NAMES[s.day_of_week]} ${s.start_time.slice(0, 5)}`).join(" · ")}</p>
@@ -124,6 +146,7 @@ export default function Tutors() {
                   </div>
                 </article>
               );
+
             })}
           </div>
         )}
