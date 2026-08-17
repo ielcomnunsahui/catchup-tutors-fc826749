@@ -55,7 +55,7 @@ export default function Tutors() {
   useEffect(() => {
     (async () => {
       const [tRes, aRes, sRes] = await Promise.all([
-        supabase.from("tutor_profiles").select("id,display_name,bio,photo_url,subjects,topics,qualifications,years_experience,pricing,rating,review_count").eq("is_approved", true).eq("is_visible", true).order("rating", { ascending: false }),
+        supabase.from("tutor_profiles").select("id,display_name,bio,photo_url,subjects,topics,qualifications,years_experience,pricing,rating,review_count,ref_code,highest_qualification").eq("is_approved", true).eq("is_visible", true).order("rating", { ascending: false }),
         supabase.from("tutor_availability").select("tutor_id,day_of_week,start_time,end_time").eq("is_active", true),
         supabase.from("subjects").select("id,name,program_id"),
       ]);
