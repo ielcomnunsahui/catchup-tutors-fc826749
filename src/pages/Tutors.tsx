@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { BadgeCheck, Calendar, MessageCircle, Search, Star, Clock, Loader2 } from "lucide-react";
+import { BadgeCheck, Calendar, MessageCircle, Search, Star, Clock, Loader2, GraduationCap } from "lucide-react";
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -10,17 +10,30 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import BookingBioForm from "@/components/booking-bio-form";
+import BookingReceipt from "@/components/booking-receipt";
 
 const ADMIN_WHATSAPP = "2348101804411";
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const FULL_DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 type Tutor = {
   id: string; display_name: string; bio: string; photo_url: string | null;
   subjects: string[]; topics: string[]; qualifications: string[]; years_experience: number;
   pricing: { hourly?: { NGN?: number; GBP?: number } }; rating: number; review_count: number;
+  ref_code: string | null; highest_qualification: string | null;
 };
 type Slot = { tutor_id: string; day_of_week: number; start_time: string; end_time: string };
 type Subject = { id: string; name: string; program_id: string };
+
+/** Best available academic qualification label (BSc / MSc / PhD …). */
+function qualificationOf(t: Tutor): string | null {
+  if (t.highest_qualification?.trim()) return t.highest_qualification.trim();
+  const q = (t.qualifications ?? []).find((x) => /bsc|b\.sc|msc|m\.sc|phd|ph\.d|bachelor|master|doctor|b\.ed|m\.ed|pgce/i.test(x));
+  return q ?? (t.qualifications ?? [])[0] ?? null;
+}
+
+
 
 export default function Tutors() {
   const jsonLd = {
