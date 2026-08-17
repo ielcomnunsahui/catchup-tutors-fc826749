@@ -100,9 +100,15 @@ export default function Tutors() {
                     <img src={t.photo_url ?? "https://i.pravatar.cc/200"} alt={t.display_name} className="size-16 rounded-full object-cover" />
                     <div>
                       <h2 className="font-display text-lg font-bold leading-tight">{t.display_name}</h2>
+                      {qualificationOf(t) && (
+                        <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-brand-green/10 px-2 py-0.5 text-xs font-bold text-brand-green">
+                          <GraduationCap className="size-3.5" /> {qualificationOf(t)}
+                        </p>
+                      )}
                       <p className="mt-0.5 flex items-center gap-1 text-sm text-muted-foreground">
                         <Star className="size-4 text-brand-orange" fill="currentColor" /> {Number(t.rating).toFixed(1)} · {t.review_count} reviews
                       </p>
+                      {t.ref_code && <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">ID: {t.ref_code}</p>}
                     </div>
                   </div>
                   <p className="mt-4 line-clamp-3 text-sm text-muted-foreground">{t.bio}</p>
@@ -110,6 +116,9 @@ export default function Tutors() {
                     {(t.subjects ?? []).map((s) => <span key={s} className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">{s}</span>)}
                   </div>
                   <div className="mt-4 space-y-1 text-xs text-muted-foreground">
+                    {(t.qualifications ?? []).length > 0 && (
+                      <p className="flex items-center gap-1.5"><GraduationCap className="size-3.5" /> {(t.qualifications ?? []).join(" · ")}</p>
+                    )}
                     <p className="flex items-center gap-1.5"><Clock className="size-3.5" /> {t.years_experience}+ years experience</p>
                     {sl.length > 0 && (
                       <p className="flex items-center gap-1.5"><Calendar className="size-3.5" /> {sl.slice(0, 3).map((s) => `${DAY_NAMES[s.day_of_week]} ${s.start_time.slice(0, 5)}`).join(" · ")}</p>
@@ -124,6 +133,7 @@ export default function Tutors() {
                   </div>
                 </article>
               );
+
             })}
           </div>
         )}
