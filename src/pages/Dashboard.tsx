@@ -195,6 +195,41 @@ export default function Dashboard() {
               )}
             </section>
 
+            {/* Tutor view: accepted students */}
+            {isTutor && (
+              <section className="rounded-3xl border bg-card p-6 shadow-soft sm:p-7">
+                <SectionHead title="Your students" subtitle="Students whose bookings the admin has accepted" />
+                {tutorStudents.length === 0 ? (
+                  <div className="mt-5 rounded-2xl border border-dashed bg-background/30 p-10 text-center">
+                    <Users className="mx-auto h-9 w-9 text-muted-foreground" />
+                    <h3 className="mt-3 font-semibold">No accepted students yet</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">Once admin confirms a booking, the student appears here.</p>
+                  </div>
+                ) : (
+                  <ul className="mt-5 divide-y">
+                    {tutorStudents.map((s) => (
+                      <li key={s.id} className="flex flex-col gap-2 py-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <p className="font-semibold">{s.student_name ?? "Student"}</p>
+                          <p className="text-xs text-muted-foreground">{s.programme ?? "Programme not specified"}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Available: {(s.available_days?.length ? s.available_days.join(", ") : "Not specified")}
+                            {s.available_times ? ` · ${s.available_times}` : ""}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {s.ref_code && <span className="font-mono text-[11px] text-muted-foreground">{s.ref_code}</span>}
+                          <StatusChip status={s.status} />
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            )}
+
+
+
             {/* Continue learning */}
             <section className="rounded-3xl border bg-card p-6 shadow-soft sm:p-7">
               <SectionHead
