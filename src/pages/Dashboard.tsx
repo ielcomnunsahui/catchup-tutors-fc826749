@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import {
   BookOpen, CalendarCheck, Clock3, Crown, Flame, GraduationCap, LogOut, PlayCircle, Settings2,
-  Sparkles, Video, FileText, TrendingUp, ArrowRight, ChevronRight, Bookmark, Award, Bell,
+  Sparkles, Video, FileText, TrendingUp, ArrowRight, ChevronRight, Bookmark, Award, Bell, Users,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,10 @@ import { Progress } from "@/components/ui/progress";
 type Booking = {
   id: string; preferred_start: string; duration_minutes: number; status: string;
   session_type: string; meeting_url: string | null; student_notes: string | null;
+};
+type TutorStudent = {
+  id: string; ref_code: string | null; student_name: string | null; programme: string | null;
+  available_days: string[] | null; available_times: string | null; preferred_start: string; status: string;
 };
 type ActivityRow = {
   id: string; activity_type: string; progress: number | null; last_viewed_at: string | null;
@@ -28,6 +32,8 @@ export default function Dashboard() {
   const [activity, setActivity] = useState<ActivityRow[]>([]);
   const [savedCount, setSavedCount] = useState(0);
   const [minutesThisWeek, setMinutesThisWeek] = useState(0);
+  const [tutorStudents, setTutorStudents] = useState<TutorStudent[]>([]);
+  const [isTutor, setIsTutor] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -40,20 +46,35 @@ export default function Dashboard() {
       setIsAdmin(!!role);
 
       const weekAgo = new Date(Date.now() - 7 * 864e5).toISOString();
-      const [bk, act, saved] = await Promise.all([
+      const [bk, act, saved, tp] = await Promise.all([
         supabase.from("bookings").select("*").eq("student_id", u.id).order("preferred_start", { ascending: true }).limit(20),
         supabase.from("learning_activity").select("*").eq("user_id", u.id).order("last_viewed_at", { ascending: false, nullsFirst: false }).limit(6),
         supabase.from("saved_resources").select("*", { count: "exact", head: true }).eq("user_id", u.id),
+        supabase.from("tutor_profiles").select("id,is_approved").eq("user_id", u.id).maybeSingle(),
       ]);
       setBookings((bk.data ?? []) as Booking[]);
       setActivity((act.data ?? []) as ActivityRow[]);
       setSavedCount(saved.count ?? 0);
+
+      if (tp.data?.id && tp.data.is_approved) {
+        setIsTutor(true);
+        // Only students whose booking the admin has accepted (confirmed/completed) are visible,
+        // and only name / programme / availability are selected.
+        const { data: st } = await supabase
+          .from("bookings")
+          .select("id,ref_code,student_name,programme,available_days,available_times,preferred_start,status")
+          .eq("tutor_id", tp.data.id)
+          .in("status", ["confirmed", "completed"])
+          .order("preferred_start", { ascending: true });
+        setTutorStudents((st ?? []) as TutorStudent[]);
+      }
 
       const weekAct = (act.data ?? []).filter((a: ActivityRow) => a.last_viewed_at && a.last_viewed_at >= weekAgo);
       setMinutesThisWeek(weekAct.length * 25); // rough estimate: 25 min per session
       setLoading(false);
     })();
   }, [navigate]);
+
 
   async function logout() {
     await supabase.auth.signOut();
@@ -173,6 +194,41 @@ export default function Dashboard() {
                 </ul>
               )}
             </section>
+
+            {/* Tutor view: accepted students */}
+            {isTutor && (
+              <section className="rounded-3xl border bg-card p-6 shadow-soft sm:p-7">
+                <SectionHead title="Your students" subtitle="Students whose bookings the admin has accepted" />
+                {tutorStudents.length === 0 ? (
+                  <div className="mt-5 rounded-2xl border border-dashed bg-background/30 p-10 text-center">
+                    <Users className="mx-auto h-9 w-9 text-muted-foreground" />
+                    <h3 className="mt-3 font-semibold">No accepted students yet</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">Once admin confirms a booking, the student appears here.</p>
+                  </div>
+                ) : (
+                  <ul className="mt-5 divide-y">
+                    {tutorStudents.map((s) => (
+                      <li key={s.id} className="flex flex-col gap-2 py-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <p className="font-semibold">{s.student_name ?? "Student"}</p>
+                          <p className="text-xs text-muted-foreground">{s.programme ?? "Programme not specified"}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Available: {(s.available_days?.length ? s.available_days.join(", ") : "Not specified")}
+                            {s.available_times ? ` · ${s.available_times}` : ""}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {s.ref_code && <span className="font-mono text-[11px] text-muted-foreground">{s.ref_code}</span>}
+                          <StatusChip status={s.status} />
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            )}
+
+
 
             {/* Continue learning */}
             <section className="rounded-3xl border bg-card p-6 shadow-soft sm:p-7">
