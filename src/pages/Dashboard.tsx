@@ -14,6 +14,10 @@ type Booking = {
   id: string; preferred_start: string; duration_minutes: number; status: string;
   session_type: string; meeting_url: string | null; student_notes: string | null;
 };
+type TutorStudent = {
+  id: string; ref_code: string | null; student_name: string | null; programme: string | null;
+  available_days: string[] | null; available_times: string | null; preferred_start: string; status: string;
+};
 type ActivityRow = {
   id: string; activity_type: string; progress: number | null; last_viewed_at: string | null;
   resource_id: string | null; video_id: string | null; topic_id: string | null;
@@ -28,6 +32,8 @@ export default function Dashboard() {
   const [activity, setActivity] = useState<ActivityRow[]>([]);
   const [savedCount, setSavedCount] = useState(0);
   const [minutesThisWeek, setMinutesThisWeek] = useState(0);
+  const [tutorStudents, setTutorStudents] = useState<TutorStudent[]>([]);
+  const [isTutor, setIsTutor] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -40,20 +46,35 @@ export default function Dashboard() {
       setIsAdmin(!!role);
 
       const weekAgo = new Date(Date.now() - 7 * 864e5).toISOString();
-      const [bk, act, saved] = await Promise.all([
+      const [bk, act, saved, tp] = await Promise.all([
         supabase.from("bookings").select("*").eq("student_id", u.id).order("preferred_start", { ascending: true }).limit(20),
         supabase.from("learning_activity").select("*").eq("user_id", u.id).order("last_viewed_at", { ascending: false, nullsFirst: false }).limit(6),
         supabase.from("saved_resources").select("*", { count: "exact", head: true }).eq("user_id", u.id),
+        supabase.from("tutor_profiles").select("id,is_approved").eq("user_id", u.id).maybeSingle(),
       ]);
       setBookings((bk.data ?? []) as Booking[]);
       setActivity((act.data ?? []) as ActivityRow[]);
       setSavedCount(saved.count ?? 0);
+
+      if (tp.data?.id && tp.data.is_approved) {
+        setIsTutor(true);
+        // Only students whose booking the admin has accepted (confirmed/completed) are visible,
+        // and only name / programme / availability are selected.
+        const { data: st } = await supabase
+          .from("bookings")
+          .select("id,ref_code,student_name,programme,available_days,available_times,preferred_start,status")
+          .eq("tutor_id", tp.data.id)
+          .in("status", ["confirmed", "completed"])
+          .order("preferred_start", { ascending: true });
+        setTutorStudents((st ?? []) as TutorStudent[]);
+      }
 
       const weekAct = (act.data ?? []).filter((a: ActivityRow) => a.last_viewed_at && a.last_viewed_at >= weekAgo);
       setMinutesThisWeek(weekAct.length * 25); // rough estimate: 25 min per session
       setLoading(false);
     })();
   }, [navigate]);
+
 
   async function logout() {
     await supabase.auth.signOut();
