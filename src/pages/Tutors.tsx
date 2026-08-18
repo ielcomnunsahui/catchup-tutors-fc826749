@@ -157,85 +157,167 @@ export default function Tutors() {
   );
 }
 
+type Step = "details" | "auth" | "pay" | "bio";
+
 function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subjects: Subject[]; onClose: () => void }) {
-  const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState<null | { id: string; waUrl: string; summary: string }>(null);
+  const [step, setStep] = useState<Step>("details");
+  const [busy, setBusy] = useState(false);
+  const [bookingId, setBookingId] = useState<string | null>(null);
+  const [bookingRef, setBookingRef] = useState<string | null>(null);
+  const [waUrl, setWaUrl] = useState("");
+  const [payNote, setPayNote] = useState("");
   const [form, setForm] = useState({
     subjectId: "", date: "", time: "16:00", duration: "60", sessionType: "google_meet",
-    studentName: "", studentEmail: "", notes: "",
+    studentName: "", studentEmail: "", studentPhone: "", programme: "",
+    availableDays: [] as string[], availableTimes: "", notes: "",
   });
+  const [auth, setAuth] = useState({ mode: "signin" as "signin" | "signup", email: "", password: "" });
 
   useEffect(() => {
-    if (tutor) {
-      setDone(null);
-      const tutorSubjects = subjects.filter((s) => (tutor.subjects ?? []).some((n) => s.name.toLowerCase().includes(n.toLowerCase())));
-      setForm((f) => ({ ...f, subjectId: tutorSubjects[0]?.id ?? subjects[0]?.id ?? "" }));
-    }
+    if (!tutor) return;
+    setStep("details"); setBookingId(null); setBookingRef(null); setPayNote("");
+    const tutorSubjects = subjects.filter((s) => (tutor.subjects ?? []).some((n) => s.name.toLowerCase().includes(n.toLowerCase())));
+    setForm((f) => ({ ...f, subjectId: tutorSubjects[0]?.id ?? subjects[0]?.id ?? "" }));
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user?.email) setForm((f) => ({ ...f, studentEmail: f.studentEmail || data.user!.email! }));
+    });
   }, [tutor, subjects]);
 
   if (!tutor) return null;
 
-  const handle = async () => {
-    if (!form.subjectId || !form.date || !form.time || !form.studentName || !form.studentEmail) {
-      toast.error("Please fill out all required fields"); return;
+  const priceAmount = tutor.pricing?.hourly?.NGN ?? 0;
+  const subjectName = subjects.find((s) => s.id === form.subjectId)?.name ?? "Mathematics";
+  const preferredStart = form.date && form.time ? new Date(`${form.date}T${form.time}:00`).toISOString() : "";
+
+  const toggleDay = (d: string) =>
+    setForm((f) => ({ ...f, availableDays: f.availableDays.includes(d) ? f.availableDays.filter((x) => x !== d) : [...f.availableDays, d] }));
+
+  /** Step 1 → sign in (or straight to payment when already signed in). */
+  const submitDetails = async () => {
+    if (!form.subjectId || !form.date || !form.time || !form.studentName || !form.studentEmail || !form.programme) {
+      toast.error("Please fill out name, email, programme, subject, date and time"); return;
     }
-    setSubmitting(true);
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) { setAuth((a) => ({ ...a, email: form.studentEmail })); setStep("auth"); return; }
+    await createBookingAndPay();
+  };
+
+  /** Step 2: inline sign in / sign up — the form data above is preserved. */
+  const doAuth = async () => {
+    if (!auth.email || auth.password.length < 6) { toast.error("Enter your email and a password of at least 6 characters"); return; }
+    setBusy(true);
+    try {
+      if (auth.mode === "signin") {
+        const { error } = await supabase.auth.signInWithPassword({ email: auth.email, password: auth.password });
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase.auth.signUp({
+          email: auth.email, password: auth.password,
+          options: { emailRedirectTo: `${window.location.origin}/tutors`, data: { full_name: form.studentName } },
+        });
+        if (error) throw error;
+        if (!data.session) { toast.success("Check your email to confirm your account, then sign in here."); setAuth((a) => ({ ...a, mode: "signin" })); return; }
+      }
+      await createBookingAndPay();
+    } catch (e) {
+      toast.error((e as Error)?.message ?? "Could not sign you in");
+    } finally { setBusy(false); }
+  };
+
+  /** Step 3: create the booking, then send the student to Paystack. */
+  const createBookingAndPay = async () => {
+    setBusy(true);
     try {
       const { data: userData } = await supabase.auth.getUser();
       const user = userData?.user;
-      if (!user) { toast.error("Please sign in to book a session"); window.location.href = `/auth?redirect=/tutors`; return; }
+      if (!user) { setStep("auth"); return; }
 
-      const preferredStart = new Date(`${form.date}T${form.time}:00`).toISOString();
-      const priceAmount = tutor.pricing?.hourly?.NGN ?? 0;
-      const { data: booking, error } = await supabase.from("bookings").insert({
-        student_id: user.id, tutor_id: tutor.id, subject_id: form.subjectId,
-        preferred_start: preferredStart, duration_minutes: parseInt(form.duration),
-        session_type: form.sessionType, price_amount: priceAmount, currency: "NGN",
-        student_notes: form.notes || null,
-      }).select("id").single();
-      if (error) throw error;
+      let id = bookingId;
+      let ref = bookingRef;
+      if (!id) {
+        const { data: booking, error } = await supabase.from("bookings").insert({
+          student_id: user.id, tutor_id: tutor.id, subject_id: form.subjectId,
+          preferred_start: preferredStart, duration_minutes: parseInt(form.duration),
+          session_type: form.sessionType, price_amount: priceAmount, currency: "NGN",
+          student_notes: form.notes || null, student_name: form.studentName,
+          student_email: form.studentEmail, student_phone: form.studentPhone || null,
+          programme: form.programme, available_days: form.availableDays,
+          available_times: form.availableTimes || null,
+        }).select("id,ref_code").single();
+        if (error) throw error;
+        id = booking.id; ref = booking.ref_code;
+        setBookingId(id); setBookingRef(ref);
 
-      const subjectName = subjects.find((s) => s.id === form.subjectId)?.name ?? "Mathematics";
-      const summary = `Hi! I just booked a ${form.duration}-min ${subjectName} session with ${tutor.display_name} for ${new Date(preferredStart).toLocaleString()}. Booking ID: ${booking.id}. — ${form.studentName} (${form.studentEmail})`;
-      const waUrl = `https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(summary)}`;
+        supabase.functions.invoke("send-booking-email", {
+          body: {
+            bookingId: id, studentName: form.studentName, studentEmail: form.studentEmail,
+            tutorName: tutor.display_name, subjectName, preferredStart,
+            durationMinutes: parseInt(form.duration), sessionType: form.sessionType,
+            priceAmount, currency: "NGN", notes: form.notes,
+          },
+        }).catch((e) => console.warn("email failed", e));
 
-      // Send confirmation email (non-blocking failure)
-      supabase.functions.invoke("send-booking-email", {
-        body: {
-          bookingId: booking.id, studentName: form.studentName, studentEmail: form.studentEmail,
-          tutorName: tutor.display_name, subjectName, preferredStart,
-          durationMinutes: parseInt(form.duration), sessionType: form.sessionType,
-          priceAmount, currency: "NGN", notes: form.notes,
-        },
-      }).catch((e) => console.warn("email failed", e));
+        setWaUrl(`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(
+          `Hi! I just booked a ${form.duration}-min ${subjectName} session with ${tutor.display_name} for ${new Date(preferredStart).toLocaleString()}. Booking ref: ${ref ?? id}. — ${form.studentName} (${form.studentEmail})`,
+        )}`);
+      }
 
-      setDone({ id: booking.id, waUrl, summary });
-      toast.success("Booking request created");
-    } catch (e: unknown) {
+      setStep("pay");
+      if (priceAmount > 0) {
+        const { data, error } = await supabase.functions.invoke("paystack-booking", {
+          body: { action: "init", bookingId: id, callbackUrl: `${window.location.origin}/payment/callback?type=booking` },
+        });
+        const res = data as { authorizationUrl?: string; error?: string } | null;
+        if (error || res?.error || !res?.authorizationUrl) {
+          setPayNote(res?.error ?? error?.message ?? "Online payment is unavailable right now. Our team will contact you with payment details.");
+          return;
+        }
+        window.location.href = res.authorizationUrl;
+        return;
+      }
+      setPayNote("This tutor has not set a session price yet — no payment is required now. Our team will confirm the fee with you.");
+    } catch (e) {
       toast.error((e as Error)?.message ?? "Could not create booking");
-    } finally { setSubmitting(false); }
+    } finally { setBusy(false); }
   };
 
   return (
     <Dialog open={!!tutor} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-lg">
-        {!done ? (
+      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>
+            {step === "details" && `Book a session with ${tutor.display_name}`}
+            {step === "auth" && "Sign in to continue"}
+            {step === "pay" && "Payment"}
+            {step === "bio" && "A few more details"}
+          </DialogTitle>
+          <DialogDescription>
+            {step === "details" && "Step 1 of 4 — brief details. Sign in, payment and your full bio come next."}
+            {step === "auth" && "Step 2 of 4 — your details are saved, nothing is lost."}
+            {step === "pay" && "Step 3 of 4 — secure payment via Paystack."}
+            {step === "bio" && "Step 4 of 4 — help your tutor prepare for the first session."}
+          </DialogDescription>
+        </DialogHeader>
+
+        {step === "details" && (
           <>
-            <DialogHeader>
-              <DialogTitle>Book a session with {tutor.display_name}</DialogTitle>
-              <DialogDescription>We'll email a confirmation and open WhatsApp so you can finalize timing.</DialogDescription>
-            </DialogHeader>
             <div className="grid gap-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="grid gap-1.5"><Label>Your name *</Label><Input value={form.studentName} onChange={(e) => setForm({ ...form, studentName: e.target.value })} /></div>
+                <div className="grid gap-1.5"><Label>Email *</Label><Input type="email" value={form.studentEmail} onChange={(e) => setForm({ ...form, studentEmail: e.target.value })} /></div>
+                <div className="grid gap-1.5"><Label>Phone</Label><Input value={form.studentPhone} onChange={(e) => setForm({ ...form, studentPhone: e.target.value })} /></div>
+                <div className="grid gap-1.5"><Label>Programme *</Label><Input value={form.programme} onChange={(e) => setForm({ ...form, programme: e.target.value })} placeholder="e.g. IGCSE Maths" /></div>
+              </div>
               <div className="grid gap-1.5">
-                <Label>Subject</Label>
+                <Label>Subject *</Label>
                 <Select value={form.subjectId} onValueChange={(v) => setForm({ ...form, subjectId: v })}>
                   <SelectTrigger><SelectValue placeholder="Pick a subject" /></SelectTrigger>
                   <SelectContent>{subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="grid gap-1.5"><Label>Date</Label><Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></div>
-                <div className="grid gap-1.5"><Label>Time</Label><Input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} /></div>
+                <div className="grid gap-1.5"><Label>Date *</Label><Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></div>
+                <div className="grid gap-1.5"><Label>Time *</Label><Input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} /></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="grid gap-1.5"><Label>Duration</Label>
@@ -255,29 +337,74 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
                   </Select>
                 </div>
               </div>
-              <div className="grid gap-1.5"><Label>Your name</Label><Input value={form.studentName} onChange={(e) => setForm({ ...form, studentName: e.target.value })} /></div>
-              <div className="grid gap-1.5"><Label>Your email</Label><Input type="email" value={form.studentEmail} onChange={(e) => setForm({ ...form, studentEmail: e.target.value })} /></div>
-              <div className="grid gap-1.5"><Label>Notes (optional)</Label><Textarea rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Topics you want to focus on" /></div>
+              <div className="grid gap-1.5">
+                <Label>Days you are available</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {FULL_DAYS.map((d) => (
+                    <button key={d} type="button" onClick={() => toggleDay(d)}
+                      className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${form.availableDays.includes(d) ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary/40"}`}>
+                      {d.slice(0, 3)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="grid gap-1.5"><Label>Times that suit you</Label><Input value={form.availableTimes} onChange={(e) => setForm({ ...form, availableTimes: e.target.value })} placeholder="e.g. Weekdays after 5pm" /></div>
+              <div className="grid gap-1.5"><Label>Notes (optional)</Label><Textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Topics you want to focus on" /></div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={onClose}>Cancel</Button>
-              <Button onClick={handle} disabled={submitting}>{submitting && <Loader2 className="animate-spin" />} Confirm booking</Button>
+              <Button onClick={submitDetails} disabled={busy}>{busy && <Loader2 className="animate-spin" />} Continue</Button>
             </DialogFooter>
           </>
-        ) : (
+        )}
+
+        {step === "auth" && (
           <>
-            <DialogHeader>
-              <DialogTitle>Booking received</DialogTitle>
-              <DialogDescription>Your booking ID is <code className="font-mono text-xs">{done.id}</code>. We've emailed a confirmation. Tap below to send a WhatsApp note to the team.</DialogDescription>
-            </DialogHeader>
-            <div className="rounded-xl bg-muted p-4 text-sm">{done.summary}</div>
+            <div className="grid gap-3">
+              <div className="grid gap-1.5"><Label>Email</Label><Input type="email" value={auth.email} onChange={(e) => setAuth({ ...auth, email: e.target.value })} /></div>
+              <div className="grid gap-1.5"><Label>Password</Label><Input type="password" value={auth.password} onChange={(e) => setAuth({ ...auth, password: e.target.value })} /></div>
+              <button type="button" className="text-left text-xs font-semibold text-primary underline-offset-2 hover:underline"
+                onClick={() => setAuth((a) => ({ ...a, mode: a.mode === "signin" ? "signup" : "signin" }))}>
+                {auth.mode === "signin" ? "New here? Create an account instead" : "Already have an account? Sign in"}
+              </button>
+            </div>
             <DialogFooter>
-              <Button variant="outline" onClick={onClose}>Close</Button>
-              <Button asChild><a href={done.waUrl} target="_blank" rel="noopener"><MessageCircle /> Open WhatsApp</a></Button>
+              <Button variant="outline" onClick={() => setStep("details")}>Back</Button>
+              <Button onClick={doAuth} disabled={busy}>{busy && <Loader2 className="animate-spin" />} {auth.mode === "signin" ? "Sign in & continue" : "Create account & continue"}</Button>
             </DialogFooter>
+          </>
+        )}
+
+        {step === "pay" && (
+          <>
+            <div className="rounded-2xl border bg-muted/40 p-4 text-sm">
+              <p className="font-semibold">Booking ref: <span className="font-mono">{bookingRef ?? bookingId}</span></p>
+              <p className="mt-1 text-muted-foreground">{subjectName} with {tutor.display_name} · {form.duration} min · {preferredStart && new Date(preferredStart).toLocaleString()}</p>
+              <p className="mt-2 font-display text-xl font-bold">{priceAmount ? `₦${priceAmount.toLocaleString()}` : "Fee to be confirmed"}</p>
+            </div>
+            {busy && <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Redirecting to Paystack…</p>}
+            {payNote && <p className="text-sm text-muted-foreground">{payNote}</p>}
+            <DialogFooter className="flex-wrap gap-2">
+              {waUrl && <Button variant="outline" asChild><a href={waUrl} target="_blank" rel="noopener"><MessageCircle /> WhatsApp us</a></Button>}
+              {priceAmount > 0 && payNote && <Button onClick={createBookingAndPay} disabled={busy}>Retry payment</Button>}
+              <Button onClick={() => setStep("bio")} variant={payNote ? "default" : "outline"}>Continue to bio details</Button>
+            </DialogFooter>
+          </>
+        )}
+
+        {step === "bio" && bookingId && (
+          <>
+            <BookingReceipt data={{
+              reference: bookingRef ?? bookingId, bookingRef, tutorName: tutor.display_name, tutorRef: tutor.ref_code,
+              amount: priceAmount, currency: "NGN", start: preferredStart, durationMinutes: parseInt(form.duration),
+              paidAt: priceAmount > 0 && !payNote ? new Date().toISOString() : null,
+            }} />
+            <div className="mt-4"><BookingBioForm bookingId={bookingId} onDone={() => toast.success("All set — see you in class!")} /></div>
+            <DialogFooter><Button variant="outline" onClick={onClose}>Close</Button></DialogFooter>
           </>
         )}
       </DialogContent>
     </Dialog>
   );
 }
+
