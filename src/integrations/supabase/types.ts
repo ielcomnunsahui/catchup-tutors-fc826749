@@ -1100,6 +1100,54 @@ export type Database = {
         }
         Relationships: []
       }
+      topic_questions: {
+        Row: {
+          access_level: Database["public"]["Enums"]["access_level"]
+          created_at: string
+          id: string
+          is_published: boolean
+          ms_url: string | null
+          paper_key: string
+          paper_label: string
+          questions_url: string | null
+          sort_order: number
+          subject_key: string
+          topic: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          access_level?: Database["public"]["Enums"]["access_level"]
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          ms_url?: string | null
+          paper_key: string
+          paper_label: string
+          questions_url?: string | null
+          sort_order?: number
+          subject_key: string
+          topic: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          access_level?: Database["public"]["Enums"]["access_level"]
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          ms_url?: string | null
+          paper_key?: string
+          paper_label?: string
+          questions_url?: string | null
+          sort_order?: number
+          subject_key?: string
+          topic?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       topics: {
         Row: {
           created_at: string
