@@ -1,7 +1,7 @@
-import musa from "@/assets/Musa_Salami.jpg.asset.json";
-import abduljamal from "@/assets/Abduljamal_Ololade_Raji.jpg.asset.json";
-import ameerah from "@/assets/IMG-20260815-WA0051.jpg.asset.json";
-import abdulahi from "@/assets/Abdullahi_Oyebanji.jpg.asset.json";
+import musa from "@/assets/Musa_Salami.jpg";
+import abduljamal from "@/assets/Abduljamal_Ololade_Raji.jpg";
+import ameerah from "@/assets/IMG-20260815-WA0051.jpg";
+import abdulahi from "@/assets/Abdullahi_Oyebanji.jpg";
 
 export type Testimonial = { quote: string; name: string; role: string; image?: string };
 
@@ -9,7 +9,7 @@ export const TESTIMONIALS: Testimonial[] = [
   {
     name: "Musa Salami",
     role: "University of Ibadan",
-    image: musa.url,
+    image: musa,
     quote:
       "Being under the tutelage of Mr. Thaoban made my mathematics coursework during my A Levels very easy. He breaks down complex concepts with ease, building both confidence and a robust foundation for my examination. He is an exceptional tutor, and I cannot recommend him highly enough.",
   },
