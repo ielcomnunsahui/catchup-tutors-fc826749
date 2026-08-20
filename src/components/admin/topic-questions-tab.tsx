@@ -52,9 +52,9 @@ export default function TopicQuestionsTab() {
       const patch = drafts[id];
       const clean: Draft = {
         ...patch,
-        questions_url: patch.questions_url !== undefined ? (patch.questions_url.trim() || null) : undefined,
-        ms_url: patch.ms_url !== undefined ? (patch.ms_url.trim() || null) : undefined,
-        video_url: patch.video_url !== undefined ? (patch.video_url.trim() || null) : undefined,
+        questions_url: patch.questions_url !== undefined ? ((patch.questions_url ?? "").trim() || null) : undefined,
+        ms_url: patch.ms_url !== undefined ? ((patch.ms_url ?? "").trim() || null) : undefined,
+        video_url: patch.video_url !== undefined ? ((patch.video_url ?? "").trim() || null) : undefined,
       };
       Object.keys(clean).forEach((k) => (clean as any)[k] === undefined && delete (clean as any)[k]);
       const { error } = await (supabase as any).from("topic_questions").update(clean).eq("id", id);
