@@ -26,6 +26,7 @@ import QuizBankTab from "@/components/admin/quiz-bank-tab";
 import SettingsTab from "@/components/admin/settings-tab";
 import StudentsTab from "@/components/admin/students-tab";
 import TutorApplicationsTab from "@/components/admin/tutor-applications-tab";
+import TopicQuestionsTab from "@/components/admin/topic-questions-tab";
 
 
 
@@ -80,7 +81,7 @@ function AdminPage() {
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <Tabs defaultValue="overview">
           <div className="-mx-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <TabsList className="inline-flex w-max min-w-full gap-1 rounded-2xl bg-muted/60 p-1 lg:grid lg:grid-cols-11">
+            <TabsList className="inline-flex w-max min-w-full gap-1 rounded-2xl bg-muted/60 p-1 lg:grid lg:grid-cols-12">
               <AdminTab value="overview" icon={LayoutDashboard} label="Overview" />
               <AdminTab value="registrations" icon={ClipboardList} label="Summer registrations" />
               <AdminTab value="students" icon={Users} label="Students" />
@@ -89,6 +90,7 @@ function AdminPage() {
               <AdminTab value="subjects" icon={BookOpen} label="Subjects" />
               <AdminTab value="topics" icon={FolderTree} label="Topics" />
               <AdminTab value="resources" icon={FileText} label="Resources" />
+              <AdminTab value="topic-questions" icon={Layers3} label="Topic questions" />
               <AdminTab value="past-papers" icon={CalendarDays} label="Past papers" />
               <AdminTab value="quiz" icon={Brain} label="Quiz bank" />
               <AdminTab value="settings" icon={Settings} label="Settings" />
@@ -103,6 +105,7 @@ function AdminPage() {
           <TabsContent value="subjects" className="mt-8"><SubjectsTab /></TabsContent>
           <TabsContent value="topics" className="mt-8"><TopicsTab /></TabsContent>
           <TabsContent value="resources" className="mt-8"><ResourcesTab /></TabsContent>
+          <TabsContent value="topic-questions" className="mt-8"><TopicQuestionsTab /></TabsContent>
           <TabsContent value="past-papers" className="mt-8"><PastPapersTab /></TabsContent>
           <TabsContent value="quiz" className="mt-8"><QuizBankTab /></TabsContent>
           <TabsContent value="settings" className="mt-8"><SettingsTab /></TabsContent>
