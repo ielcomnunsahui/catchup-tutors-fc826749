@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, ArrowRight, BookMarked, CalendarDays, ChevronRight, Download,
-  ExternalLink, GraduationCap, Layers3, LockKeyhole, PlayCircle, Search, Sigma, Sparkles, Users, X,
+  ExternalLink, GraduationCap, Layers3, Loader2, LockKeyhole, PlayCircle, Search, Sigma, Sparkles, Users, X,
 } from "lucide-react";
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 import { usePremium } from "@/hooks/use-premium";
 import { SESSIONS, PAPER_NUMBERS, PAPER_GROUPS, variantsOf, type Session, fetchPastPapers, indexPapers, paperKey, paperFileName, type PastPaper } from "@/lib/past-papers";
+import { fetchTopicQuestions, groupByPaper, type TopicQuestion } from "@/lib/topic-questions";
 
 
 // ---------- helpers ----------
