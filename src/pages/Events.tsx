@@ -19,13 +19,13 @@ const UPCOMING = [
 
 const PAST = [
   { title: "Summer Lesson 2025 Class Group Photo", when: "Sep 2025", img: summerGroup.url, note: "Our secondary-school scholars and volunteer tutors at Al-Bayan High School, Ilorin a full house of learners on closing day." },
-  { title: "Scholarship Award Abdulrahman Ahmad", when: "Sep 2025", img: summerPrize2.url, note: "₦10,000 cash prize presented to Abdulrahman Ahmad for outstanding performance during the 2025 Summer Lesson." },
-  { title: "NECO Sponsorship Abdulateef S. Arewa", when: "Sep 2025", img: summerPrize1.url, note: "Free NECO registration awarded to Abdulateef S. Arewa as best-performing student of the 2025 cohort." },
+  { title: "Scholarship Award Abdulrahman Ahmad", when: "Sep 2025", img: summerPrize1.url, note: "₦10,000 cash prize presented to Abdulrahman Ahmad for outstanding performance during the 2025 Summer Lesson." },
+  { title: "NECO Sponsorship Abdulateef S. Arewa", when: "Sep 2025", img: summerPrize2.url, note: "Free NECO registration awarded to Abdulateef S. Arewa as best-performing student of the 2025 cohort." },
 ];
 
 const NEWS = [
   { title: "Awards & Gift Presentations 2025", img: summerPrize2.url, blurb: "Cash prizes, free NECO/WAEC registration and gift items presented to the top-performing students of the 2025 Summer Lesson." },
-  { title: "Free Summer Lesson Campaign Ilorin", img: summerBanner.url, blurb: "Community outreach for the free summer academy at Al-Bayan High School, Akerebiate, Ilorin sponsored by Jimoh Habibullahi Initiative." },
+  { title: "Free Summer Lesson Campaign Ilorin", img: summerBanner.url, blurb: "Community outreach for the free summer academy at Al-Bayan High School, Akerebiate, Ilorin." },
 ];
 
 export default function Events() {
