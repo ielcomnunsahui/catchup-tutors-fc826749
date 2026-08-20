@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, ArrowRight, BookMarked, CalendarDays, ChevronRight, Download,
-  ExternalLink, GraduationCap, Layers3, LockKeyhole, PlayCircle, Search, Sigma, Sparkles, Users, X,
+  ExternalLink, GraduationCap, Layers3, Loader2, LockKeyhole, PlayCircle, Search, Sigma, Sparkles, Users, X,
 } from "lucide-react";
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 import { usePremium } from "@/hooks/use-premium";
 import { SESSIONS, PAPER_NUMBERS, PAPER_GROUPS, variantsOf, type Session, fetchPastPapers, indexPapers, paperKey, paperFileName, type PastPaper } from "@/lib/past-papers";
+import { fetchTopicQuestions, groupByPaper, type TopicQuestion } from "@/lib/topic-questions";
 
 
 // ---------- helpers ----------
@@ -785,9 +786,47 @@ function PaperPreview({ rec, num, doc, label, premium, onOpenPdf }: {
   );
 }
 
+type TopicEntry = { topic: string; questions?: string; solutions?: string; videoUrl?: string; isFree: boolean };
+type PaperEntry = { paper: string; label: string; topics: TopicEntry[] };
+
 function TopicsView({ program, subject, premium, onBack, onOpenPdf, onOpenVideo }: { program: Program; subject: Subject; premium: ReturnType<typeof usePremium>; onBack: () => void; onOpenPdf: OpenPdf; onOpenVideo: OpenVideo }) {
-  const papers = TOPIC_PAPERS[subject.id] ?? [];
+  const [dbRows, setDbRows] = useState<TopicQuestion[] | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setDbRows(null);
+    setSelected(null);
+    fetchTopicQuestions(subject.id)
+      .then((rows) => { if (!cancelled) setDbRows(rows.filter((r) => r.is_published)); })
+      .catch(() => { if (!cancelled) setDbRows([]); });
+    return () => { cancelled = true; };
+  }, [subject.id]);
+
+  const papers: PaperEntry[] = useMemo(() => {
+    if (dbRows && dbRows.length) {
+      return groupByPaper(dbRows).map((g) => ({
+        paper: g.paper,
+        label: g.label,
+        topics: g.rows.map((r) => ({
+          topic: r.topic,
+          questions: r.questions_url ?? undefined,
+          solutions: r.ms_url ?? undefined,
+          videoUrl: r.video_url ?? undefined,
+          isFree: r.access_level === "free",
+        })),
+      }));
+    }
+    return (TOPIC_PAPERS[subject.id] ?? []).map((p) => ({
+      paper: p.paper,
+      label: p.label,
+      topics: p.topics.map((t) => {
+        const a = getTopicAssets(subject.id, t);
+        return { topic: t, questions: a.questions, solutions: a.solutions, videoUrl: a.videoUrl, isFree: !!a.isFree };
+      }),
+    }));
+  }, [dbRows, subject.id]);
+
   const active = papers.find((p) => p.paper === selected) ?? null;
 
   return (
@@ -797,13 +836,15 @@ function TopicsView({ program, subject, premium, onBack, onOpenPdf, onOpenVideo 
         <Layers3 className="shrink-0 text-brand-orange" />
         <div>
           <h2 className="font-display text-2xl font-bold sm:text-3xl">
-            {active ? `Paper ${active.paper} · ${active.label}` : "Topic-based past questions"}
+            {active ? active.label : "Topic-based past questions"}
           </h2>
           <p className="text-sm text-muted-foreground">{program.name} · {subject.name} ({subject.code})</p>
         </div>
       </div>
 
-      {!active ? (
+      {dbRows === null ? (
+        <div className="mt-10 flex justify-center py-16 text-muted-foreground"><Loader2 className="animate-spin" /></div>
+      ) : !active ? (
         <>
           <p className="mt-6 max-w-2xl text-sm text-muted-foreground">Choose a paper component — you'll then see its topics in syllabus order.</p>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -813,10 +854,9 @@ function TopicsView({ program, subject, premium, onBack, onOpenPdf, onOpenVideo 
                 onClick={() => setSelected(p.paper)}
                 className="group flex items-start gap-4 rounded-2xl border bg-card p-5 text-left transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-soft"
               >
-                <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 font-display text-lg font-bold text-primary">{p.paper}</span>
+                <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 font-display text-sm font-bold text-primary">{p.paper}</span>
                 <span className="min-w-0 flex-1">
-                  <span className="block font-display text-lg font-bold">Paper {p.paper}</span>
-                  <span className="block text-sm text-muted-foreground">{p.label}</span>
+                  <span className="block font-display text-lg font-bold">{p.label}</span>
                   <span className="mt-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground/80">{p.topics.length} topics</span>
                 </span>
                 <ChevronRight className="mt-1 size-5 shrink-0 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-primary" />
@@ -826,10 +866,10 @@ function TopicsView({ program, subject, premium, onBack, onOpenPdf, onOpenVideo 
         </>
       ) : (
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {active.topics.map((topic, i) => {
-            const a = getTopicAssets(subject.id, topic);
+          {active.topics.map((a, i) => {
+            const topic = a.topic;
             const hasReal = !!(a.questions || a.solutions || a.videoUrl);
-            const isFree = !!a.isFree;
+            const isFree = a.isFree;
             const lockedNonFree = hasReal && !isFree && !premium.isPremium;
             return (
               <article key={topic} className="group flex flex-col rounded-2xl border bg-card p-5 transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-soft">
@@ -838,15 +878,19 @@ function TopicsView({ program, subject, premium, onBack, onOpenPdf, onOpenVideo 
                   {hasReal ? (isFree ? <FreeBadge /> : <PremiumBadge />) : <span className="text-[10px] font-semibold uppercase text-muted-foreground/70">Coming soon</span>}
                 </div>
                 <h3 className="mt-2 break-words font-display text-lg font-bold leading-snug">{topic}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">Past questions · Worked solutions · Video lesson</p>
+                <p className="mt-2 text-sm text-muted-foreground">Past questions · Marking scheme · Video lesson</p>
                 <div className="mt-4 grid gap-2">
-                  <Button size="sm" variant="outline" className="justify-start" disabled={!a.questions && !hasReal}
-                    onClick={() => onOpenPdf(a.questions ?? SAMPLE_PDF, `${topic} — Past Questions`, false)}>
-                    <BookMarked /> View past questions
+                  <Button size="sm" variant="outline" className="justify-start" disabled={!a.questions}
+                    onClick={() => a.questions && onOpenPdf(a.questions, `${topic} — Past Questions`, false)}>
+                    <BookMarked /> {a.questions ? "View past questions" : "Questions coming soon"}
                   </Button>
-                  <LockableButton locked={lockedNonFree} onClick={() => onOpenPdf(a.solutions ?? SAMPLE_PDF, `${topic} — Worked Solutions`, !isFree && hasReal)}>
-                    <BookMarked /> {lockedNonFree ? "Solutions (Premium)" : "View solutions"}
-                  </LockableButton>
+                  {a.solutions ? (
+                    <LockableButton locked={lockedNonFree} onClick={() => onOpenPdf(a.solutions!, `${topic} — Marking Scheme`, !isFree)}>
+                      <BookMarked /> {lockedNonFree ? "Marking scheme (Premium)" : "View marking scheme"}
+                    </LockableButton>
+                  ) : (
+                    <Button size="sm" variant="outline" className="justify-start" disabled><BookMarked /> Marking scheme coming soon</Button>
+                  )}
                   {a.videoUrl ? (
                     <LockableButton locked={lockedNonFree} onClick={() => onOpenVideo(a.videoUrl!, `${topic} — Video Solution`, !isFree)}>
                       <PlayCircle /> {lockedNonFree ? "Video (Premium)" : "Watch video"}
@@ -863,6 +907,7 @@ function TopicsView({ program, subject, premium, onBack, onOpenPdf, onOpenVideo 
     </div>
   );
 }
+
 
 function BackBar({ onBack, label }: { onBack: () => void; label: string }) {
   return (
