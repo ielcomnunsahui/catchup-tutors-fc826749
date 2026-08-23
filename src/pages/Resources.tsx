@@ -13,24 +13,17 @@ import { cn } from "@/lib/utils";
 import { usePremium } from "@/hooks/use-premium";
 import { SESSIONS, PAPER_NUMBERS, PAPER_GROUPS, variantsOf, type Session, fetchPastPapers, indexPapers, paperKey, paperFileName, type PastPaper } from "@/lib/past-papers";
 import { fetchTopicQuestions, groupByPaper, type TopicQuestion } from "@/lib/topic-questions";
+import { drivePreview, driveDownload, driveOpen } from "@/lib/drive";
 
 
 // ---------- helpers ----------
 type ViewerState =
-  | { kind: "pdf"; url: string; title: string; downloadUrl?: string }
+  | { kind: "pdf"; url: string; title: string; downloadUrl?: string; sourceUrl?: string }
   | { kind: "video"; youtubeId: string; title: string }
   | null;
 
 const ytId = (url: string) => url.match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/)?.[1] ?? "";
-const driveId = (url: string) => url.match(/\/file\/d\/([\w-]+)/)?.[1] ?? "";
-const drivePreview = (url: string) => {
-  const id = driveId(url);
-  return id ? `https://drive.google.com/file/d/${id}/preview` : url;
-};
-const driveDownload = (url: string) => {
-  const id = driveId(url);
-  return id ? `https://drive.google.com/uc?export=download&id=${id}` : url;
-};
+
 
 // ---------- domain data ----------
 type Program = { id: string; name: string; tagline: string; badge: string };
@@ -137,9 +130,16 @@ function ResourceViewer({ state, onClose }: { state: ViewerState; onClose: () =>
           <DialogTitle className="truncate text-base">{state.title}</DialogTitle>
           <div className="flex items-center gap-2">
             {state.kind === "pdf" ? (
-              <Button asChild size="sm" variant="outline">
-                <a href={state.downloadUrl ?? state.url} target="_blank" rel="noopener"><Download /> Download</a>
-              </Button>
+              <>
+                {state.sourceUrl && (
+                  <Button asChild size="sm" variant="ghost">
+                    <a href={state.sourceUrl} target="_blank" rel="noopener"><ExternalLink /> Open in Drive</a>
+                  </Button>
+                )}
+                <Button asChild size="sm" variant="outline">
+                  <a href={state.downloadUrl ?? state.url} target="_blank" rel="noopener"><Download /> Download</a>
+                </Button>
+              </>
             ) : (
               <Button asChild size="sm" variant="outline">
                 <a href={`https://www.youtube.com/watch?v=${state.youtubeId}`} target="_blank" rel="noopener"><ExternalLink /> YouTube</a>
@@ -346,7 +346,7 @@ export default function Resources() {
 
   const openPdf = (url: string, title: string, locked: boolean) => {
     if (locked && !premium.isPremium) return setViewer({ kind: "pdf", url: SAMPLE_PDF, title: `${title} (Preview)` });
-    setViewer({ kind: "pdf", url: drivePreview(url), downloadUrl: driveDownload(url), title });
+    setViewer({ kind: "pdf", url: drivePreview(url), downloadUrl: driveDownload(url), sourceUrl: driveOpen(url), title });
   };
   const openVideo = (url: string, title: string, locked: boolean) => {
     if (locked && !premium.isPremium) return; // gate handled in UI

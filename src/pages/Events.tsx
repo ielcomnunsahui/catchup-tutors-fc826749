@@ -160,7 +160,7 @@ export default function Events() {
           <Sparkles className="mx-auto h-6 w-6 text-[#FF6B12]" />
           <h3 className="mt-4 font-display text-xl font-bold text-brand-navy">Want to sponsor or partner with an event?</h3>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Reach us on WhatsApp <a href="https://wa.me/2348101804411" className="font-semibold text-primary hover:underline">+234 810 180 4411</a> or email{" "}
+            Reach us on WhatsApp <a href="https://wa.me/447350890668" className="font-semibold text-primary hover:underline">+44 7350 890668</a> or email{" "}
             <a href="mailto:Catchuptutors01@gmail.com" className="font-semibold text-primary hover:underline">Catchuptutors01@gmail.com</a>.
           </p>
         </div>

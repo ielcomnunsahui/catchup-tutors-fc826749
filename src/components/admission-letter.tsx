@@ -113,7 +113,7 @@ export const AdmissionLetter = forwardRef<HTMLDivElement, AdmissionLetterProps>(
               We look forward to partnering with you this summer to unlock your academic potential and build true wisdom.
             </p>
             <p>
-              For questions, contact us on WhatsApp at <b>+234 810 180 4411</b> or by email at{" "}
+              For questions, contact us on WhatsApp at <b>+44 7350 890668</b> or by email at{" "}
               <b>Catchuptutors01@gmail.com</b>.
             </p>
 
@@ -164,7 +164,7 @@ export const AdmissionLetter = forwardRef<HTMLDivElement, AdmissionLetterProps>(
               Our coordinator will contact you on the phone number you provided to confirm subjects, timetable and orientation date.
             </p>
             <p>
-              For questions, contact us on WhatsApp at <b>+234 810 180 4411</b> or by email at{" "}
+              For questions, contact us on WhatsApp at <b>+44 7350 890668</b> or by email at{" "}
               <b>Catchuptutors01@gmail.com</b>.
             </p>
 
