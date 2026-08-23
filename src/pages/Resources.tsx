@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { usePremium } from "@/hooks/use-premium";
 import { SESSIONS, PAPER_NUMBERS, PAPER_GROUPS, variantsOf, type Session, fetchPastPapers, indexPapers, paperKey, paperFileName, type PastPaper } from "@/lib/past-papers";
 import { fetchTopicQuestions, groupByPaper, type TopicQuestion } from "@/lib/topic-questions";
+import { drivePreview, driveDownload, driveOpen } from "@/lib/drive";
 
 
 // ---------- helpers ----------
@@ -22,15 +23,7 @@ type ViewerState =
   | null;
 
 const ytId = (url: string) => url.match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/)?.[1] ?? "";
-const driveId = (url: string) => url.match(/\/file\/d\/([\w-]+)/)?.[1] ?? "";
-const drivePreview = (url: string) => {
-  const id = driveId(url);
-  return id ? `https://drive.google.com/file/d/${id}/preview` : url;
-};
-const driveDownload = (url: string) => {
-  const id = driveId(url);
-  return id ? `https://drive.google.com/uc?export=download&id=${id}` : url;
-};
+
 
 // ---------- domain data ----------
 type Program = { id: string; name: string; tagline: string; badge: string };
