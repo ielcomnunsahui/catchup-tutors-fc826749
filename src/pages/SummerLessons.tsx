@@ -94,7 +94,7 @@ export default function SummerLessons() {
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
             The Summer Academy runs on donations and volunteer time. Every accepted student receives an admission letter
             and a place in a small, supportive class. Questions? WhatsApp{" "}
-            <a href="https://wa.me/2348101804411" className="font-semibold text-primary hover:underline">+234 810 180 4411</a>.
+            <a href="https://wa.me/447350890668" className="font-semibold text-primary hover:underline">+44 7350 890668</a>.
           </p>
         </div>
       </section>

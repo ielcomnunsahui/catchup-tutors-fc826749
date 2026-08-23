@@ -51,7 +51,7 @@ export default function About() {
       founder: { "@type": "Person", name: "Ahmed Thaoban", jobTitle: "Founder" },
       address: { "@type": "PostalAddress", addressLocality: "Ilorin", addressRegion: "Kwara", addressCountry: "NG" },
       email: "Catchuptutors01@gmail.com",
-      telephone: "+2348101804411",
+      telephone: "+447350890668",
     },
   };
 

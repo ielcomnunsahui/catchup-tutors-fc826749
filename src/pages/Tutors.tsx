@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import BookingBioForm from "@/components/booking-bio-form";
 import BookingReceipt from "@/components/booking-receipt";
 
-const ADMIN_WHATSAPP = "2348101804411";
+const ADMIN_WHATSAPP = "447350890668";
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const FULL_DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 

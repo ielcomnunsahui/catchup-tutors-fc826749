@@ -64,7 +64,7 @@ export default function Partnership() {
       >
         <div className="flex flex-wrap gap-3">
           <Button asChild size="lg" className="bg-[#FF6B12] text-white hover:bg-[#FF6B12]/90">
-            <a href="https://wa.me/2348101804411" target="_blank" rel="noopener"><MessageCircle /> WhatsApp our team</a>
+            <a href="https://wa.me/447350890668" target="_blank" rel="noopener"><MessageCircle /> WhatsApp our team</a>
           </Button>
           <Button asChild size="lg" variant="outline" className="border-hero-foreground/40 bg-transparent text-hero-foreground hover:bg-hero-foreground hover:text-brand-navy">
             <Link to="/contact">Start a conversation <ArrowRight /></Link>
@@ -178,7 +178,7 @@ export default function Partnership() {
               To discuss collaboration opportunities, sponsorships, or to book a meeting with our leadership, please contact us directly through the channels below.
             </p>
             <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <ContactChip icon={Phone} title="Phone / WhatsApp" text="+234 810 180 4411" href="https://wa.me/2348101804411" />
+              <ContactChip icon={Phone} title="Phone / WhatsApp" text="+44 7350 890668" href="https://wa.me/447350890668" />
               <ContactChip icon={Mail} title="Email" text="Catchuptutors01@gmail.com" href="mailto:Catchuptutors01@gmail.com" />
               <ContactChip icon={MapPin} title="Office" text="Al-Bayan High School, behind Karuma Secondary School, Akerebiate, Ilorin, Kwara State." />
             </div>
@@ -187,7 +187,7 @@ export default function Partnership() {
                 <Link to="/contact">Start a conversation <ArrowRight /></Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="border-hero-foreground/40 bg-transparent text-hero-foreground hover:bg-hero-foreground hover:text-brand-navy">
-                <a href="https://wa.me/2348101804411" target="_blank" rel="noopener"><MessageCircle /> WhatsApp our team</a>
+                <a href="https://wa.me/447350890668" target="_blank" rel="noopener"><MessageCircle /> WhatsApp our team</a>
               </Button>
             </div>
             <p className="mt-6 text-xs italic text-hero-foreground/70">Let's build the next generation of leaders together — with wisdom and intentionality.</p>

@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import logoUrl from "@/assets/catchup-logo.png";
+import { CONTACT, waLink, waLinkNG } from "@/lib/contact";
 
 
 const navigation = [
@@ -75,23 +76,23 @@ export function SiteShell({ children }: { children: ReactNode }) {
             <a href="mailto:Catchuptutors01@gmail.com" className="inline-flex items-center gap-1.5 transition-colors hover:text-brand-orange focus-visible:outline-none focus-visible:text-brand-orange">
               <Mail className="h-3.5 w-3.5" aria-hidden="true" /> Catchuptutors01@gmail.com
             </a>
-            <a href="https://wa.me/2348101804411" target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 transition-colors hover:text-brand-orange">
-              <Phone className="h-3.5 w-3.5" aria-hidden="true" /> +234 810 180 4411
+            <a href={waLink()} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 font-semibold transition-colors hover:text-brand-orange">
+              <Phone className="h-3.5 w-3.5" aria-hidden="true" /> {CONTACT.primary.label} <span className="hidden lg:inline text-hero-foreground/60">(UK)</span>
             </a>
-            <a href="https://wa.me/447350890668" target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 transition-colors hover:text-brand-orange">
-              <Phone className="h-3.5 w-3.5" aria-hidden="true" /> +44 7350 890668 <span className="hidden lg:inline text-hero-foreground/60">(UK)</span>
+            <a href={waLinkNG()} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 transition-colors hover:text-brand-orange">
+              <Phone className="h-3.5 w-3.5" aria-hidden="true" /> {CONTACT.secondary.label} <span className="hidden lg:inline text-hero-foreground/60">(NG)</span>
             </a>
-            <span className="inline-flex items-center gap-1.5 text-hero-foreground/70"><MapPin className="h-3.5 w-3.5" aria-hidden="true" /> Nigeria · UK</span>
+            <span className="inline-flex items-center gap-1.5 text-hero-foreground/70"><MapPin className="h-3.5 w-3.5" aria-hidden="true" /> UK · Nigeria</span>
           </div>
           <div className="flex items-center gap-4">
-            <a href={SOCIAL.instagram.url} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 text-hero-foreground/85 transition-colors hover:text-brand-orange focus-visible:outline-none focus-visible:text-brand-orange" aria-label={`Instagram ${SOCIAL.instagram.handle}`}>
+            <a href={SOCIAL.youtube.url} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 text-hero-foreground/85 transition-colors hover:text-brand-orange focus-visible:outline-none focus-visible:text-brand-orange" aria-label={`YouTube ${SOCIAL.youtube.handle}`}>
+              <Youtube className="h-3.5 w-3.5" aria-hidden="true" /> <span className="hidden lg:inline">{SOCIAL.youtube.handle}</span>
+            </a>
+            <a href={SOCIAL.instagram.url} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 text-hero-foreground/85 transition-colors hover:text-brand-orange" aria-label={`Instagram ${SOCIAL.instagram.handle}`}>
               <Instagram className="h-3.5 w-3.5" aria-hidden="true" /> <span className="hidden lg:inline">{SOCIAL.instagram.handle}</span>
             </a>
             <a href={SOCIAL.facebook.url} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 text-hero-foreground/85 transition-colors hover:text-brand-orange" aria-label={`Facebook ${SOCIAL.facebook.handle}`}>
               <Facebook className="h-3.5 w-3.5" aria-hidden="true" /> <span className="hidden lg:inline">{SOCIAL.facebook.handle}</span>
-            </a>
-            <a href={SOCIAL.youtube.url} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 text-hero-foreground/85 transition-colors hover:text-brand-orange" aria-label={`YouTube ${SOCIAL.youtube.handle}`}>
-              <Youtube className="h-3.5 w-3.5" aria-hidden="true" /> <span className="hidden lg:inline">{SOCIAL.youtube.handle}</span>
             </a>
           </div>
         </div>
@@ -190,12 +191,12 @@ export function SiteShell({ children }: { children: ReactNode }) {
                 <p className="text-xs text-hero-foreground/60">We reply within 24 hours</p>
               </div>
             </a>
-            <a href="https://wa.me/2348101804411" target="_blank" rel="noopener" className="group flex items-start gap-4 rounded-xl p-4 -m-4 transition-colors hover:bg-hero-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hero-foreground">
+            <a href={waLink()} target="_blank" rel="noopener" className="group flex items-start gap-4 rounded-xl p-4 -m-4 transition-colors hover:bg-hero-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hero-foreground">
               <span className="grid h-11 w-11 place-items-center rounded-lg bg-brand-orange/15 text-brand-orange"><MessageCircle className="h-5 w-5" aria-hidden="true" /></span>
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-hero-foreground/60">WhatsApp</p>
-                <p className="mt-1 text-sm font-medium">+234 810 180 4411 <span className="text-hero-foreground/60">(NG)</span></p>
-                <p className="mt-0.5 text-sm font-medium">+44 7350 890668 <span className="text-hero-foreground/60">(UK)</span></p>
+                <p className="mt-1 text-base font-semibold">{CONTACT.primary.label} <span className="text-hero-foreground/60">(UK · main)</span></p>
+                <p className="mt-0.5 text-sm font-medium text-hero-foreground/80">{CONTACT.secondary.label} <span className="text-hero-foreground/60">(NG)</span></p>
                 <p className="text-xs text-hero-foreground/60">Bookings & fast replies</p>
               </div>
             </a>
@@ -203,7 +204,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
               <span className="grid h-11 w-11 place-items-center rounded-lg bg-brand-orange/15 text-brand-orange"><MapPin className="h-5 w-5" aria-hidden="true" /></span>
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-hero-foreground/60">Where we work</p>
-                <p className="mt-1 text-sm font-medium">Nigeria · United Kingdom</p>
+                <p className="mt-1 text-sm font-medium">United Kingdom · Nigeria</p>
                 <p className="text-xs text-hero-foreground/60">Online worldwide</p>
               </div>
             </div>
@@ -220,9 +221,9 @@ export function SiteShell({ children }: { children: ReactNode }) {
               </p>
               <div className="mt-6 flex items-center gap-3">
                 {[
+                  { href: SOCIAL.youtube.url,   Icon: Youtube,   label: "YouTube" },
                   { href: SOCIAL.instagram.url, Icon: Instagram, label: "Instagram" },
                   { href: SOCIAL.facebook.url,  Icon: Facebook,  label: "Facebook" },
-                  { href: SOCIAL.youtube.url,   Icon: Youtube,   label: "YouTube" },
                 ].map(({ href, Icon, label }) => (
                   <a key={label} href={href} target="_blank" rel="noopener" aria-label={label}
                      className="grid h-10 w-10 place-items-center rounded-full border border-hero-foreground/20 text-hero-foreground transition hover:border-brand-orange hover:text-brand-orange focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange">
