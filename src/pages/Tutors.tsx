@@ -167,7 +167,8 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
   const [waUrl, setWaUrl] = useState("");
   const [payNote, setPayNote] = useState("");
   const [form, setForm] = useState({
-    subjectId: "", date: "", time: "16:00", duration: "60", sessionType: "google_meet",
+    subjectIds: [] as string[], contacts: {} as Record<string, number>,
+    date: "", time: "16:00", sessionType: "google_meet",
     studentName: "", studentEmail: "", studentPhone: "", programme: "",
     availableDays: [] as string[], availableTimes: "", notes: "",
   });
@@ -176,8 +177,7 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
   useEffect(() => {
     if (!tutor) return;
     setStep("details"); setBookingId(null); setBookingRef(null); setPayNote("");
-    const tutorSubjects = subjects.filter((s) => (tutor.subjects ?? []).some((n) => s.name.toLowerCase().includes(n.toLowerCase())));
-    setForm((f) => ({ ...f, subjectId: tutorSubjects[0]?.id ?? subjects[0]?.id ?? "" }));
+    setForm((f) => ({ ...f, subjectIds: [], contacts: {} }));
     supabase.auth.getUser().then(({ data }) => {
       if (data.user?.email) setForm((f) => ({ ...f, studentEmail: f.studentEmail || data.user!.email! }));
     });
@@ -185,8 +185,24 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
 
   if (!tutor) return null;
 
-  const priceAmount = tutor.pricing?.hourly?.NGN ?? 0;
-  const subjectName = subjects.find((s) => s.id === form.subjectId)?.name ?? "Mathematics";
+  const hourlyRate = tutor.pricing?.hourly?.NGN ?? 0;
+  const hourlyGBP = tutor.pricing?.hourly?.GBP ?? 0;
+  const selectedSubjects = subjects.filter((s) => form.subjectIds.includes(s.id));
+  const contactsFor = (id: string) => form.contacts[id] ?? 1;
+  /** Each contact = 1 hour of one subject, charged at the tutor's hourly rate. */
+  const totalContacts = form.subjectIds.reduce((n, id) => n + contactsFor(id), 0);
+  const priceAmount = hourlyRate * totalContacts;
+  const priceGBP = hourlyGBP * totalContacts;
+  const subjectName = selectedSubjects.map((s) => s.name).join(", ") || "Mathematics";
+  const primarySubjectId = form.subjectIds[0] ?? "";
+  const toggleSubject = (id: string) =>
+    setForm((f) => f.subjectIds.includes(id)
+      ? { ...f, subjectIds: f.subjectIds.filter((x) => x !== id) }
+      : { ...f, subjectIds: [...f.subjectIds, id], contacts: { ...f.contacts, [id]: f.contacts[id] ?? 1 } });
+  const setContacts = (id: string, n: number) =>
+    setForm((f) => ({ ...f, contacts: { ...f.contacts, [id]: Math.min(7, Math.max(1, n)) } }));
+  const planSummary = selectedSubjects
+    .map((s) => `${s.name} × ${contactsFor(s.id)} contact(s)/week`).join("; ");
   const preferredStart = form.date && form.time ? new Date(`${form.date}T${form.time}:00`).toISOString() : "";
 
   const toggleDay = (d: string) =>
@@ -194,9 +210,11 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
 
   /** Step 1 → sign in (or straight to payment when already signed in). */
   const submitDetails = async () => {
-    if (!form.subjectId || !form.date || !form.time || !form.studentName || !form.studentEmail || !form.programme) {
-      toast.error("Please fill out name, email, programme, subject, date and time"); return;
+    if (!form.subjectIds.length) { toast.error("Select at least one subject"); return; }
+    if (!form.date || !form.time || !form.studentName || !form.studentEmail || !form.programme) {
+      toast.error("Please fill out name, email, programme, date and time"); return;
     }
+    if (!form.availableDays.length) { toast.error("Pick the days you want your contacts to hold"); return; }
     const { data } = await supabase.auth.getUser();
     if (!data.user) { setAuth((a) => ({ ...a, email: form.studentEmail })); setStep("auth"); return; }
     await createBookingAndPay();
@@ -236,10 +254,11 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
       let ref = bookingRef;
       if (!id) {
         const { data: booking, error } = await supabase.from("bookings").insert({
-          student_id: user.id, tutor_id: tutor.id, subject_id: form.subjectId,
-          preferred_start: preferredStart, duration_minutes: parseInt(form.duration),
+          student_id: user.id, tutor_id: tutor.id, subject_id: primarySubjectId,
+          preferred_start: preferredStart, duration_minutes: totalContacts * 60,
           session_type: form.sessionType, price_amount: priceAmount, currency: "NGN",
-          student_notes: form.notes || null, student_name: form.studentName,
+          student_notes: [planSummary, form.notes].filter(Boolean).join(" — ") || null,
+          bio_details: { plan: selectedSubjects.map((s) => ({ subject: s.name, contactsPerWeek: contactsFor(s.id) })), hourlyRate, totalContacts }, student_name: form.studentName,
           student_email: form.studentEmail, student_phone: form.studentPhone || null,
           programme: form.programme, available_days: form.availableDays,
           available_times: form.availableTimes || null,
@@ -252,13 +271,13 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
           body: {
             bookingId: id, studentName: form.studentName, studentEmail: form.studentEmail,
             tutorName: tutor.display_name, subjectName, preferredStart,
-            durationMinutes: parseInt(form.duration), sessionType: form.sessionType,
+            durationMinutes: totalContacts * 60, sessionType: form.sessionType,
             priceAmount, currency: "NGN", notes: form.notes,
           },
         }).catch((e) => console.warn("email failed", e));
 
         setWaUrl(`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(
-          `Hi! I just booked a ${form.duration}-min ${subjectName} session with ${tutor.display_name} for ${new Date(preferredStart).toLocaleString()}. Booking ref: ${ref ?? id}. — ${form.studentName} (${form.studentEmail})`,
+          `Hi! I just booked ${totalContacts} weekly contact(s) of ${subjectName} with ${tutor.display_name} for ${new Date(preferredStart).toLocaleString()}. Booking ref: ${ref ?? id}. — ${form.studentName} (${form.studentEmail})`,
         )}`);
       }
 
@@ -308,24 +327,47 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
                 <div className="grid gap-1.5"><Label>Phone</Label><Input value={form.studentPhone} onChange={(e) => setForm({ ...form, studentPhone: e.target.value })} /></div>
                 <div className="grid gap-1.5"><Label>Programme *</Label><Input value={form.programme} onChange={(e) => setForm({ ...form, programme: e.target.value })} placeholder="e.g. IGCSE Maths" /></div>
               </div>
-              <div className="grid gap-1.5">
-                <Label>Subject *</Label>
-                <Select value={form.subjectId} onValueChange={(v) => setForm({ ...form, subjectId: v })}>
-                  <SelectTrigger><SelectValue placeholder="Pick a subject" /></SelectTrigger>
-                  <SelectContent>{subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
-                </Select>
+              <div className="grid gap-2">
+                <Label>Subjects you want one-to-one tutoring in *</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {subjects.map((s) => (
+                    <button key={s.id} type="button" onClick={() => toggleSubject(s.id)}
+                      className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${form.subjectIds.includes(s.id) ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary/40"}`}>
+                      {s.name}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">{form.subjectIds.length} subject{form.subjectIds.length === 1 ? "" : "s"} selected</p>
               </div>
+
+              {selectedSubjects.length > 0 && (
+                <div className="grid gap-2 rounded-2xl border bg-muted/30 p-3">
+                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">Contacts per week (1 contact = 1 hour)</Label>
+                  {selectedSubjects.map((s) => (
+                    <div key={s.id} className="flex items-center justify-between gap-3 text-sm">
+                      <span className="font-medium">{s.name}</span>
+                      <div className="flex items-center gap-2">
+                        <Button type="button" size="icon" variant="outline" className="size-7" onClick={() => setContacts(s.id, contactsFor(s.id) - 1)}>−</Button>
+                        <span className="w-6 text-center font-bold">{contactsFor(s.id)}</span>
+                        <Button type="button" size="icon" variant="outline" className="size-7" onClick={() => setContacts(s.id, contactsFor(s.id) + 1)}>+</Button>
+                        <span className="w-24 text-right text-xs text-muted-foreground">{hourlyRate ? `₦${(hourlyRate * contactsFor(s.id)).toLocaleString()}` : "—"}/week</span>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="mt-1 flex items-end justify-between border-t pt-2">
+                    <div>
+                      <p className="text-xs text-muted-foreground">{totalContacts} contact(s)/week × {hourlyRate ? `₦${hourlyRate.toLocaleString()}` : "rate TBC"} per hour</p>
+                      <p className="font-display text-xl font-bold">{priceAmount ? `₦${priceAmount.toLocaleString()}` : "Fee to be confirmed"} <span className="text-xs font-normal text-muted-foreground">per week</span></p>
+                    </div>
+                    {priceGBP > 0 && <p className="text-xs text-muted-foreground">≈ £{priceGBP}</p>}
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-3">
                 <div className="grid gap-1.5"><Label>Date *</Label><Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></div>
                 <div className="grid gap-1.5"><Label>Time *</Label><Input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} /></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="grid gap-1.5"><Label>Duration</Label>
-                  <Select value={form.duration} onValueChange={(v) => setForm({ ...form, duration: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{[30, 60, 90, 120].map((d) => <SelectItem key={d} value={String(d)}>{d} min</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
                 <div className="grid gap-1.5"><Label>Session</Label>
                   <Select value={form.sessionType} onValueChange={(v) => setForm({ ...form, sessionType: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
@@ -338,7 +380,7 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
                 </div>
               </div>
               <div className="grid gap-1.5">
-                <Label>Days you are available</Label>
+                <Label>Days for your contacts *</Label>
                 <div className="flex flex-wrap gap-1.5">
                   {FULL_DAYS.map((d) => (
                     <button key={d} type="button" onClick={() => toggleDay(d)}
@@ -348,7 +390,7 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
                   ))}
                 </div>
               </div>
-              <div className="grid gap-1.5"><Label>Times that suit you</Label><Input value={form.availableTimes} onChange={(e) => setForm({ ...form, availableTimes: e.target.value })} placeholder="e.g. Weekdays after 5pm" /></div>
+              <div className="grid gap-1.5"><Label>Preferred times *</Label><Input value={form.availableTimes} onChange={(e) => setForm({ ...form, availableTimes: e.target.value })} placeholder="e.g. Mon & Wed 5–6pm" /></div>
               <div className="grid gap-1.5"><Label>Notes (optional)</Label><Textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Topics you want to focus on" /></div>
             </div>
             <DialogFooter>
@@ -379,8 +421,8 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
           <>
             <div className="rounded-2xl border bg-muted/40 p-4 text-sm">
               <p className="font-semibold">Booking ref: <span className="font-mono">{bookingRef ?? bookingId}</span></p>
-              <p className="mt-1 text-muted-foreground">{subjectName} with {tutor.display_name} · {form.duration} min · {preferredStart && new Date(preferredStart).toLocaleString()}</p>
-              <p className="mt-2 font-display text-xl font-bold">{priceAmount ? `₦${priceAmount.toLocaleString()}` : "Fee to be confirmed"}</p>
+              <p className="mt-1 text-muted-foreground">{planSummary} with {tutor.display_name} · starts {preferredStart && new Date(preferredStart).toLocaleString()}</p>
+              <p className="mt-2 font-display text-xl font-bold">{priceAmount ? `₦${priceAmount.toLocaleString()} / week` : "Fee to be confirmed"}</p>
             </div>
             {busy && <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Redirecting to Paystack…</p>}
             {payNote && <p className="text-sm text-muted-foreground">{payNote}</p>}
@@ -396,7 +438,7 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
           <>
             <BookingReceipt data={{
               reference: bookingRef ?? bookingId, bookingRef, tutorName: tutor.display_name, tutorRef: tutor.ref_code,
-              amount: priceAmount, currency: "NGN", start: preferredStart, durationMinutes: parseInt(form.duration),
+              amount: priceAmount, currency: "NGN", start: preferredStart, durationMinutes: totalContacts * 60,
               paidAt: priceAmount > 0 && !payNote ? new Date().toISOString() : null,
             }} />
             <div className="mt-4"><BookingBioForm bookingId={bookingId} onDone={() => toast.success("All set — see you in class!")} /></div>
