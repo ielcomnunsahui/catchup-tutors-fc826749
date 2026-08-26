@@ -287,11 +287,17 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
           student_id: user.id, tutor_id: tutor.id, subject_id: primarySubjectId,
           preferred_start: preferredStart, duration_minutes: totalContacts * 60,
           session_type: form.sessionType, price_amount: priceAmount, currency: "NGN",
-          student_notes: [planSummary, form.notes].filter(Boolean).join(" — ") || null,
-          bio_details: { plan: selectedSubjects.map((s) => ({ subject: s.name, contactsPerWeek: contactsFor(s.id) })), hourlyRate, totalContacts }, student_name: form.studentName,
+          student_notes: [`${form.examScope} examinations: ${programme}`, planSummary, form.notes].filter(Boolean).join(" — ") || null,
+          bio_details: {
+            examScope: form.examScope, examTypes: form.examTypes,
+            plan: form.subjectNames.map((name) => ({ subject: name, contactsPerWeek: contactsFor(name) })),
+            hourlyRate, totalContacts,
+          },
+          student_name: form.studentName,
           student_email: form.studentEmail, student_phone: form.studentPhone || null,
-          programme: form.programme, available_days: form.availableDays,
+          programme, available_days: form.availableDays,
           available_times: form.availableTimes || null,
+
         }).select("id,ref_code").single();
         if (error) throw error;
         id = booking.id; ref = booking.ref_code;
