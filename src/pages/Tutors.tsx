@@ -17,6 +17,16 @@ const ADMIN_WHATSAPP = "447350890668";
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const FULL_DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
+/** Exam catalogue used by the one-to-one registration flow. */
+const INTERNATIONAL_EXAMS = ["Cambridge", "Edexcel", "IB", "IGCSE", "TMUA", "GRE", "TOEFL", "IELTS", "SAT", "GMAT"];
+const LOCAL_EXAMS = ["JAMB", "WAEC", "NECO", "JUPEB", "IJMB"];
+const SUBJECT_CATALOGUE = [
+  "Mathematics", "Further Mathematics", "Physics", "Chemistry", "Biology",
+  "Computer Science", "Sociology", "Law", "Psychology", "English",
+  "Accounting", "Economics", "Business",
+];
+
+
 type Tutor = {
   id: string; display_name: string; bio: string; photo_url: string | null;
   subjects: string[]; topics: string[]; qualifications: string[]; years_experience: number;
@@ -167,9 +177,11 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
   const [waUrl, setWaUrl] = useState("");
   const [payNote, setPayNote] = useState("");
   const [form, setForm] = useState({
-    subjectIds: [] as string[], contacts: {} as Record<string, number>,
+    examScope: "" as "" | "international" | "local" | "both",
+    examTypes: [] as string[],
+    subjectNames: [] as string[], contacts: {} as Record<string, number>,
     date: "", time: "16:00", sessionType: "google_meet",
-    studentName: "", studentEmail: "", studentPhone: "", programme: "",
+    studentName: "", studentEmail: "", studentPhone: "",
     availableDays: [] as string[], availableTimes: "", notes: "",
   });
   const [auth, setAuth] = useState({ mode: "signin" as "signin" | "signup", email: "", password: "" });
@@ -177,7 +189,7 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
   useEffect(() => {
     if (!tutor) return;
     setStep("details"); setBookingId(null); setBookingRef(null); setPayNote("");
-    setForm((f) => ({ ...f, subjectIds: [], contacts: {} }));
+    setForm((f) => ({ ...f, examScope: "", examTypes: [], subjectNames: [], contacts: {} }));
     supabase.auth.getUser().then(({ data }) => {
       if (data.user?.email) setForm((f) => ({ ...f, studentEmail: f.studentEmail || data.user!.email! }));
     });
@@ -187,22 +199,36 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
 
   const hourlyRate = tutor.pricing?.hourly?.NGN ?? 0;
   const hourlyGBP = tutor.pricing?.hourly?.GBP ?? 0;
-  const selectedSubjects = subjects.filter((s) => form.subjectIds.includes(s.id));
-  const contactsFor = (id: string) => form.contacts[id] ?? 1;
-  /** Each contact = 1 hour of one subject, charged at the tutor's hourly rate. */
-  const totalContacts = form.subjectIds.reduce((n, id) => n + contactsFor(id), 0);
+  /** Exams offered for the chosen scope. */
+  const examOptions =
+    form.examScope === "international" ? INTERNATIONAL_EXAMS
+      : form.examScope === "local" ? LOCAL_EXAMS
+        : form.examScope === "both" ? [...INTERNATIONAL_EXAMS, ...LOCAL_EXAMS]
+          : [];
+  const contactsFor = (name: string) => form.contacts[name] ?? 1;
+  /** Each contact = 1 hour of one subject, charged at the tutor's hourly rate per contact per subject. */
+  const totalContacts = form.subjectNames.reduce((n, name) => n + contactsFor(name), 0);
   const priceAmount = hourlyRate * totalContacts;
   const priceGBP = hourlyGBP * totalContacts;
-  const subjectName = selectedSubjects.map((s) => s.name).join(", ") || "Mathematics";
-  const primarySubjectId = form.subjectIds[0] ?? "";
-  const toggleSubject = (id: string) =>
-    setForm((f) => f.subjectIds.includes(id)
-      ? { ...f, subjectIds: f.subjectIds.filter((x) => x !== id) }
-      : { ...f, subjectIds: [...f.subjectIds, id], contacts: { ...f.contacts, [id]: f.contacts[id] ?? 1 } });
-  const setContacts = (id: string, n: number) =>
-    setForm((f) => ({ ...f, contacts: { ...f.contacts, [id]: Math.min(7, Math.max(1, n)) } }));
-  const planSummary = selectedSubjects
-    .map((s) => `${s.name} × ${contactsFor(s.id)} contact(s)/week`).join("; ");
+  const subjectName = form.subjectNames.join(", ") || "Mathematics";
+  const programme = form.examTypes.join(", ");
+  /** Bookings need a real subject row: match by name, else fall back to the first one. */
+  const primarySubjectId =
+    subjects.find((s) => s.name.toLowerCase() === (form.subjectNames[0] ?? "").toLowerCase())?.id
+    ?? subjects[0]?.id ?? "";
+
+  const setScope = (scope: "international" | "local" | "both") =>
+    setForm((f) => ({ ...f, examScope: scope, examTypes: [] }));
+  const toggleExam = (name: string) =>
+    setForm((f) => ({ ...f, examTypes: f.examTypes.includes(name) ? f.examTypes.filter((x) => x !== name) : [...f.examTypes, name] }));
+  const toggleSubject = (name: string) =>
+    setForm((f) => f.subjectNames.includes(name)
+      ? { ...f, subjectNames: f.subjectNames.filter((x) => x !== name) }
+      : { ...f, subjectNames: [...f.subjectNames, name], contacts: { ...f.contacts, [name]: f.contacts[name] ?? 1 } });
+  const setContacts = (name: string, n: number) =>
+    setForm((f) => ({ ...f, contacts: { ...f.contacts, [name]: Math.min(7, Math.max(1, n)) } }));
+  const planSummary = form.subjectNames
+    .map((name) => `${name} × ${contactsFor(name)} contact(s)/week`).join("; ");
   const preferredStart = form.date && form.time ? new Date(`${form.date}T${form.time}:00`).toISOString() : "";
 
   const toggleDay = (d: string) =>
@@ -210,15 +236,19 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
 
   /** Step 1 → sign in (or straight to payment when already signed in). */
   const submitDetails = async () => {
-    if (!form.subjectIds.length) { toast.error("Select at least one subject"); return; }
-    if (!form.date || !form.time || !form.studentName || !form.studentEmail || !form.programme) {
-      toast.error("Please fill out name, email, programme, date and time"); return;
+    if (!form.examScope) { toast.error("Choose whether this is for international, local or both examinations"); return; }
+    if (!form.examTypes.length) { toast.error("Select at least one exam type"); return; }
+    if (!form.subjectNames.length) { toast.error("Select at least one subject"); return; }
+    if (!form.date || !form.time || !form.studentName || !form.studentEmail) {
+      toast.error("Please fill out name, email, date and time"); return;
     }
     if (!form.availableDays.length) { toast.error("Pick the days you want your contacts to hold"); return; }
+    if (!form.availableTimes.trim()) { toast.error("Add the times you want your contacts to hold"); return; }
     const { data } = await supabase.auth.getUser();
     if (!data.user) { setAuth((a) => ({ ...a, email: form.studentEmail })); setStep("auth"); return; }
     await createBookingAndPay();
   };
+
 
   /** Step 2: inline sign in / sign up — the form data above is preserved. */
   const doAuth = async () => {
@@ -257,11 +287,17 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
           student_id: user.id, tutor_id: tutor.id, subject_id: primarySubjectId,
           preferred_start: preferredStart, duration_minutes: totalContacts * 60,
           session_type: form.sessionType, price_amount: priceAmount, currency: "NGN",
-          student_notes: [planSummary, form.notes].filter(Boolean).join(" — ") || null,
-          bio_details: { plan: selectedSubjects.map((s) => ({ subject: s.name, contactsPerWeek: contactsFor(s.id) })), hourlyRate, totalContacts }, student_name: form.studentName,
+          student_notes: [`${form.examScope} examinations: ${programme}`, planSummary, form.notes].filter(Boolean).join(" — ") || null,
+          bio_details: {
+            examScope: form.examScope, examTypes: form.examTypes,
+            plan: form.subjectNames.map((name) => ({ subject: name, contactsPerWeek: contactsFor(name) })),
+            hourlyRate, totalContacts,
+          },
+          student_name: form.studentName,
           student_email: form.studentEmail, student_phone: form.studentPhone || null,
-          programme: form.programme, available_days: form.availableDays,
+          programme, available_days: form.availableDays,
           available_times: form.availableTimes || null,
+
         }).select("id,ref_code").single();
         if (error) throw error;
         id = booking.id; ref = booking.ref_code;
@@ -321,48 +357,82 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
         {step === "details" && (
           <>
             <div className="grid gap-3">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div className="grid gap-1.5"><Label>Your name *</Label><Input value={form.studentName} onChange={(e) => setForm({ ...form, studentName: e.target.value })} /></div>
                 <div className="grid gap-1.5"><Label>Email *</Label><Input type="email" value={form.studentEmail} onChange={(e) => setForm({ ...form, studentEmail: e.target.value })} /></div>
-                <div className="grid gap-1.5"><Label>Phone</Label><Input value={form.studentPhone} onChange={(e) => setForm({ ...form, studentPhone: e.target.value })} /></div>
-                <div className="grid gap-1.5"><Label>Programme *</Label><Input value={form.programme} onChange={(e) => setForm({ ...form, programme: e.target.value })} placeholder="e.g. IGCSE Maths" /></div>
+                <div className="grid gap-1.5 sm:col-span-2"><Label>Phone</Label><Input value={form.studentPhone} onChange={(e) => setForm({ ...form, studentPhone: e.target.value })} /></div>
               </div>
+
               <div className="grid gap-2">
-                <Label>Subjects you want one-to-one tutoring in *</Label>
-                <div className="flex flex-wrap gap-1.5">
-                  {subjects.map((s) => (
-                    <button key={s.id} type="button" onClick={() => toggleSubject(s.id)}
-                      className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${form.subjectIds.includes(s.id) ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary/40"}`}>
-                      {s.name}
+                <Label>1. Is this tutoring for international or local examinations? *</Label>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {([
+                    { key: "international", label: "International", hint: "Cambridge, IB, SAT…" },
+                    { key: "local", label: "Local", hint: "JAMB, WAEC, NECO…" },
+                    { key: "both", label: "Both", hint: "Mix of exam boards" },
+                  ] as const).map((o) => (
+                    <button key={o.key} type="button" onClick={() => setScope(o.key)}
+                      className={`rounded-2xl border p-3 text-left transition ${form.examScope === o.key ? "border-primary bg-primary/10" : "hover:border-primary/40"}`}>
+                      <span className="block text-sm font-bold">{o.label}</span>
+                      <span className="block text-xs text-muted-foreground">{o.hint}</span>
                     </button>
                   ))}
                 </div>
-                <p className="text-xs text-muted-foreground">{form.subjectIds.length} subject{form.subjectIds.length === 1 ? "" : "s"} selected</p>
               </div>
 
-              {selectedSubjects.length > 0 && (
+              {examOptions.length > 0 && (
+                <div className="grid gap-2">
+                  <Label>2. Choose the exam type(s) *</Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {examOptions.map((e) => (
+                      <button key={e} type="button" onClick={() => toggleExam(e)}
+                        className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${form.examTypes.includes(e) ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary/40"}`}>
+                        {e}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {form.examTypes.length > 0 && (
+                <div className="grid gap-2">
+                  <Label>3. Choose your subject(s) *</Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {SUBJECT_CATALOGUE.map((s) => (
+                      <button key={s} type="button" onClick={() => toggleSubject(s)}
+                        className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${form.subjectNames.includes(s) ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary/40"}`}>
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{form.subjectNames.length} subject{form.subjectNames.length === 1 ? "" : "s"} selected</p>
+                </div>
+              )}
+
+              {form.subjectNames.length > 0 && (
                 <div className="grid gap-2 rounded-2xl border bg-muted/30 p-3">
-                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">Contacts per week (1 contact = 1 hour)</Label>
-                  {selectedSubjects.map((s) => (
-                    <div key={s.id} className="flex items-center justify-between gap-3 text-sm">
-                      <span className="font-medium">{s.name}</span>
+                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">4. Contacts per week (1 contact = 1 hour of one subject)</Label>
+                  {form.subjectNames.map((name) => (
+                    <div key={name} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                      <span className="font-medium">{name}</span>
                       <div className="flex items-center gap-2">
-                        <Button type="button" size="icon" variant="outline" className="size-7" onClick={() => setContacts(s.id, contactsFor(s.id) - 1)}>−</Button>
-                        <span className="w-6 text-center font-bold">{contactsFor(s.id)}</span>
-                        <Button type="button" size="icon" variant="outline" className="size-7" onClick={() => setContacts(s.id, contactsFor(s.id) + 1)}>+</Button>
-                        <span className="w-24 text-right text-xs text-muted-foreground">{hourlyRate ? `₦${(hourlyRate * contactsFor(s.id)).toLocaleString()}` : "—"}/week</span>
+                        <Button type="button" size="icon" variant="outline" className="size-7" onClick={() => setContacts(name, contactsFor(name) - 1)}>−</Button>
+                        <span className="w-6 text-center font-bold">{contactsFor(name)}</span>
+                        <Button type="button" size="icon" variant="outline" className="size-7" onClick={() => setContacts(name, contactsFor(name) + 1)}>+</Button>
+                        <span className="w-24 text-right text-xs text-muted-foreground">{hourlyRate ? `₦${(hourlyRate * contactsFor(name)).toLocaleString()}` : "—"}/week</span>
                       </div>
                     </div>
                   ))}
                   <div className="mt-1 flex items-end justify-between border-t pt-2">
                     <div>
-                      <p className="text-xs text-muted-foreground">{totalContacts} contact(s)/week × {hourlyRate ? `₦${hourlyRate.toLocaleString()}` : "rate TBC"} per hour</p>
+                      <p className="text-xs text-muted-foreground">{totalContacts} contact(s)/week × {hourlyRate ? `₦${hourlyRate.toLocaleString()}` : "rate TBC"} per contact</p>
                       <p className="font-display text-xl font-bold">{priceAmount ? `₦${priceAmount.toLocaleString()}` : "Fee to be confirmed"} <span className="text-xs font-normal text-muted-foreground">per week</span></p>
                     </div>
                     {priceGBP > 0 && <p className="text-xs text-muted-foreground">≈ £{priceGBP}</p>}
                   </div>
                 </div>
               )}
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="grid gap-1.5"><Label>Date *</Label><Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></div>
                 <div className="grid gap-1.5"><Label>Time *</Label><Input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} /></div>
@@ -380,7 +450,7 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
                 </div>
               </div>
               <div className="grid gap-1.5">
-                <Label>Days for your contacts *</Label>
+                <Label>5. Days for your contacts *</Label>
                 <div className="flex flex-wrap gap-1.5">
                   {FULL_DAYS.map((d) => (
                     <button key={d} type="button" onClick={() => toggleDay(d)}
@@ -390,7 +460,8 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
                   ))}
                 </div>
               </div>
-              <div className="grid gap-1.5"><Label>Preferred times *</Label><Input value={form.availableTimes} onChange={(e) => setForm({ ...form, availableTimes: e.target.value })} placeholder="e.g. Mon & Wed 5–6pm" /></div>
+              <div className="grid gap-1.5"><Label>Times for your contacts *</Label><Input value={form.availableTimes} onChange={(e) => setForm({ ...form, availableTimes: e.target.value })} placeholder="e.g. Mon & Wed 5–6pm" /></div>
+
               <div className="grid gap-1.5"><Label>Notes (optional)</Label><Textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Topics you want to focus on" /></div>
             </div>
             <DialogFooter>
