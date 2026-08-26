@@ -357,48 +357,82 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
         {step === "details" && (
           <>
             <div className="grid gap-3">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div className="grid gap-1.5"><Label>Your name *</Label><Input value={form.studentName} onChange={(e) => setForm({ ...form, studentName: e.target.value })} /></div>
                 <div className="grid gap-1.5"><Label>Email *</Label><Input type="email" value={form.studentEmail} onChange={(e) => setForm({ ...form, studentEmail: e.target.value })} /></div>
-                <div className="grid gap-1.5"><Label>Phone</Label><Input value={form.studentPhone} onChange={(e) => setForm({ ...form, studentPhone: e.target.value })} /></div>
-                <div className="grid gap-1.5"><Label>Programme *</Label><Input value={form.programme} onChange={(e) => setForm({ ...form, programme: e.target.value })} placeholder="e.g. IGCSE Maths" /></div>
+                <div className="grid gap-1.5 sm:col-span-2"><Label>Phone</Label><Input value={form.studentPhone} onChange={(e) => setForm({ ...form, studentPhone: e.target.value })} /></div>
               </div>
+
               <div className="grid gap-2">
-                <Label>Subjects you want one-to-one tutoring in *</Label>
-                <div className="flex flex-wrap gap-1.5">
-                  {subjects.map((s) => (
-                    <button key={s.id} type="button" onClick={() => toggleSubject(s.id)}
-                      className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${form.subjectIds.includes(s.id) ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary/40"}`}>
-                      {s.name}
+                <Label>1. Is this tutoring for international or local examinations? *</Label>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {([
+                    { key: "international", label: "International", hint: "Cambridge, IB, SAT…" },
+                    { key: "local", label: "Local", hint: "JAMB, WAEC, NECO…" },
+                    { key: "both", label: "Both", hint: "Mix of exam boards" },
+                  ] as const).map((o) => (
+                    <button key={o.key} type="button" onClick={() => setScope(o.key)}
+                      className={`rounded-2xl border p-3 text-left transition ${form.examScope === o.key ? "border-primary bg-primary/10" : "hover:border-primary/40"}`}>
+                      <span className="block text-sm font-bold">{o.label}</span>
+                      <span className="block text-xs text-muted-foreground">{o.hint}</span>
                     </button>
                   ))}
                 </div>
-                <p className="text-xs text-muted-foreground">{form.subjectIds.length} subject{form.subjectIds.length === 1 ? "" : "s"} selected</p>
               </div>
 
-              {selectedSubjects.length > 0 && (
+              {examOptions.length > 0 && (
+                <div className="grid gap-2">
+                  <Label>2. Choose the exam type(s) *</Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {examOptions.map((e) => (
+                      <button key={e} type="button" onClick={() => toggleExam(e)}
+                        className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${form.examTypes.includes(e) ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary/40"}`}>
+                        {e}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {form.examTypes.length > 0 && (
+                <div className="grid gap-2">
+                  <Label>3. Choose your subject(s) *</Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {SUBJECT_CATALOGUE.map((s) => (
+                      <button key={s} type="button" onClick={() => toggleSubject(s)}
+                        className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${form.subjectNames.includes(s) ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary/40"}`}>
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{form.subjectNames.length} subject{form.subjectNames.length === 1 ? "" : "s"} selected</p>
+                </div>
+              )}
+
+              {form.subjectNames.length > 0 && (
                 <div className="grid gap-2 rounded-2xl border bg-muted/30 p-3">
-                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">Contacts per week (1 contact = 1 hour)</Label>
-                  {selectedSubjects.map((s) => (
-                    <div key={s.id} className="flex items-center justify-between gap-3 text-sm">
-                      <span className="font-medium">{s.name}</span>
+                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">4. Contacts per week (1 contact = 1 hour of one subject)</Label>
+                  {form.subjectNames.map((name) => (
+                    <div key={name} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                      <span className="font-medium">{name}</span>
                       <div className="flex items-center gap-2">
-                        <Button type="button" size="icon" variant="outline" className="size-7" onClick={() => setContacts(s.id, contactsFor(s.id) - 1)}>−</Button>
-                        <span className="w-6 text-center font-bold">{contactsFor(s.id)}</span>
-                        <Button type="button" size="icon" variant="outline" className="size-7" onClick={() => setContacts(s.id, contactsFor(s.id) + 1)}>+</Button>
-                        <span className="w-24 text-right text-xs text-muted-foreground">{hourlyRate ? `₦${(hourlyRate * contactsFor(s.id)).toLocaleString()}` : "—"}/week</span>
+                        <Button type="button" size="icon" variant="outline" className="size-7" onClick={() => setContacts(name, contactsFor(name) - 1)}>−</Button>
+                        <span className="w-6 text-center font-bold">{contactsFor(name)}</span>
+                        <Button type="button" size="icon" variant="outline" className="size-7" onClick={() => setContacts(name, contactsFor(name) + 1)}>+</Button>
+                        <span className="w-24 text-right text-xs text-muted-foreground">{hourlyRate ? `₦${(hourlyRate * contactsFor(name)).toLocaleString()}` : "—"}/week</span>
                       </div>
                     </div>
                   ))}
                   <div className="mt-1 flex items-end justify-between border-t pt-2">
                     <div>
-                      <p className="text-xs text-muted-foreground">{totalContacts} contact(s)/week × {hourlyRate ? `₦${hourlyRate.toLocaleString()}` : "rate TBC"} per hour</p>
+                      <p className="text-xs text-muted-foreground">{totalContacts} contact(s)/week × {hourlyRate ? `₦${hourlyRate.toLocaleString()}` : "rate TBC"} per contact</p>
                       <p className="font-display text-xl font-bold">{priceAmount ? `₦${priceAmount.toLocaleString()}` : "Fee to be confirmed"} <span className="text-xs font-normal text-muted-foreground">per week</span></p>
                     </div>
                     {priceGBP > 0 && <p className="text-xs text-muted-foreground">≈ £{priceGBP}</p>}
                   </div>
                 </div>
               )}
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="grid gap-1.5"><Label>Date *</Label><Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></div>
                 <div className="grid gap-1.5"><Label>Time *</Label><Input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} /></div>
