@@ -17,6 +17,16 @@ const ADMIN_WHATSAPP = "447350890668";
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const FULL_DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
+/** Exam catalogue used by the one-to-one registration flow. */
+const INTERNATIONAL_EXAMS = ["Cambridge", "Edexcel", "IB", "IGCSE", "TMUA", "GRE", "TOEFL", "IELTS", "SAT", "GMAT"];
+const LOCAL_EXAMS = ["JAMB", "WAEC", "NECO", "JUPEB", "IJMB"];
+const SUBJECT_CATALOGUE = [
+  "Mathematics", "Further Mathematics", "Physics", "Chemistry", "Biology",
+  "Computer Science", "Sociology", "Law", "Psychology", "English",
+  "Accounting", "Economics", "Business",
+];
+
+
 type Tutor = {
   id: string; display_name: string; bio: string; photo_url: string | null;
   subjects: string[]; topics: string[]; qualifications: string[]; years_experience: number;
