@@ -177,9 +177,11 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
   const [waUrl, setWaUrl] = useState("");
   const [payNote, setPayNote] = useState("");
   const [form, setForm] = useState({
-    subjectIds: [] as string[], contacts: {} as Record<string, number>,
+    examScope: "" as "" | "international" | "local" | "both",
+    examTypes: [] as string[],
+    subjectNames: [] as string[], contacts: {} as Record<string, number>,
     date: "", time: "16:00", sessionType: "google_meet",
-    studentName: "", studentEmail: "", studentPhone: "", programme: "",
+    studentName: "", studentEmail: "", studentPhone: "",
     availableDays: [] as string[], availableTimes: "", notes: "",
   });
   const [auth, setAuth] = useState({ mode: "signin" as "signin" | "signup", email: "", password: "" });
@@ -187,7 +189,7 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
   useEffect(() => {
     if (!tutor) return;
     setStep("details"); setBookingId(null); setBookingRef(null); setPayNote("");
-    setForm((f) => ({ ...f, subjectIds: [], contacts: {} }));
+    setForm((f) => ({ ...f, examScope: "", examTypes: [], subjectNames: [], contacts: {} }));
     supabase.auth.getUser().then(({ data }) => {
       if (data.user?.email) setForm((f) => ({ ...f, studentEmail: f.studentEmail || data.user!.email! }));
     });
@@ -197,22 +199,36 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
 
   const hourlyRate = tutor.pricing?.hourly?.NGN ?? 0;
   const hourlyGBP = tutor.pricing?.hourly?.GBP ?? 0;
-  const selectedSubjects = subjects.filter((s) => form.subjectIds.includes(s.id));
-  const contactsFor = (id: string) => form.contacts[id] ?? 1;
-  /** Each contact = 1 hour of one subject, charged at the tutor's hourly rate. */
-  const totalContacts = form.subjectIds.reduce((n, id) => n + contactsFor(id), 0);
+  /** Exams offered for the chosen scope. */
+  const examOptions =
+    form.examScope === "international" ? INTERNATIONAL_EXAMS
+      : form.examScope === "local" ? LOCAL_EXAMS
+        : form.examScope === "both" ? [...INTERNATIONAL_EXAMS, ...LOCAL_EXAMS]
+          : [];
+  const contactsFor = (name: string) => form.contacts[name] ?? 1;
+  /** Each contact = 1 hour of one subject, charged at the tutor's hourly rate per contact per subject. */
+  const totalContacts = form.subjectNames.reduce((n, name) => n + contactsFor(name), 0);
   const priceAmount = hourlyRate * totalContacts;
   const priceGBP = hourlyGBP * totalContacts;
-  const subjectName = selectedSubjects.map((s) => s.name).join(", ") || "Mathematics";
-  const primarySubjectId = form.subjectIds[0] ?? "";
-  const toggleSubject = (id: string) =>
-    setForm((f) => f.subjectIds.includes(id)
-      ? { ...f, subjectIds: f.subjectIds.filter((x) => x !== id) }
-      : { ...f, subjectIds: [...f.subjectIds, id], contacts: { ...f.contacts, [id]: f.contacts[id] ?? 1 } });
-  const setContacts = (id: string, n: number) =>
-    setForm((f) => ({ ...f, contacts: { ...f.contacts, [id]: Math.min(7, Math.max(1, n)) } }));
-  const planSummary = selectedSubjects
-    .map((s) => `${s.name} × ${contactsFor(s.id)} contact(s)/week`).join("; ");
+  const subjectName = form.subjectNames.join(", ") || "Mathematics";
+  const programme = form.examTypes.join(", ");
+  /** Bookings need a real subject row: match by name, else fall back to the first one. */
+  const primarySubjectId =
+    subjects.find((s) => s.name.toLowerCase() === (form.subjectNames[0] ?? "").toLowerCase())?.id
+    ?? subjects[0]?.id ?? "";
+
+  const setScope = (scope: "international" | "local" | "both") =>
+    setForm((f) => ({ ...f, examScope: scope, examTypes: [] }));
+  const toggleExam = (name: string) =>
+    setForm((f) => ({ ...f, examTypes: f.examTypes.includes(name) ? f.examTypes.filter((x) => x !== name) : [...f.examTypes, name] }));
+  const toggleSubject = (name: string) =>
+    setForm((f) => f.subjectNames.includes(name)
+      ? { ...f, subjectNames: f.subjectNames.filter((x) => x !== name) }
+      : { ...f, subjectNames: [...f.subjectNames, name], contacts: { ...f.contacts, [name]: f.contacts[name] ?? 1 } });
+  const setContacts = (name: string, n: number) =>
+    setForm((f) => ({ ...f, contacts: { ...f.contacts, [name]: Math.min(7, Math.max(1, n)) } }));
+  const planSummary = form.subjectNames
+    .map((name) => `${name} × ${contactsFor(name)} contact(s)/week`).join("; ");
   const preferredStart = form.date && form.time ? new Date(`${form.date}T${form.time}:00`).toISOString() : "";
 
   const toggleDay = (d: string) =>
@@ -220,15 +236,19 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
 
   /** Step 1 → sign in (or straight to payment when already signed in). */
   const submitDetails = async () => {
-    if (!form.subjectIds.length) { toast.error("Select at least one subject"); return; }
-    if (!form.date || !form.time || !form.studentName || !form.studentEmail || !form.programme) {
-      toast.error("Please fill out name, email, programme, date and time"); return;
+    if (!form.examScope) { toast.error("Choose whether this is for international, local or both examinations"); return; }
+    if (!form.examTypes.length) { toast.error("Select at least one exam type"); return; }
+    if (!form.subjectNames.length) { toast.error("Select at least one subject"); return; }
+    if (!form.date || !form.time || !form.studentName || !form.studentEmail) {
+      toast.error("Please fill out name, email, date and time"); return;
     }
     if (!form.availableDays.length) { toast.error("Pick the days you want your contacts to hold"); return; }
+    if (!form.availableTimes.trim()) { toast.error("Add the times you want your contacts to hold"); return; }
     const { data } = await supabase.auth.getUser();
     if (!data.user) { setAuth((a) => ({ ...a, email: form.studentEmail })); setStep("auth"); return; }
     await createBookingAndPay();
   };
+
 
   /** Step 2: inline sign in / sign up — the form data above is preserved. */
   const doAuth = async () => {
