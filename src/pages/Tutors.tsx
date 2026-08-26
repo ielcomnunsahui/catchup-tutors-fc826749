@@ -450,7 +450,7 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
                 </div>
               </div>
               <div className="grid gap-1.5">
-                <Label>Days for your contacts *</Label>
+                <Label>5. Days for your contacts *</Label>
                 <div className="flex flex-wrap gap-1.5">
                   {FULL_DAYS.map((d) => (
                     <button key={d} type="button" onClick={() => toggleDay(d)}
@@ -460,7 +460,8 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
                   ))}
                 </div>
               </div>
-              <div className="grid gap-1.5"><Label>Preferred times *</Label><Input value={form.availableTimes} onChange={(e) => setForm({ ...form, availableTimes: e.target.value })} placeholder="e.g. Mon & Wed 5–6pm" /></div>
+              <div className="grid gap-1.5"><Label>Times for your contacts *</Label><Input value={form.availableTimes} onChange={(e) => setForm({ ...form, availableTimes: e.target.value })} placeholder="e.g. Mon & Wed 5–6pm" /></div>
+
               <div className="grid gap-1.5"><Label>Notes (optional)</Label><Textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Topics you want to focus on" /></div>
             </div>
             <DialogFooter>
