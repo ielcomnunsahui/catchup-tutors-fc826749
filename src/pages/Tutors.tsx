@@ -190,7 +190,7 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
 
   useEffect(() => {
     if (!tutor) return;
-    setStep("details"); setBookingId(null); setBookingRef(null); setPayNote("");
+    setStep("details"); setSub(1); setBookingId(null); setBookingRef(null); setPayNote("");
     setForm((f) => ({ ...f, examScope: "", examTypes: [], subjectNames: [], contacts: {} }));
     supabase.auth.getUser().then(({ data }) => {
       if (data.user?.email) setForm((f) => ({ ...f, studentEmail: f.studentEmail || data.user!.email! }));
