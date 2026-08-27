@@ -171,6 +171,8 @@ type Step = "details" | "auth" | "pay" | "bio";
 
 function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subjects: Subject[]; onClose: () => void }) {
   const [step, setStep] = useState<Step>("details");
+  /** Sub-step inside "details": 1 course · 2 schedule · 3 you. */
+  const [sub, setSub] = useState(1);
   const [busy, setBusy] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [bookingRef, setBookingRef] = useState<string | null>(null);
