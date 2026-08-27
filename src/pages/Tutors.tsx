@@ -171,6 +171,8 @@ type Step = "details" | "auth" | "pay" | "bio";
 
 function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subjects: Subject[]; onClose: () => void }) {
   const [step, setStep] = useState<Step>("details");
+  /** Sub-step inside "details": 1 course · 2 schedule · 3 you. */
+  const [sub, setSub] = useState(1);
   const [busy, setBusy] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [bookingRef, setBookingRef] = useState<string | null>(null);
@@ -188,7 +190,7 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
 
   useEffect(() => {
     if (!tutor) return;
-    setStep("details"); setBookingId(null); setBookingRef(null); setPayNote("");
+    setStep("details"); setSub(1); setBookingId(null); setBookingRef(null); setPayNote("");
     setForm((f) => ({ ...f, examScope: "", examTypes: [], subjectNames: [], contacts: {} }));
     supabase.auth.getUser().then(({ data }) => {
       if (data.user?.email) setForm((f) => ({ ...f, studentEmail: f.studentEmail || data.user!.email! }));
@@ -233,6 +235,21 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
 
   const toggleDay = (d: string) =>
     setForm((f) => ({ ...f, availableDays: f.availableDays.includes(d) ? f.availableDays.filter((x) => x !== d) : [...f.availableDays, d] }));
+
+  /** Guarded move between the details sub-steps. */
+  const nextSub = () => {
+    if (sub === 1) {
+      if (!form.examScope) { toast.error("Choose international, local or both examinations"); return; }
+      if (!form.examTypes.length) { toast.error("Select at least one exam type"); return; }
+      if (!form.subjectNames.length) { toast.error("Select at least one subject"); return; }
+    }
+    if (sub === 2) {
+      if (!form.availableDays.length) { toast.error("Pick the days you want your contacts to hold"); return; }
+      if (!form.availableTimes.trim()) { toast.error("Add the times that work for you"); return; }
+      if (!form.date || !form.time) { toast.error("Choose your first session date and time"); return; }
+    }
+    setSub((n) => Math.min(3, n + 1));
+  };
 
   /** Step 1 → sign in (or straight to payment when already signed in). */
   const submitDetails = async () => {
@@ -347,8 +364,8 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
             {step === "bio" && "A few more details"}
           </DialogTitle>
           <DialogDescription>
-            {step === "details" && "Step 1 of 4 — brief details. Sign in, payment and your full bio come next."}
-            {step === "auth" && "Step 2 of 4 — your details are saved, nothing is lost."}
+            {step === "details" && "Three quick steps — course, schedule, then your details."}
+            {step === "auth" && "Your details are saved, nothing is lost."}
             {step === "pay" && "Step 3 of 4 — secure payment via Paystack."}
             {step === "bio" && "Step 4 of 4 — help your tutor prepare for the first session."}
           </DialogDescription>
@@ -356,120 +373,161 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
 
         {step === "details" && (
           <>
-            <div className="grid gap-3">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="grid gap-1.5"><Label>Your name *</Label><Input value={form.studentName} onChange={(e) => setForm({ ...form, studentName: e.target.value })} /></div>
-                <div className="grid gap-1.5"><Label>Email *</Label><Input type="email" value={form.studentEmail} onChange={(e) => setForm({ ...form, studentEmail: e.target.value })} /></div>
-                <div className="grid gap-1.5 sm:col-span-2"><Label>Phone</Label><Input value={form.studentPhone} onChange={(e) => setForm({ ...form, studentPhone: e.target.value })} /></div>
-              </div>
+            {/* progress rail */}
+            <div className="flex items-center gap-2">
+              {["Course", "Schedule", "You"].map((label, i) => {
+                const n = i + 1;
+                const done = sub > n;
+                const active = sub === n;
+                return (
+                  <button key={label} type="button" onClick={() => n < sub && setSub(n)}
+                    className={`flex flex-1 items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${active ? "border-primary bg-primary/10 text-foreground" : done ? "border-primary/40 text-primary" : "text-muted-foreground"}`}>
+                    <span className={`grid size-5 shrink-0 place-items-center rounded-full text-[10px] ${active || done ? "bg-primary text-primary-foreground" : "bg-muted"}`}>{done ? "✓" : n}</span>
+                    <span className="truncate">{label}</span>
+                  </button>
+                );
+              })}
+            </div>
 
-              <div className="grid gap-2">
-                <Label>1. Is this tutoring for international or local examinations? *</Label>
-                <div className="grid gap-2 sm:grid-cols-3">
-                  {([
-                    { key: "international", label: "International", hint: "Cambridge, IB, SAT…" },
-                    { key: "local", label: "Local", hint: "JAMB, WAEC, NECO…" },
-                    { key: "both", label: "Both", hint: "Mix of exam boards" },
-                  ] as const).map((o) => (
-                    <button key={o.key} type="button" onClick={() => setScope(o.key)}
-                      className={`rounded-2xl border p-3 text-left transition ${form.examScope === o.key ? "border-primary bg-primary/10" : "hover:border-primary/40"}`}>
-                      <span className="block text-sm font-bold">{o.label}</span>
-                      <span className="block text-xs text-muted-foreground">{o.hint}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {examOptions.length > 0 && (
-                <div className="grid gap-2">
-                  <Label>2. Choose the exam type(s) *</Label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {examOptions.map((e) => (
-                      <button key={e} type="button" onClick={() => toggleExam(e)}
-                        className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${form.examTypes.includes(e) ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary/40"}`}>
-                        {e}
-                      </button>
-                    ))}
+            <div className="grid gap-4">
+              {/* ---------- 1. Course ---------- */}
+              {sub === 1 && (
+                <>
+                  <div className="grid gap-2">
+                    <Label>Which examinations is this for?</Label>
+                    <div className="grid gap-2 sm:grid-cols-3">
+                      {([
+                        { key: "international", label: "International", hint: "Cambridge, IB, SAT…" },
+                        { key: "local", label: "Local", hint: "JAMB, WAEC, NECO…" },
+                        { key: "both", label: "Both", hint: "Mix of exam boards" },
+                      ] as const).map((o) => (
+                        <button key={o.key} type="button" onClick={() => setScope(o.key)}
+                          className={`rounded-2xl border p-3 text-left transition ${form.examScope === o.key ? "border-primary bg-primary/10 ring-1 ring-primary" : "hover:border-primary/40"}`}>
+                          <span className="block text-sm font-bold">{o.label}</span>
+                          <span className="block text-xs text-muted-foreground">{o.hint}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
 
-              {form.examTypes.length > 0 && (
-                <div className="grid gap-2">
-                  <Label>3. Choose your subject(s) *</Label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {SUBJECT_CATALOGUE.map((s) => (
-                      <button key={s} type="button" onClick={() => toggleSubject(s)}
-                        className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${form.subjectNames.includes(s) ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary/40"}`}>
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-xs text-muted-foreground">{form.subjectNames.length} subject{form.subjectNames.length === 1 ? "" : "s"} selected</p>
-                </div>
-              )}
-
-              {form.subjectNames.length > 0 && (
-                <div className="grid gap-2 rounded-2xl border bg-muted/30 p-3">
-                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">4. Contacts per week (1 contact = 1 hour of one subject)</Label>
-                  {form.subjectNames.map((name) => (
-                    <div key={name} className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                      <span className="font-medium">{name}</span>
-                      <div className="flex items-center gap-2">
-                        <Button type="button" size="icon" variant="outline" className="size-7" onClick={() => setContacts(name, contactsFor(name) - 1)}>−</Button>
-                        <span className="w-6 text-center font-bold">{contactsFor(name)}</span>
-                        <Button type="button" size="icon" variant="outline" className="size-7" onClick={() => setContacts(name, contactsFor(name) + 1)}>+</Button>
-                        <span className="w-24 text-right text-xs text-muted-foreground">{hourlyRate ? `₦${(hourlyRate * contactsFor(name)).toLocaleString()}` : "—"}/week</span>
+                  {examOptions.length > 0 && (
+                    <div className="grid gap-2">
+                      <Label>Exam type(s)</Label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {examOptions.map((e) => (
+                          <button key={e} type="button" onClick={() => toggleExam(e)}
+                            className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${form.examTypes.includes(e) ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary/40"}`}>
+                            {e}
+                          </button>
+                        ))}
                       </div>
                     </div>
-                  ))}
-                  <div className="mt-1 flex items-end justify-between border-t pt-2">
-                    <div>
-                      <p className="text-xs text-muted-foreground">{totalContacts} contact(s)/week × {hourlyRate ? `₦${hourlyRate.toLocaleString()}` : "rate TBC"} per contact</p>
-                      <p className="font-display text-xl font-bold">{priceAmount ? `₦${priceAmount.toLocaleString()}` : "Fee to be confirmed"} <span className="text-xs font-normal text-muted-foreground">per week</span></p>
+                  )}
+
+                  {form.examTypes.length > 0 && (
+                    <div className="grid gap-2">
+                      <Label>Subject(s)</Label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {SUBJECT_CATALOGUE.map((s) => (
+                          <button key={s} type="button" onClick={() => toggleSubject(s)}
+                            className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${form.subjectNames.includes(s) ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary/40"}`}>
+                            {s}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                    {priceGBP > 0 && <p className="text-xs text-muted-foreground">≈ £{priceGBP}</p>}
-                  </div>
-                </div>
+                  )}
+
+                  {form.subjectNames.length > 0 && (
+                    <div className="grid gap-2 rounded-2xl border bg-muted/30 p-3">
+                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">Contacts per week · 1 contact = 1 hour</Label>
+                      {form.subjectNames.map((name) => (
+                        <div key={name} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                          <span className="font-medium">{name}</span>
+                          <div className="flex items-center gap-2">
+                            <Button type="button" size="icon" variant="outline" className="size-7" onClick={() => setContacts(name, contactsFor(name) - 1)}>−</Button>
+                            <span className="w-6 text-center font-bold">{contactsFor(name)}</span>
+                            <Button type="button" size="icon" variant="outline" className="size-7" onClick={() => setContacts(name, contactsFor(name) + 1)}>+</Button>
+                            <span className="w-24 text-right text-xs text-muted-foreground">{hourlyRate ? `₦${(hourlyRate * contactsFor(name)).toLocaleString()}` : "—"}/week</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="grid gap-1.5"><Label>Date *</Label><Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></div>
-                <div className="grid gap-1.5"><Label>Time *</Label><Input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} /></div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="grid gap-1.5"><Label>Session</Label>
-                  <Select value={form.sessionType} onValueChange={(v) => setForm({ ...form, sessionType: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="google_meet">Google Meet</SelectItem>
-                      <SelectItem value="zoom">Zoom</SelectItem>
-                      <SelectItem value="whatsapp_coordination">WhatsApp coordination</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid gap-1.5">
-                <Label>5. Days for your contacts *</Label>
-                <div className="flex flex-wrap gap-1.5">
-                  {FULL_DAYS.map((d) => (
-                    <button key={d} type="button" onClick={() => toggleDay(d)}
-                      className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${form.availableDays.includes(d) ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary/40"}`}>
-                      {d.slice(0, 3)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="grid gap-1.5"><Label>Times for your contacts *</Label><Input value={form.availableTimes} onChange={(e) => setForm({ ...form, availableTimes: e.target.value })} placeholder="e.g. Mon & Wed 5–6pm" /></div>
+              {/* ---------- 2. Schedule ---------- */}
+              {sub === 2 && (
+                <>
+                  <div className="grid gap-1.5">
+                    <Label>Days for your contacts</Label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {FULL_DAYS.map((d) => (
+                        <button key={d} type="button" onClick={() => toggleDay(d)}
+                          className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${form.availableDays.includes(d) ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary/40"}`}>
+                          {d.slice(0, 3)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label>Times that work for you</Label>
+                    <Input value={form.availableTimes} onChange={(e) => setForm({ ...form, availableTimes: e.target.value })} placeholder="e.g. Mon & Wed 5–6pm" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="grid gap-1.5"><Label>First session date</Label><Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></div>
+                    <div className="grid gap-1.5"><Label>Start time</Label><Input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} /></div>
+                  </div>
+                  <div className="grid gap-1.5"><Label>How would you like to meet?</Label>
+                    <Select value={form.sessionType} onValueChange={(v) => setForm({ ...form, sessionType: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="google_meet">Google Meet</SelectItem>
+                        <SelectItem value="zoom">Zoom</SelectItem>
+                        <SelectItem value="whatsapp_coordination">WhatsApp coordination</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              )}
 
-              <div className="grid gap-1.5"><Label>Notes (optional)</Label><Textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Topics you want to focus on" /></div>
+              {/* ---------- 3. You ---------- */}
+              {sub === 3 && (
+                <>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid gap-1.5"><Label>Your name *</Label><Input value={form.studentName} onChange={(e) => setForm({ ...form, studentName: e.target.value })} /></div>
+                    <div className="grid gap-1.5"><Label>Email *</Label><Input type="email" value={form.studentEmail} onChange={(e) => setForm({ ...form, studentEmail: e.target.value })} /></div>
+                    <div className="grid gap-1.5 sm:col-span-2"><Label>Phone</Label><Input value={form.studentPhone} onChange={(e) => setForm({ ...form, studentPhone: e.target.value })} /></div>
+                  </div>
+                  <div className="grid gap-1.5"><Label>Notes (optional)</Label><Textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Topics you want to focus on" /></div>
+                  <div className="rounded-2xl border bg-muted/30 p-3 text-sm">
+                    <p className="font-semibold">{planSummary || "No subjects selected yet"}</p>
+                    <p className="text-xs text-muted-foreground">{form.examTypes.join(", ") || "—"} · {form.availableDays.map((d) => d.slice(0, 3)).join(", ") || "days TBC"} · {form.availableTimes || "times TBC"}</p>
+                  </div>
+                </>
+              )}
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={onClose}>Cancel</Button>
-              <Button onClick={submitDetails} disabled={busy}>{busy && <Loader2 className="animate-spin" />} Continue</Button>
-            </DialogFooter>
+
+            {/* sticky price + actions */}
+            <div className="sticky bottom-0 -mx-6 mt-2 border-t bg-background/95 px-6 pt-3 backdrop-blur">
+              <div className="mb-3 flex items-end justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">{totalContacts} contact{totalContacts === 1 ? "" : "s"}/week{hourlyRate ? ` × ₦${hourlyRate.toLocaleString()}` : ""}</p>
+                  <p className="font-display text-xl font-bold">{priceAmount ? `₦${priceAmount.toLocaleString()}` : "Fee to be confirmed"} <span className="text-xs font-normal text-muted-foreground">per week</span></p>
+                </div>
+                {priceGBP > 0 && <p className="text-xs text-muted-foreground">≈ £{priceGBP}</p>}
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1" onClick={() => (sub === 1 ? onClose() : setSub(sub - 1))}>{sub === 1 ? "Cancel" : "Back"}</Button>
+                {sub < 3
+                  ? <Button className="flex-1" onClick={nextSub}>Continue</Button>
+                  : <Button className="flex-1" onClick={submitDetails} disabled={busy}>{busy && <Loader2 className="animate-spin" />} Continue to payment</Button>}
+              </div>
+            </div>
           </>
         )}
+
 
         {step === "auth" && (
           <>
