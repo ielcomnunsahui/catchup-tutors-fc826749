@@ -365,6 +365,7 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
           </DialogTitle>
           <DialogDescription>
             {step === "details" && "Three quick steps — course, schedule, then your details."}
+            {step === "auth" && "Your details are saved, nothing is lost."}
             {step === "pay" && "Step 3 of 4 — secure payment via Paystack."}
             {step === "bio" && "Step 4 of 4 — help your tutor prepare for the first session."}
           </DialogDescription>
