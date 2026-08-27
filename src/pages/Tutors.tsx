@@ -236,6 +236,21 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
   const toggleDay = (d: string) =>
     setForm((f) => ({ ...f, availableDays: f.availableDays.includes(d) ? f.availableDays.filter((x) => x !== d) : [...f.availableDays, d] }));
 
+  /** Guarded move between the details sub-steps. */
+  const nextSub = () => {
+    if (sub === 1) {
+      if (!form.examScope) { toast.error("Choose international, local or both examinations"); return; }
+      if (!form.examTypes.length) { toast.error("Select at least one exam type"); return; }
+      if (!form.subjectNames.length) { toast.error("Select at least one subject"); return; }
+    }
+    if (sub === 2) {
+      if (!form.availableDays.length) { toast.error("Pick the days you want your contacts to hold"); return; }
+      if (!form.availableTimes.trim()) { toast.error("Add the times that work for you"); return; }
+      if (!form.date || !form.time) { toast.error("Choose your first session date and time"); return; }
+    }
+    setSub((n) => Math.min(3, n + 1));
+  };
+
   /** Step 1 → sign in (or straight to payment when already signed in). */
   const submitDetails = async () => {
     if (!form.examScope) { toast.error("Choose whether this is for international, local or both examinations"); return; }
