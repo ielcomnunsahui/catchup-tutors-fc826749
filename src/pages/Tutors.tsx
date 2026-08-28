@@ -302,7 +302,7 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
       if (!id) {
         const { data: booking, error } = await supabase.from("bookings").insert({
           student_id: user.id, tutor_id: tutor.id, subject_id: primarySubjectId,
-          preferred_start: preferredStart, duration_minutes: totalContacts * 60,
+          preferred_start: preferredStart, duration_minutes: 60, // each contact is a 1-hour session
           session_type: form.sessionType, price_amount: priceAmount, currency: "NGN",
           student_notes: [`${form.examScope} examinations: ${programme}`, planSummary, form.notes].filter(Boolean).join(" — ") || null,
           bio_details: {
@@ -324,7 +324,7 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
           body: {
             bookingId: id, studentName: form.studentName, studentEmail: form.studentEmail,
             tutorName: tutor.display_name, subjectName, preferredStart,
-            durationMinutes: totalContacts * 60, sessionType: form.sessionType,
+            durationMinutes: 60, sessionType: form.sessionType,
             priceAmount, currency: "NGN", notes: form.notes,
           },
         }).catch((e) => console.warn("email failed", e));
@@ -567,7 +567,7 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
           <>
             <BookingReceipt data={{
               reference: bookingRef ?? bookingId, bookingRef, tutorName: tutor.display_name, tutorRef: tutor.ref_code,
-              amount: priceAmount, currency: "NGN", start: preferredStart, durationMinutes: totalContacts * 60,
+              amount: priceAmount, currency: "NGN", start: preferredStart, durationMinutes: 60,
               paidAt: priceAmount > 0 && !payNote ? new Date().toISOString() : null,
             }} />
             <div className="mt-4"><BookingBioForm bookingId={bookingId} onDone={() => toast.success("All set — see you in class!")} /></div>
