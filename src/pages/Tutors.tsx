@@ -255,8 +255,39 @@ function BookingDialog({ tutor, subjects, slots, onClose }: { tutor: Tutor | nul
     .map((name) => `${name} × ${contactsFor(name)} contact(s)/week`).join("; ");
   const preferredStart = form.date && form.time ? new Date(`${form.date}T${form.time}:00`).toISOString() : "";
 
-  const toggleDay = (d: string) =>
-    setForm((f) => ({ ...f, availableDays: f.availableDays.includes(d) ? f.availableDays.filter((x) => x !== d) : [...f.availableDays, d] }));
+  /** Tutor's published availability as day index → selectable hour labels. */
+  const availability: Record<number, string[]> = {};
+  for (const s of slots) {
+    const hrs = hoursBetween(s.start_time, s.end_time);
+    availability[s.day_of_week] = Array.from(new Set([...(availability[s.day_of_week] ?? []), ...hrs])).sort();
+  }
+  const hasPublishedAvailability = Object.keys(availability).length > 0;
+  if (!hasPublishedAvailability) {
+    // Fallback window when the tutor has not published slots yet.
+    for (let d = 1; d <= 6; d++) availability[d] = hoursBetween("09:00", "20:00");
+  }
+  const openDays = Object.keys(availability).map(Number).sort();
+  const [activeDay, setActiveDay] = useState<number | null>(null);
+  const dayInView = activeDay !== null && availability[activeDay] ? activeDay : (openDays[0] ?? null);
+
+  /** Add / remove a weekly slot and keep the derived schedule fields in sync. */
+  const togglePick = (dayIndex: number, time: string) =>
+    setForm((f) => {
+      const key = `${dayIndex}|${time}`;
+      const picked = f.picked.includes(key) ? f.picked.filter((x) => x !== key) : [...f.picked, key];
+      const sorted = [...picked].sort((a, b) => {
+        const [da, ta] = a.split("|"); const [db, tb] = b.split("|");
+        return Number(da) - Number(db) || ta.localeCompare(tb);
+      });
+      const days = Array.from(new Set(sorted.map((k) => FULL_DAYS[Number(k.split("|")[0])])));
+      const times = sorted.map((k) => `${DAY_NAMES[Number(k.split("|")[0])]} ${k.split("|")[1]}`).join(", ");
+      const first = sorted[0];
+      return {
+        ...f, picked: sorted, availableDays: days, availableTimes: times,
+        date: first ? nextDateFor(Number(first.split("|")[0])) : "",
+        time: first ? first.split("|")[1] : f.time,
+      };
+    });
 
   /** Guarded move between the details sub-steps. */
   const nextSub = () => {
@@ -266,10 +297,10 @@ function BookingDialog({ tutor, subjects, slots, onClose }: { tutor: Tutor | nul
       if (!form.subjectNames.length) { toast.error("Select at least one subject"); return; }
     }
     if (sub === 2) {
-      if (!form.availableDays.length) { toast.error("Pick the days you want your contacts to hold"); return; }
-      if (!form.availableTimes.trim()) { toast.error("Add the times that work for you"); return; }
-      if (!form.date || !form.time) { toast.error("Choose your first session date and time"); return; }
+      if (!form.picked.length) { toast.error("Pick at least one available time slot"); return; }
+      if (form.picked.length < totalContacts) { toast.error(`Pick ${totalContacts} slots — one per contact per week`); return; }
     }
+
     setSub((n) => Math.min(3, n + 1));
   };
 
