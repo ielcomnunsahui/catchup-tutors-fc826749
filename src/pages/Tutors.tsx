@@ -309,11 +309,9 @@ function BookingDialog({ tutor, subjects, slots, onClose }: { tutor: Tutor | nul
     if (!form.examScope) { toast.error("Choose whether this is for international, local or both examinations"); return; }
     if (!form.examTypes.length) { toast.error("Select at least one exam type"); return; }
     if (!form.subjectNames.length) { toast.error("Select at least one subject"); return; }
-    if (!form.date || !form.time || !form.studentName || !form.studentEmail) {
-      toast.error("Please fill out name, email, date and time"); return;
-    }
-    if (!form.availableDays.length) { toast.error("Pick the days you want your contacts to hold"); return; }
-    if (!form.availableTimes.trim()) { toast.error("Add the times you want your contacts to hold"); return; }
+    if (!form.studentName || !form.studentEmail) { toast.error("Please add your name and email"); return; }
+    if (!form.picked.length) { toast.error("Pick at least one available time slot"); return; }
+
     const { data } = await supabase.auth.getUser();
     if (!data.user) { setAuth((a) => ({ ...a, email: form.studentEmail })); setStep("auth"); return; }
     await createBookingAndPay();
