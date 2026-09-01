@@ -207,6 +207,7 @@ function BookingDialog({ tutor, subjects, slots, onClose }: { tutor: Tutor | nul
     /** Chosen weekly slots encoded as "dayIndex|HH:MM". */
     picked: [] as string[],
   });
+  const [activeDay, setActiveDay] = useState<number | null>(null);
   const [auth, setAuth] = useState({ mode: "signin" as "signin" | "signup", email: "", password: "" });
 
   useEffect(() => {
@@ -267,7 +268,6 @@ function BookingDialog({ tutor, subjects, slots, onClose }: { tutor: Tutor | nul
     for (let d = 1; d <= 6; d++) availability[d] = hoursBetween("09:00", "20:00");
   }
   const openDays = Object.keys(availability).map(Number).sort();
-  const [activeDay, setActiveDay] = useState<number | null>(null);
   const dayInView = activeDay !== null && availability[activeDay] ? activeDay : (openDays[0] ?? null);
 
   /** Add / remove a weekly slot and keep the derived schedule fields in sync. */
