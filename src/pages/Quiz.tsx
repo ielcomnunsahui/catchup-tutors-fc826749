@@ -14,6 +14,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { usePremium } from "@/hooks/use-premium";
+import { heroImages } from "@/assets/heroes";
 
 type Question = {
   id: string;
@@ -181,6 +182,7 @@ export default function Quiz() {
         description="Practise exam questions by exam type, course, year or topic. Answer, submit and instantly review worked answers and explanations."
       />
       <PageHero
+        image={heroImages.quiz}
         eyebrow="Practice"
         title="Quiz & test yourself"
         description="Pick an exam type, course and year — or shuffle across years and topics. Answer the questions, submit, then review every answer with explanations."

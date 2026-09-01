@@ -3,6 +3,7 @@ import { ArrowRight, BookOpen, Sigma } from "lucide-react";
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { PremiumCTA, TutorCTA } from "./Resources";
+import { heroImages } from "@/assets/heroes";
 
 const PROGRAM_LIST = [
   { name: "Cambridge Mathematics", description: "Cambridge IGCSE/AS/A-Level Mathematics program with deep conceptual learning." },
@@ -28,7 +29,7 @@ export default function Programs() {
   return (
     <SiteShell>
       <Seo title="Cambridge & IGCSE Programs | CatchUp Tutors" description="Explore Cambridge and IGCSE Mathematics and Further Mathematics learning programs." path="/programs" jsonLd={jsonLd} />
-      <PageHero eyebrow="Learning pathways" title="Choose the program that moves you forward." description="Structured exam preparation, targeted practice, premium lessons, and tutor support—organized around your curriculum." />
+      <PageHero image={heroImages.programs} eyebrow="Learning pathways" title="Choose the program that moves you forward." description="Structured exam preparation, targeted practice, premium lessons, and tutor support—organized around your curriculum." />
       <section className="mx-auto grid max-w-7xl gap-7 px-4 py-16 sm:px-6 md:grid-cols-2 lg:px-8">
         {[
           { name: "Cambridge", icon: Sigma, accent: "bg-primary", subjects: ["Mathematics", "Further Mathematics"], text: "Deep conceptual learning for confident problem-solving across Cambridge pathways." },

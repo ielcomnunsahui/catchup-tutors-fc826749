@@ -265,9 +265,15 @@ function FooterCol({ title, links }: { title: string; links: [string, string][] 
   );
 }
 
-export function PageHero({ eyebrow, title, description, children }: { eyebrow: string; title: string; description: string; children?: ReactNode }) {
+export function PageHero({ eyebrow, title, description, image, children }: { eyebrow: string; title: string; description: string; image?: string; children?: ReactNode }) {
   return (
-    <section className="bg-hero text-hero-foreground">
+    <section className="relative isolate overflow-hidden bg-hero text-hero-foreground">
+      {image && (
+        <>
+          <img src={image} alt="" aria-hidden="true" loading="eager" className="absolute inset-0 -z-20 h-full w-full object-cover" />
+          <div className="absolute inset-0 -z-10 bg-gradient-to-r from-hero via-hero/90 to-hero/60" aria-hidden="true" />
+        </>
+      )}
       <div className="hero-grid mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <p className="mb-4 text-sm font-bold uppercase tracking-[0.2em] text-brand-orange">{eyebrow}</p>
         <h1 className="max-w-4xl font-display text-4xl font-bold tracking-tight sm:text-6xl">{title}</h1>
@@ -277,6 +283,7 @@ export function PageHero({ eyebrow, title, description, children }: { eyebrow: s
     </section>
   );
 }
+
 
 export type SeoProps = { title: string; description: string; image?: string; path?: string; noindex?: boolean; jsonLd?: Record<string, unknown> | Record<string, unknown>[] };
 export function Seo({ title, description, image, path, noindex, jsonLd }: SeoProps) {

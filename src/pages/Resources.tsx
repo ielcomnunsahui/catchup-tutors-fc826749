@@ -14,6 +14,7 @@ import { usePremium } from "@/hooks/use-premium";
 import { SESSIONS, PAPER_NUMBERS, PAPER_GROUPS, variantsOf, type Session, fetchPastPapers, indexPapers, paperKey, paperFileName, type PastPaper } from "@/lib/past-papers";
 import { fetchTopicQuestions, groupByPaper, type TopicQuestion } from "@/lib/topic-questions";
 import { drivePreview, driveDownload, driveOpen } from "@/lib/drive";
+import { heroImages } from "@/assets/heroes";
 
 
 // ---------- helpers ----------
@@ -357,6 +358,7 @@ export default function Resources() {
     <SiteShell>
       <Seo title={meta.title} description={meta.description} path="/resources" jsonLd={jsonLd} />
       <PageHero
+        image={heroImages.resources}
         eyebrow="Resource library"
         title="Search past questions, schemes & video solutions."
         description="Filter by program, subject, topic or exam year — open PDFs in-browser, download for offline, or watch the worked-solution video."

@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AdmissionLetter } from "@/components/admission-letter";
+import { heroImages } from "@/assets/heroes";
 
 const TARGET_EXAMS = ["WAEC", "NECO", "JAMB", "IGCSE", "Cambridge A-Level", "SAT", "TMUA"];
 
@@ -119,7 +120,7 @@ export default function SummerStudentRegister() {
   return (
     <SiteShell>
       <Seo title="Register for Free Summer Lessons | CatchUp Tutors" description="Student registration form for the CatchUp Tutors Free Summer Academy in Ilorin." path="/summerlessons/student" />
-      <PageHero eyebrow="Student registration" title="Reserve your free seat." description="Fill in your details below. Once you submit, your admission letter appears instantly and is emailed to you." />
+      <PageHero image={heroImages.summer} eyebrow="Student registration" title="Reserve your free seat." description="Fill in your details below. Once you submit, your admission letter appears instantly and is emailed to you." />
       <section className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
         <Button variant="ghost" onClick={() => navigate("/summerlessons")} className="mb-6"><ArrowLeft /> Back to Summer Lessons</Button>
         <div className="rounded-3xl border bg-card p-6 shadow-soft sm:p-10">

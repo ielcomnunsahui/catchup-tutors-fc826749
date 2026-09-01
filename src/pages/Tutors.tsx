@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import BookingBioForm from "@/components/booking-bio-form";
 import BookingReceipt from "@/components/booking-receipt";
+import { heroImages } from "@/assets/heroes";
 
 const ADMIN_WHATSAPP = "447350890668";
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -88,7 +89,7 @@ export default function Tutors() {
   return (
     <SiteShell>
       <Seo title="Expert Mathematics Tutors | CatchUp Tutors" description="Find approved Cambridge and IGCSE Mathematics tutors and book one-to-one sessions." path="/tutors" jsonLd={jsonLd} />
-      <PageHero eyebrow="Approved experts" title="Find the tutor who understands your next step." description="Compare subjects, teaching focus, experience, availability, and tutor-set session pricing." />
+      <PageHero image={heroImages.tutors} eyebrow="Approved experts" title="Find the tutor who understands your next step." description="Compare subjects, teaching focus, experience, availability, and tutor-set session pricing." />
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3 rounded-2xl border bg-card px-4 shadow-soft">
           <Search className="text-muted-foreground" />
@@ -162,14 +163,32 @@ export default function Tutors() {
         )}
       </section>
 
-      <BookingDialog tutor={booking} subjects={subjects} onClose={() => setBooking(null)} />
+      <BookingDialog tutor={booking} subjects={subjects} slots={booking ? slots.filter((s) => s.tutor_id === booking.id) : []} onClose={() => setBooking(null)} />
     </SiteShell>
   );
 }
 
 type Step = "details" | "auth" | "pay" | "bio";
 
-function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subjects: Subject[]; onClose: () => void }) {
+/** Hour labels between two "HH:MM[:SS]" times, e.g. 16:00 → 19:00 gives 16:00, 17:00, 18:00. */
+function hoursBetween(start: string, end: string): string[] {
+  const s = Number(start.slice(0, 2));
+  const e = Number(end.slice(0, 2));
+  const out: string[] = [];
+  for (let h = s; h < e; h++) out.push(`${String(h).padStart(2, "0")}:00`);
+  return out;
+}
+
+/** Next calendar date (yyyy-mm-dd) for a weekday index, today included. */
+function nextDateFor(dayIndex: number): string {
+  const now = new Date();
+  const diff = (dayIndex - now.getDay() + 7) % 7;
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diff);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function BookingDialog({ tutor, subjects, slots, onClose }: { tutor: Tutor | null; subjects: Subject[]; slots: Slot[]; onClose: () => void }) {
+
   const [step, setStep] = useState<Step>("details");
   /** Sub-step inside "details": 1 course · 2 schedule · 3 you. */
   const [sub, setSub] = useState(1);
@@ -185,13 +204,17 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
     date: "", time: "16:00", sessionType: "google_meet",
     studentName: "", studentEmail: "", studentPhone: "",
     availableDays: [] as string[], availableTimes: "", notes: "",
+    /** Chosen weekly slots encoded as "dayIndex|HH:MM". */
+    picked: [] as string[],
   });
+  const [activeDay, setActiveDay] = useState<number | null>(null);
   const [auth, setAuth] = useState({ mode: "signin" as "signin" | "signup", email: "", password: "" });
 
   useEffect(() => {
     if (!tutor) return;
     setStep("details"); setSub(1); setBookingId(null); setBookingRef(null); setPayNote("");
-    setForm((f) => ({ ...f, examScope: "", examTypes: [], subjectNames: [], contacts: {} }));
+    setForm((f) => ({ ...f, examScope: "", examTypes: [], subjectNames: [], contacts: {}, picked: [], availableDays: [], availableTimes: "", date: "" }));
+
     supabase.auth.getUser().then(({ data }) => {
       if (data.user?.email) setForm((f) => ({ ...f, studentEmail: f.studentEmail || data.user!.email! }));
     });
@@ -233,8 +256,38 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
     .map((name) => `${name} × ${contactsFor(name)} contact(s)/week`).join("; ");
   const preferredStart = form.date && form.time ? new Date(`${form.date}T${form.time}:00`).toISOString() : "";
 
-  const toggleDay = (d: string) =>
-    setForm((f) => ({ ...f, availableDays: f.availableDays.includes(d) ? f.availableDays.filter((x) => x !== d) : [...f.availableDays, d] }));
+  /** Tutor's published availability as day index → selectable hour labels. */
+  const availability: Record<number, string[]> = {};
+  for (const s of slots) {
+    const hrs = hoursBetween(s.start_time, s.end_time);
+    availability[s.day_of_week] = Array.from(new Set([...(availability[s.day_of_week] ?? []), ...hrs])).sort();
+  }
+  const hasPublishedAvailability = Object.keys(availability).length > 0;
+  if (!hasPublishedAvailability) {
+    // Fallback window when the tutor has not published slots yet.
+    for (let d = 1; d <= 6; d++) availability[d] = hoursBetween("09:00", "20:00");
+  }
+  const openDays = Object.keys(availability).map(Number).sort();
+  const dayInView = activeDay !== null && availability[activeDay] ? activeDay : (openDays[0] ?? null);
+
+  /** Add / remove a weekly slot and keep the derived schedule fields in sync. */
+  const togglePick = (dayIndex: number, time: string) =>
+    setForm((f) => {
+      const key = `${dayIndex}|${time}`;
+      const picked = f.picked.includes(key) ? f.picked.filter((x) => x !== key) : [...f.picked, key];
+      const sorted = [...picked].sort((a, b) => {
+        const [da, ta] = a.split("|"); const [db, tb] = b.split("|");
+        return Number(da) - Number(db) || ta.localeCompare(tb);
+      });
+      const days = Array.from(new Set(sorted.map((k) => FULL_DAYS[Number(k.split("|")[0])])));
+      const times = sorted.map((k) => `${DAY_NAMES[Number(k.split("|")[0])]} ${k.split("|")[1]}`).join(", ");
+      const first = sorted[0];
+      return {
+        ...f, picked: sorted, availableDays: days, availableTimes: times,
+        date: first ? nextDateFor(Number(first.split("|")[0])) : "",
+        time: first ? first.split("|")[1] : f.time,
+      };
+    });
 
   /** Guarded move between the details sub-steps. */
   const nextSub = () => {
@@ -244,10 +297,10 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
       if (!form.subjectNames.length) { toast.error("Select at least one subject"); return; }
     }
     if (sub === 2) {
-      if (!form.availableDays.length) { toast.error("Pick the days you want your contacts to hold"); return; }
-      if (!form.availableTimes.trim()) { toast.error("Add the times that work for you"); return; }
-      if (!form.date || !form.time) { toast.error("Choose your first session date and time"); return; }
+      if (!form.picked.length) { toast.error("Pick at least one available time slot"); return; }
+      if (form.picked.length < totalContacts) { toast.error(`Pick ${totalContacts} slots — one per contact per week`); return; }
     }
+
     setSub((n) => Math.min(3, n + 1));
   };
 
@@ -256,11 +309,9 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
     if (!form.examScope) { toast.error("Choose whether this is for international, local or both examinations"); return; }
     if (!form.examTypes.length) { toast.error("Select at least one exam type"); return; }
     if (!form.subjectNames.length) { toast.error("Select at least one subject"); return; }
-    if (!form.date || !form.time || !form.studentName || !form.studentEmail) {
-      toast.error("Please fill out name, email, date and time"); return;
-    }
-    if (!form.availableDays.length) { toast.error("Pick the days you want your contacts to hold"); return; }
-    if (!form.availableTimes.trim()) { toast.error("Add the times you want your contacts to hold"); return; }
+    if (!form.studentName || !form.studentEmail) { toast.error("Please add your name and email"); return; }
+    if (!form.picked.length) { toast.error("Pick at least one available time slot"); return; }
+
     const { data } = await supabase.auth.getUser();
     if (!data.user) { setAuth((a) => ({ ...a, email: form.studentEmail })); setStep("auth"); return; }
     await createBookingAndPay();
@@ -461,24 +512,61 @@ function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subj
               {sub === 2 && (
                 <>
                   <div className="grid gap-1.5">
-                    <Label>Days for your contacts</Label>
-                    <div className="flex flex-wrap gap-1.5">
-                      {FULL_DAYS.map((d) => (
-                        <button key={d} type="button" onClick={() => toggleDay(d)}
-                          className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${form.availableDays.includes(d) ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary/40"}`}>
-                          {d.slice(0, 3)}
-                        </button>
-                      ))}
+                    <Label>Pick your weekly slots</Label>
+                    <p className="text-xs text-muted-foreground">
+                      {hasPublishedAvailability
+                        ? "Only times this tutor is available are shown."
+                        : "This tutor has not published slots yet — choose from the standard teaching window."}
+                      {" "}You need {totalContacts || 0} slot{totalContacts === 1 ? "" : "s"} for {totalContacts || 0} contact{totalContacts === 1 ? "" : "s"} per week.
+                    </p>
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      {FULL_DAYS.map((d, i) => {
+                        const open = !!availability[i]?.length;
+                        return (
+                          <button key={d} type="button" disabled={!open} onClick={() => setActiveDay(i)}
+                            className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${dayInView === i ? "border-primary bg-primary text-primary-foreground" : open ? "text-muted-foreground hover:border-primary/40" : "cursor-not-allowed opacity-40"}`}>
+                            {DAY_NAMES[i]}
+                            {form.picked.some((k) => k.startsWith(`${i}|`)) && <span className="ml-1">•</span>}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
-                  <div className="grid gap-1.5">
-                    <Label>Times that work for you</Label>
-                    <Input value={form.availableTimes} onChange={(e) => setForm({ ...form, availableTimes: e.target.value })} placeholder="e.g. Mon & Wed 5–6pm" />
+
+                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                    {dayInView === null ? (
+                      <p className="col-span-full text-sm text-muted-foreground">No availability published.</p>
+                    ) : (availability[dayInView] ?? []).map((t) => {
+                      const active = form.picked.includes(`${dayInView}|${t}`);
+                      return (
+                        <button key={t} type="button" onClick={() => togglePick(dayInView, t)}
+                          className={`rounded-xl border px-2 py-2 text-xs font-semibold transition ${active ? "border-primary bg-primary text-primary-foreground" : "hover:border-primary/40"}`}>
+                          {t}
+                        </button>
+                      );
+                    })}
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="grid gap-1.5"><Label>First session date</Label><Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></div>
-                    <div className="grid gap-1.5"><Label>Start time</Label><Input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} /></div>
+
+                  <div className="grid gap-1.5 rounded-2xl border bg-muted/30 p-3">
+                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">Selected slots ({form.picked.length})</Label>
+                    {form.picked.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Nothing selected yet.</p>
+                    ) : (
+                      <ul className="grid gap-1.5">
+                        {form.picked.map((k) => {
+                          const [d, t] = k.split("|");
+                          return (
+                            <li key={k} className="flex items-center justify-between rounded-lg bg-background px-3 py-1.5 text-sm">
+                              <span className="font-medium">{FULL_DAYS[Number(d)]} · {t} – {String(Number(t.slice(0, 2)) + 1).padStart(2, "0")}:00</span>
+                              <button type="button" onClick={() => togglePick(Number(d), t)} className="text-xs font-semibold text-muted-foreground hover:text-destructive">Remove</button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                    {form.date && <p className="text-xs text-muted-foreground">First session: {form.date} at {form.time}</p>}
                   </div>
+
                   <div className="grid gap-1.5"><Label>How would you like to meet?</Label>
                     <Select value={form.sessionType} onValueChange={(v) => setForm({ ...form, sessionType: v })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
