@@ -514,24 +514,61 @@ function BookingDialog({ tutor, subjects, slots, onClose }: { tutor: Tutor | nul
               {sub === 2 && (
                 <>
                   <div className="grid gap-1.5">
-                    <Label>Days for your contacts</Label>
-                    <div className="flex flex-wrap gap-1.5">
-                      {FULL_DAYS.map((d) => (
-                        <button key={d} type="button" onClick={() => toggleDay(d)}
-                          className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${form.availableDays.includes(d) ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary/40"}`}>
-                          {d.slice(0, 3)}
-                        </button>
-                      ))}
+                    <Label>Pick your weekly slots</Label>
+                    <p className="text-xs text-muted-foreground">
+                      {hasPublishedAvailability
+                        ? "Only times this tutor is available are shown."
+                        : "This tutor has not published slots yet — choose from the standard teaching window."}
+                      {" "}You need {totalContacts || 0} slot{totalContacts === 1 ? "" : "s"} for {totalContacts || 0} contact{totalContacts === 1 ? "" : "s"} per week.
+                    </p>
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      {FULL_DAYS.map((d, i) => {
+                        const open = !!availability[i]?.length;
+                        return (
+                          <button key={d} type="button" disabled={!open} onClick={() => setActiveDay(i)}
+                            className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${dayInView === i ? "border-primary bg-primary text-primary-foreground" : open ? "text-muted-foreground hover:border-primary/40" : "cursor-not-allowed opacity-40"}`}>
+                            {DAY_NAMES[i]}
+                            {form.picked.some((k) => k.startsWith(`${i}|`)) && <span className="ml-1">•</span>}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
-                  <div className="grid gap-1.5">
-                    <Label>Times that work for you</Label>
-                    <Input value={form.availableTimes} onChange={(e) => setForm({ ...form, availableTimes: e.target.value })} placeholder="e.g. Mon & Wed 5–6pm" />
+
+                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                    {dayInView === null ? (
+                      <p className="col-span-full text-sm text-muted-foreground">No availability published.</p>
+                    ) : (availability[dayInView] ?? []).map((t) => {
+                      const active = form.picked.includes(`${dayInView}|${t}`);
+                      return (
+                        <button key={t} type="button" onClick={() => togglePick(dayInView, t)}
+                          className={`rounded-xl border px-2 py-2 text-xs font-semibold transition ${active ? "border-primary bg-primary text-primary-foreground" : "hover:border-primary/40"}`}>
+                          {t}
+                        </button>
+                      );
+                    })}
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="grid gap-1.5"><Label>First session date</Label><Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></div>
-                    <div className="grid gap-1.5"><Label>Start time</Label><Input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} /></div>
+
+                  <div className="grid gap-1.5 rounded-2xl border bg-muted/30 p-3">
+                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">Selected slots ({form.picked.length})</Label>
+                    {form.picked.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Nothing selected yet.</p>
+                    ) : (
+                      <ul className="grid gap-1.5">
+                        {form.picked.map((k) => {
+                          const [d, t] = k.split("|");
+                          return (
+                            <li key={k} className="flex items-center justify-between rounded-lg bg-background px-3 py-1.5 text-sm">
+                              <span className="font-medium">{FULL_DAYS[Number(d)]} · {t} – {String(Number(t.slice(0, 2)) + 1).padStart(2, "0")}:00</span>
+                              <button type="button" onClick={() => togglePick(Number(d), t)} className="text-xs font-semibold text-muted-foreground hover:text-destructive">Remove</button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                    {form.date && <p className="text-xs text-muted-foreground">First session: {form.date} at {form.time}</p>}
                   </div>
+
                   <div className="grid gap-1.5"><Label>How would you like to meet?</Label>
                     <Select value={form.sessionType} onValueChange={(v) => setForm({ ...form, sessionType: v })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
