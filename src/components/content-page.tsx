@@ -2,6 +2,8 @@ import { BookOpen, CheckCircle2, Facebook, HelpCircle, Instagram, LockKeyhole, M
 import { SiteShell, PageHero } from "./site-shell";
 import { Button } from "./ui/button";
 import { TESTIMONIALS } from "@/data/testimonials";
+import { heroImages } from "@/assets/heroes";
+
 
 type PageKind = "about" | "testimonials" | "contact" | "faq" | "privacy" | "terms";
 
@@ -14,10 +16,20 @@ const pageCopy: Record<PageKind, { eyebrow: string; title: string; description: 
   terms: { eyebrow: "Platform terms", title: "Fair terms for a trusted academic community.", description: "These terms set expectations for learners, tutors, guardians, and platform administrators." },
 };
 
+const pageImage: Record<PageKind, string> = {
+  about: heroImages.about,
+  testimonials: heroImages.testimonials,
+  contact: heroImages.contact,
+  faq: heroImages.contact,
+  privacy: heroImages.legal,
+  terms: heroImages.legal,
+};
+
 export function ContentPage({ kind }: { kind: PageKind }) {
   const copy = pageCopy[kind];
-  return <SiteShell><PageHero {...copy} /><section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">{renderContent(kind)}</section></SiteShell>;
+  return <SiteShell><PageHero {...copy} image={pageImage[kind]} /><section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">{renderContent(kind)}</section></SiteShell>;
 }
+
 
 function renderContent(kind: PageKind) {
   if (kind === "about") return <div className="space-y-16">
