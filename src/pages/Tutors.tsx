@@ -163,14 +163,32 @@ export default function Tutors() {
         )}
       </section>
 
-      <BookingDialog tutor={booking} subjects={subjects} onClose={() => setBooking(null)} />
+      <BookingDialog tutor={booking} subjects={subjects} slots={booking ? slots.filter((s) => s.tutor_id === booking.id) : []} onClose={() => setBooking(null)} />
     </SiteShell>
   );
 }
 
 type Step = "details" | "auth" | "pay" | "bio";
 
-function BookingDialog({ tutor, subjects, onClose }: { tutor: Tutor | null; subjects: Subject[]; onClose: () => void }) {
+/** Hour labels between two "HH:MM[:SS]" times, e.g. 16:00 → 19:00 gives 16:00, 17:00, 18:00. */
+function hoursBetween(start: string, end: string): string[] {
+  const s = Number(start.slice(0, 2));
+  const e = Number(end.slice(0, 2));
+  const out: string[] = [];
+  for (let h = s; h < e; h++) out.push(`${String(h).padStart(2, "0")}:00`);
+  return out;
+}
+
+/** Next calendar date (yyyy-mm-dd) for a weekday index, today included. */
+function nextDateFor(dayIndex: number): string {
+  const now = new Date();
+  const diff = (dayIndex - now.getDay() + 7) % 7;
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diff);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function BookingDialog({ tutor, subjects, slots, onClose }: { tutor: Tutor | null; subjects: Subject[]; slots: Slot[]; onClose: () => void }) {
+
   const [step, setStep] = useState<Step>("details");
   /** Sub-step inside "details": 1 course · 2 schedule · 3 you. */
   const [sub, setSub] = useState(1);
