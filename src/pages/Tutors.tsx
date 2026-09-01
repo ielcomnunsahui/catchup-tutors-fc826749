@@ -204,13 +204,16 @@ function BookingDialog({ tutor, subjects, slots, onClose }: { tutor: Tutor | nul
     date: "", time: "16:00", sessionType: "google_meet",
     studentName: "", studentEmail: "", studentPhone: "",
     availableDays: [] as string[], availableTimes: "", notes: "",
+    /** Chosen weekly slots encoded as "dayIndex|HH:MM". */
+    picked: [] as string[],
   });
   const [auth, setAuth] = useState({ mode: "signin" as "signin" | "signup", email: "", password: "" });
 
   useEffect(() => {
     if (!tutor) return;
     setStep("details"); setSub(1); setBookingId(null); setBookingRef(null); setPayNote("");
-    setForm((f) => ({ ...f, examScope: "", examTypes: [], subjectNames: [], contacts: {} }));
+    setForm((f) => ({ ...f, examScope: "", examTypes: [], subjectNames: [], contacts: {}, picked: [], availableDays: [], availableTimes: "", date: "" }));
+
     supabase.auth.getUser().then(({ data }) => {
       if (data.user?.email) setForm((f) => ({ ...f, studentEmail: f.studentEmail || data.user!.email! }));
     });
