@@ -7,6 +7,7 @@ import {
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { heroImages } from "@/assets/heroes";
 const founderPortrait = { url: "/founder-ahmed.jpeg" };
 
 const VALUES = [
@@ -64,6 +65,7 @@ export default function About() {
         jsonLd={jsonLd}
       />
       <PageHero
+        image={heroImages.about}
         eyebrow="Our story"
         title="Turning learning gaps into lasting confidence."
         description="Since 2018, CatchUp Tutors has helped brilliant students master IGCSE, Cambridge A-Level, SAT, GRE and university-entrance exams and step onto the world stage."

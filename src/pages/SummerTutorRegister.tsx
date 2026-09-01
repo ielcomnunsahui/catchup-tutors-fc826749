@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AdmissionLetter } from "@/components/admission-letter";
+import { heroImages } from "@/assets/heroes";
 
 const SUBJECTS = ["Mathematics", "Further Mathematics", "Physics", "Chemistry", "Biology", "English", "Economics"];
 
@@ -127,7 +128,7 @@ export default function SummerTutorRegister() {
   return (
     <SiteShell>
       <Seo title="Volunteer as a tutor | CatchUp Tutors" description="Apply to volunteer at the CatchUp Tutors Free Summer Academy in Ilorin." path="/summerlessons/tutor" />
-      <PageHero eyebrow="Volunteer application" title="Teach a class this summer." description="Tell us about you. Submit the form to receive your provisional acceptance letter instantly." />
+      <PageHero image={heroImages.summer} eyebrow="Volunteer application" title="Teach a class this summer." description="Tell us about you. Submit the form to receive your provisional acceptance letter instantly." />
       <section className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
         <Button variant="ghost" onClick={() => navigate("/summerlessons")} className="mb-6"><ArrowLeft /> Back to Summer Lessons</Button>
         <div className="rounded-3xl border bg-card p-6 shadow-soft sm:p-10">

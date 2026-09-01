@@ -5,6 +5,7 @@ import { Check, Sparkles, GraduationCap, BookOpen, Star, Loader2 } from "lucide-
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { heroImages } from "@/assets/heroes";
 
 type DbPlan = { id: string; slug: string; name: string; price_ngn: number; price_usd: number | null };
 
@@ -138,6 +139,7 @@ export default function Pricing() {
         jsonLd={jsonLd}
       />
       <PageHero
+        image={heroImages.pricing}
         eyebrow="Choose your plan"
         title="Two clear paths. One serious goal — mastery."
         description="Pick 1-on-1 tutoring for personal coaching, or a resource subscription for unlimited self-study. Or combine both."

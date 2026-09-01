@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import BookingBioForm from "@/components/booking-bio-form";
 import BookingReceipt from "@/components/booking-receipt";
+import { heroImages } from "@/assets/heroes";
 
 const ADMIN_WHATSAPP = "447350890668";
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -88,7 +89,7 @@ export default function Tutors() {
   return (
     <SiteShell>
       <Seo title="Expert Mathematics Tutors | CatchUp Tutors" description="Find approved Cambridge and IGCSE Mathematics tutors and book one-to-one sessions." path="/tutors" jsonLd={jsonLd} />
-      <PageHero eyebrow="Approved experts" title="Find the tutor who understands your next step." description="Compare subjects, teaching focus, experience, availability, and tutor-set session pricing." />
+      <PageHero image={heroImages.tutors} eyebrow="Approved experts" title="Find the tutor who understands your next step." description="Compare subjects, teaching focus, experience, availability, and tutor-set session pricing." />
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3 rounded-2xl border bg-card px-4 shadow-soft">
           <Search className="text-muted-foreground" />

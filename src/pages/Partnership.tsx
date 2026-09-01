@@ -6,6 +6,7 @@ import {
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { heroImages } from "@/assets/heroes";
 
 const TRACKS = [
   {
@@ -58,6 +59,7 @@ export default function Partnership() {
         jsonLd={jsonLd}
       />
       <PageHero
+        image={heroImages.partnership}
         eyebrow="Partnership · Collaboration · Sponsorship"
         title="Build the next generation of leaders with us."
         description="We welcome corporate organisations, NGOs, community leaders and individuals who share our vision of educational equity, youth development and academic excellence."

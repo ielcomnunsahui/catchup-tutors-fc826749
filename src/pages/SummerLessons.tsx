@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { MapPin, CalendarDays, GraduationCap, HeartHandshake, CheckCircle2, ArrowRight, Sparkles } from "lucide-react";
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
+import { heroImages } from "@/assets/heroes";
 
 const VENUE = "Al-Bayan High School, Ilorin, Kwara State, Nigeria";
 
@@ -25,6 +26,7 @@ export default function SummerLessons() {
         jsonLd={jsonLd}
       />
       <PageHero
+        image={heroImages.summer}
         eyebrow="Community programme"
         title="Free Summer Lessons, Ilorin"
         description="A fully-funded, in-person summer academy for secondary students. Taught by volunteer tutors from across the country, hosted at Al-Bayan High School."

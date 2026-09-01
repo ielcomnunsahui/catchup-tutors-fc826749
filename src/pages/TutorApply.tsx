@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
+import { heroImages } from "@/assets/heroes";
 
 const OCCUPATIONS = ["Full-time Teacher", "Professional Tutor", "University Student / Graduate", "Other"];
 const QUALIFICATIONS = ["Bachelor's Degree", "Master's Degree / PhD", "Undergraduate Student", "Other"];
@@ -212,6 +213,7 @@ export default function TutorApply() {
         path="/tutors/apply"
       />
       <PageHero
+        image={heroImages.tutors}
         eyebrow="Join the team"
         title="Catch-Up Tutors — Tutor Application Form"
         description="Our mission is to bridge educational gaps and provide student-centered, impactful learning experiences, particularly for students preparing for IGCSE, Cambridge A-Level, Edexcel, IB, TMUA and SAT. Shortlisted candidates will be contacted for an interview and a teaching demonstration."

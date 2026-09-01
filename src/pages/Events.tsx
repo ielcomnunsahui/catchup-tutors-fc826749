@@ -3,6 +3,7 @@ import { MapPin, CalendarDays, GraduationCap, HeartHandshake, ArrowRight, Sparkl
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { heroImages } from "@/assets/heroes";
 
 const summerBanner = { url: "/summer-banner.jpeg" };
 const summerGroup = { url: "/summer-group.jpeg" };
@@ -43,6 +44,7 @@ export default function Events() {
         jsonLd={jsonLd}
       />
       <PageHero
+        image={heroImages.events}
         eyebrow="Events & Community"
         title="Where CatchUp Tutors meets in real life"
         description="Summer academies, olympiads, orientation days and community programmes all in one place."
