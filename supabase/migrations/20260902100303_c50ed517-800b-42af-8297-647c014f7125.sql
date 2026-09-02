@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.guard_attendance_marks() FROM PUBLIC, anon, authenticated;
