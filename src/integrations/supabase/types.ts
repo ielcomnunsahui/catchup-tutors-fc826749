@@ -58,8 +58,13 @@ export type Database = {
           id: string
           notes: string | null
           recorded_at: string | null
+          session_date: string
           student_id: string
+          student_marked: boolean | null
+          student_marked_at: string | null
           tutor_id: string
+          tutor_marked: boolean | null
+          tutor_marked_at: string | null
           updated_at: string
         }
         Insert: {
@@ -69,8 +74,13 @@ export type Database = {
           id?: string
           notes?: string | null
           recorded_at?: string | null
+          session_date?: string
           student_id: string
+          student_marked?: boolean | null
+          student_marked_at?: string | null
           tutor_id: string
+          tutor_marked?: boolean | null
+          tutor_marked_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -80,8 +90,13 @@ export type Database = {
           id?: string
           notes?: string | null
           recorded_at?: string | null
+          session_date?: string
           student_id?: string
+          student_marked?: boolean | null
+          student_marked_at?: string | null
           tutor_id?: string
+          tutor_marked?: boolean | null
+          tutor_marked_at?: string | null
           updated_at?: string
         }
         Relationships: [
