@@ -1,33 +1,140 @@
 import { Link } from "react-router-dom";
-import { MapPin, CalendarDays, GraduationCap, HeartHandshake, ArrowRight, Sparkles, Trophy, Newspaper, Clock, CheckCircle2 } from "lucide-react";
+import { MapPin, CalendarDays, GraduationCap, HeartHandshake, ArrowRight, Sparkles, Trophy, Newspaper, Clock, CheckCircle2, Award } from "lucide-react";
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { heroImages } from "@/assets/heroes";
+
+/**
+ * FEATURED EVENT SWITCH
+ * ---------------------
+ * Set to "tutor-recruitment" to show the volunteer/professional tutor vacancy flyer,
+ * or back to "summer-academy" when the next Summer Lessons registration opens.
+ * Both blocks below are kept intact — nothing is deleted when switching.
+ */
+const FEATURED: "tutor-recruitment" | "summer-academy" = "tutor-recruitment";
+
+/** Replace this with the tutor vacancy flyer once uploaded (e.g. "/tutor-vacancy-flyer.jpeg"). */
+const TUTOR_FLYER = "/summer2026-banner.jpeg";
 
 const summerBanner = { url: "/summer-banner.jpeg" };
 const summerGroup = { url: "/summer-group.jpeg" };
 const summerPrize1 = { url: "/summer-prize-1.jpeg" };
 const summerPrize2 = { url: "/summer-prize-2.jpeg" };
 
+const s26 = {
+  banner: "/summer2026-banner.jpeg",
+  gifts: "/summer2026-gifts.jpeg",
+  winners: "/summer2026-winners.jpeg",
+  award: "/summer2026-abdulbasit-award.jpeg",
+  tenK: "/summer2026-10k.jpeg",
+  quasim: "/summer2026-quasim.jpeg",
+  abdulbasit: "/summer2026-abdulbasit.jpeg",
+};
+
 const VENUE = "Al-Bayan High School, Ilorin, Kwara State";
 
 const UPCOMING = [
-  { title: "Free Summer Academy 2026", when: "Aug 4 – Sep 5, 2026", where: VENUE, tag: "Summer Lessons", href: "/summerlessons" },
-  { title: "Volunteer Tutor Orientation", when: "Jul 28, 2026", where: "Zoom + Ilorin", tag: "Tutors" },
-  { title: "Parent & Student Open Day", when: "Aug 2, 2026", where: VENUE, tag: "Community" },
+  { title: "Tutor Recruitment 2026/27", when: "Applications open now", where: "Online · nationwide", tag: "Tutors", href: "/tutors/apply" },
+  { title: "Volunteer Tutor Awards Ceremony", when: "Sep 2026", where: VENUE, tag: "Community" },
+  { title: "Free Summer Academy 2027", when: "Aug 2027", where: VENUE, tag: "Summer Lessons", href: "/summerlessons" },
+];
+
+/** Academic Excellence Award 2026 recipients (Free Summer Lessons 2026, Ilorin). */
+const AWARDS_2026 = [
+  { name: "Abdulbasit Abdulrafiu", prize: "₦30,000 cash prize", img: s26.abdulbasit, note: "Overall best-performing student of the Free Summer Lessons 2026 cohort." },
+  { name: "Quasim 'O' Muh'd Kamaldeen", prize: "₦25,000 cash prize", img: s26.quasim, note: "Second place, Academic Excellence Award 2026." },
+  { name: "Abdulrahman Abdullateef", prize: "₦10,000 cash prize", img: s26.tenK, note: "Third place, Academic Excellence Award 2026." },
 ];
 
 const PAST = [
-  { title: "Summer Lesson 2025 Class Group Photo", when: "Sep 2025", img: summerGroup.url, note: "Our secondary-school scholars and volunteer tutors at Al-Bayan High School, Ilorin a full house of learners on closing day." },
-  { title: "Scholarship Award Abdulrahman Ahmad", when: "Sep 2025", img: summerPrize1.url, note: "₦10,000 cash prize presented to Abdulrahman Ahmad for outstanding performance during the 2025 Summer Lesson." },
-  { title: "NECO Sponsorship Abdulateef S. Arewa", when: "Sep 2025", img: summerPrize2.url, note: "Free NECO registration awarded to Abdulateef S. Arewa as best-performing student of the 2025 cohort." },
+  { title: "Free Summer Lessons 2026 · Ilorin", when: "Aug – Sep 2026", img: s26.banner, note: "Fully sponsored summer academy delivered with Cerebrum Tutorials, Jimoh Habibullahi Initiative, Chemistry in Yoruba, The Premier Institute and Trim X." },
+  { title: "Academic Excellence Awards 2026", when: "Sep 1, 2026", img: s26.winners, note: "Cash prizes of ₦30,000, ₦25,000 and ₦10,000 presented to the top students of the 2026 cohort, alongside gift items." },
+  { title: "Gift Presentation · Junior Class 2026", when: "Sep 1, 2026", img: s26.gifts, note: "Learning packs and gift items presented to our outstanding junior secondary scholars." },
+  { title: "Summer Lesson 2025 Class Group Photo", when: "Sep 2025", img: summerGroup.url, note: "Our secondary-school scholars and volunteer tutors at Al-Bayan High School, Ilorin — a full house of learners on closing day." },
+  { title: "Scholarship Award · Abdulrahman Ahmad", when: "Sep 2025", img: summerPrize1.url, note: "₦10,000 cash prize presented to Abdulrahman Ahmad for outstanding performance during the 2025 Summer Lesson." },
+  { title: "NECO Sponsorship · Abdulateef S. Arewa", when: "Sep 2025", img: summerPrize2.url, note: "Free NECO registration awarded to Abdulateef S. Arewa as best-performing student of the 2025 cohort." },
 ];
 
 const NEWS = [
-  { title: "Awards & Gift Presentations 2025", img: summerPrize2.url, blurb: "Cash prizes, free NECO/WAEC registration and gift items presented to the top-performing students of the 2025 Summer Lesson." },
-  { title: "Free Summer Lesson Campaign Ilorin", img: summerBanner.url, blurb: "Community outreach for the free summer academy at Al-Bayan High School, Akerebiate, Ilorin." },
+  { title: "Volunteer Tutors Honoured · 2026", img: s26.award, blurb: "Our 2026 volunteer tutors were recognised with certificates of service and commendation for six weeks of free, dedicated teaching in Ilorin." },
+  { title: "Awards & Gift Presentations 2026", img: s26.winners, blurb: "Cash prizes, gift items and exam registration support presented to the top-performing students of the Free Summer Lessons 2026." },
+  { title: "Free Summer Lesson Campaign · Ilorin", img: summerBanner.url, blurb: "Community outreach for the free summer academy at Al-Bayan High School, Akerebiate, Ilorin." },
 ];
+
+function SummerAcademyFeature() {
+  return (
+    <>
+      <div className="mb-6 flex items-end justify-between gap-4">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#FF6B12]">Featured event</p>
+          <h2 className="mt-2 font-display text-3xl font-bold text-brand-navy sm:text-4xl">Free Summer Lessons · Ilorin</h2>
+        </div>
+        <Link to="/summerlessons" className="hidden text-sm font-semibold text-primary hover:underline sm:inline-flex">
+          View full page <ArrowRight className="ml-1 h-4 w-4" />
+        </Link>
+      </div>
+
+      <div className="overflow-hidden rounded-3xl border bg-card shadow-soft">
+        <div className="relative aspect-[16/7] w-full overflow-hidden bg-brand-navy">
+          <img src={summerBanner.url} alt="Catch-Up Tutors Free Summer Lesson banner" className="h-full w-full object-cover opacity-80" />
+          <div className="absolute inset-0 bg-gradient-to-r from-brand-navy/90 via-brand-navy/40 to-transparent" />
+          <div className="absolute inset-0 flex flex-col justify-end p-6 text-white sm:p-10">
+            <Badge className="w-fit bg-[#FF6B12] text-white hover:bg-[#FF6B12]">Registration open</Badge>
+            <h3 className="mt-3 font-display text-2xl font-bold sm:text-4xl">Summer Academy</h3>
+            <p className="mt-2 max-w-xl text-sm text-white/85 sm:text-base">Fully sponsored coaching for secondary students at {VENUE}. Small classes, patient teaching, official admission letter.</p>
+          </div>
+        </div>
+        <div className="grid gap-4 border-t bg-muted/40 p-6 sm:grid-cols-2 sm:p-8">
+          <Button asChild size="lg" className="w-full">
+            <Link to="/summerlessons/student"><GraduationCap className="mr-1" /> Register as student <ArrowRight /></Link>
+          </Button>
+          <Button asChild size="lg" variant="outline" className="w-full border-[#FF6B12] text-[#FF6B12] hover:bg-[#FF6B12] hover:text-white">
+            <Link to="/summerlessons/tutor"><HeartHandshake className="mr-1" /> Apply as volunteer tutor <ArrowRight /></Link>
+          </Button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function TutorRecruitmentFeature() {
+  return (
+    <>
+      <div className="mb-6 flex items-end justify-between gap-4">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#FF6B12]">Featured event</p>
+          <h2 className="mt-2 font-display text-3xl font-bold text-brand-navy sm:text-4xl">Tutor vacancy · Apply now</h2>
+        </div>
+        <Link to="/tutors/apply" className="hidden text-sm font-semibold text-primary hover:underline sm:inline-flex">
+          Go to application <ArrowRight className="ml-1 h-4 w-4" />
+        </Link>
+      </div>
+
+      <div className="overflow-hidden rounded-3xl border bg-card shadow-soft">
+        <div className="relative aspect-[16/7] w-full overflow-hidden bg-brand-navy">
+          <img src={TUTOR_FLYER} alt="Catch-Up Tutors tutor vacancy flyer" className="h-full w-full object-cover opacity-80" />
+          <div className="absolute inset-0 bg-gradient-to-r from-brand-navy/90 via-brand-navy/40 to-transparent" />
+          <div className="absolute inset-0 flex flex-col justify-end p-6 text-white sm:p-10">
+            <Badge className="w-fit bg-[#FF6B12] text-white hover:bg-[#FF6B12]">Applications open</Badge>
+            <h3 className="mt-3 font-display text-2xl font-bold sm:text-4xl">We're hiring tutors</h3>
+            <p className="mt-2 max-w-xl text-sm text-white/85 sm:text-base">
+              Teach Mathematics, Sciences, Business and Humanities for WAEC, NECO, JAMB, IGCSE, A-Level, SAT and more. Flexible online hours, competitive pay per contact.
+            </p>
+          </div>
+        </div>
+        <div className="grid gap-4 border-t bg-muted/40 p-6 sm:grid-cols-2 sm:p-8">
+          <Button asChild size="lg" className="w-full">
+            <Link to="/tutors/apply"><GraduationCap className="mr-1" /> Apply as tutor <ArrowRight /></Link>
+          </Button>
+          <Button asChild size="lg" variant="outline" className="w-full border-[#FF6B12] text-[#FF6B12] hover:bg-[#FF6B12] hover:text-white">
+            <Link to="/tutors">Meet our tutors <ArrowRight /></Link>
+          </Button>
+        </div>
+      </div>
+    </>
+  );
+}
 
 export default function Events() {
   const jsonLd = {
@@ -39,7 +146,7 @@ export default function Events() {
     <SiteShell>
       <Seo
         title="Events & Community | CatchUp Tutors"
-        description="Upcoming and past CatchUp Tutors events including the free Summer Lessons programme at Al-Bayan High School, Ilorin."
+        description="Tutor recruitment, award ceremonies and past CatchUp Tutors events including the free Summer Lessons programme at Al-Bayan High School, Ilorin."
         path="/events"
         jsonLd={jsonLd}
       />
@@ -47,7 +154,7 @@ export default function Events() {
         image={heroImages.events}
         eyebrow="Events & Community"
         title="Where CatchUp Tutors meets in real life"
-        description="Summer academies, olympiads, orientation days and community programmes all in one place."
+        description="Summer academies, awards, tutor recruitment and community programmes — all in one place."
       >
         <div className="flex flex-wrap gap-4 text-sm text-hero-foreground/80">
           <span className="inline-flex items-center gap-2"><MapPin className="h-4 w-4" /> Ilorin, Kwara State</span>
@@ -55,35 +162,57 @@ export default function Events() {
         </div>
       </PageHero>
 
-      {/* Featured: Summer Lessons banner + CTAs */}
+      {/* Featured event — switch via the FEATURED constant at the top of this file */}
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mb-6 flex items-end justify-between gap-4">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#FF6B12]">Featured event</p>
-            <h2 className="mt-2 font-display text-3xl font-bold text-brand-navy sm:text-4xl">Free Summer Lessons Ilorin</h2>
-          </div>
-          <Link to="/summerlessons" className="hidden text-sm font-semibold text-primary hover:underline sm:inline-flex">
-            View full page <ArrowRight className="ml-1 h-4 w-4" />
-          </Link>
-        </div>
+        {FEATURED === "tutor-recruitment" ? <TutorRecruitmentFeature /> : <SummerAcademyFeature />}
+      </section>
 
-        <div className="overflow-hidden rounded-3xl border bg-card shadow-soft">
-          <div className="relative aspect-[16/7] w-full overflow-hidden bg-brand-navy">
-            <img src={summerBanner.url} alt="Catch-Up Tutors Free Summer Lesson banner" className="h-full w-full object-cover opacity-80" />
-            <div className="absolute inset-0 bg-gradient-to-r from-brand-navy/90 via-brand-navy/40 to-transparent" />
-            <div className="absolute inset-0 flex flex-col justify-end p-6 text-white sm:p-10">
-              <Badge className="w-fit bg-[#FF6B12] text-white hover:bg-[#FF6B12]">Registration open</Badge>
-              <h3 className="mt-3 font-display text-2xl font-bold sm:text-4xl">Summer Academy 2026</h3>
-              <p className="mt-2 max-w-xl text-sm text-white/85 sm:text-base">Fully sponsored coaching for secondary students at {VENUE}. Small classes, patient teaching, official admission letter.</p>
-            </div>
+      {/* Summer Lessons 2026 — completed */}
+      <section className="bg-brand-navy/[0.03]">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
+          <Badge className="bg-brand-green text-white hover:bg-brand-green">Completed</Badge>
+          <h2 className="mt-3 font-display text-2xl font-bold text-brand-navy sm:text-3xl">Free Summer Lessons 2026 — mission accomplished</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
+            Six weeks of free, in-person coaching at {VENUE}, delivered entirely by volunteer tutors and closing on 1 September 2026 with
+            our Academic Excellence Awards — cash prizes, gift items and exam support for our best scholars.
+          </p>
+
+          <div className="mt-8 grid gap-6 md:grid-cols-3">
+            {AWARDS_2026.map((a) => (
+              <article key={a.name} className="overflow-hidden rounded-2xl border bg-card shadow-soft">
+                <div className="aspect-[4/5] w-full overflow-hidden">
+                  <img src={a.img} alt={`${a.name} receiving the Academic Excellence Award 2026`} className="h-full w-full object-cover transition duration-500 hover:scale-105" loading="lazy" />
+                </div>
+                <div className="p-5">
+                  <div className="flex items-center gap-2 text-[#FF6B12]"><Award className="h-4 w-4" /><span className="text-xs font-bold uppercase tracking-wider">{a.prize}</span></div>
+                  <h3 className="mt-1 font-display text-lg font-bold text-brand-navy">{a.name}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">{a.note}</p>
+                </div>
+              </article>
+            ))}
           </div>
-          <div className="grid gap-4 border-t bg-muted/40 p-6 sm:grid-cols-2 sm:p-8">
-            <Button asChild size="lg" className="w-full">
-              <Link to="/summerlessons/student"><GraduationCap className="mr-1" /> Register as student <ArrowRight /></Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="w-full border-[#FF6B12] text-[#FF6B12] hover:bg-[#FF6B12] hover:text-white">
-              <Link to="/summerlessons/tutor"><HeartHandshake className="mr-1" /> Apply as volunteer tutor <ArrowRight /></Link>
-            </Button>
+
+          {/* Volunteer tutor recognition */}
+          <div className="mt-10 grid items-center gap-8 rounded-3xl border bg-card p-6 shadow-soft md:grid-cols-2 sm:p-8">
+            <div className="overflow-hidden rounded-2xl">
+              <img src={s26.award} alt="Catch-Up Tutors volunteer tutors presenting an award to a student" className="h-full w-full object-cover" loading="lazy" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 text-brand-green"><HeartHandshake className="h-5 w-5" /><span className="text-xs font-bold uppercase tracking-wider">Volunteer tutor awards</span></div>
+              <h3 className="mt-2 font-display text-xl font-bold text-brand-navy">Honouring our 2026 volunteer tutors</h3>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                Every volunteer tutor who taught through the 2026 Summer Lessons received a certificate of service and a commendation award
+                at the closing ceremony — recognition for weeks of free teaching, marking and mentoring that made the programme possible.
+              </p>
+              <ul className="mt-4 space-y-2 text-sm">
+                {["Certificate of volunteer service", "Commendation award for outstanding tutors", "Meals and local transport covered throughout", "Priority consideration for paid tutoring roles"].map((f) => (
+                  <li key={f} className="flex items-start gap-2.5"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-brand-green" /><span>{f}</span></li>
+                ))}
+              </ul>
+              <Button asChild className="mt-6">
+                <Link to="/tutors/apply">Join the tutor team <ArrowRight /></Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>
@@ -142,7 +271,7 @@ export default function Events() {
           <Newspaper className="h-5 w-5 text-primary" />
           <h2 className="font-display text-2xl font-bold text-brand-navy sm:text-3xl">News highlights</h2>
         </div>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Pictures and stories from last year's Summer Lessons, plus awards and gift presentations.</p>
+        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Pictures and stories from the Summer Lessons, plus awards and gift presentations.</p>
         <div className="mt-8 grid gap-6 md:grid-cols-2">
           {NEWS.map((n) => (
             <article key={n.title} className="group grid grid-cols-[140px_1fr] gap-5 overflow-hidden rounded-2xl border bg-card p-4 shadow-soft sm:grid-cols-[180px_1fr]">
