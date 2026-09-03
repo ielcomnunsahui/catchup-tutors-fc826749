@@ -57,5 +57,6 @@ export default function App() {
       <Route path="/summerlessons/tutor" element={<SummerTutorRegister />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
+    </>
   );
 }
