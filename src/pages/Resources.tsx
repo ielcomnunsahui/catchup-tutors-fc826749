@@ -15,6 +15,7 @@ import { SESSIONS, PAPER_NUMBERS, PAPER_GROUPS, variantsOf, type Session, fetchP
 import { fetchTopicQuestions, groupByPaper, type TopicQuestion } from "@/lib/topic-questions";
 import { drivePreview, driveDownload, driveOpen } from "@/lib/drive";
 import { heroImages } from "@/assets/heroes";
+import ExamSubjectCatalog from "@/components/exam-subject-catalog";
 
 
 // ---------- helpers ----------
