@@ -124,6 +124,8 @@ export default function Premium() {
         </div>
 
 
+        <PremiumTopicLibrary unlocked={unlocked} ctaLabel={settings.cta_label} />
+
         {/* Search */}
         <div className="mt-10 flex flex-wrap items-center gap-3">
           <h2 className="font-display text-xl font-bold sm:text-2xl">Premium past papers</h2>
