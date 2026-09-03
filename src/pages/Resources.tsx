@@ -441,6 +441,14 @@ export default function Resources() {
           </div>
         )}
 
+        <div className="mt-16">
+          <h2 className="font-display text-2xl font-bold sm:text-3xl">All examinations & subjects</h2>
+          <p className="mt-2 max-w-2xl text-muted-foreground">
+            Resources, tutoring and premium topic lessons are available across every board and subject below.
+          </p>
+          <div className="mt-8"><ExamSubjectCatalog /></div>
+        </div>
+
         <div className="mt-16 grid gap-5 lg:grid-cols-2"><PremiumCTA /><TutorCTA /></div>
       </section>
 
