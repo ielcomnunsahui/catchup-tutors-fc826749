@@ -200,6 +200,10 @@ export default function Dashboard() {
               )}
             </section>
 
+            {/* Attendance */}
+            <StudentAttendance userId={userId} />
+            {isTutor && <TutorAttendance tutorId={tutorId} />}
+
             {/* Tutor view: accepted students */}
             {isTutor && (
               <section className="rounded-3xl border bg-card p-6 shadow-soft sm:p-7">
