@@ -28,6 +28,8 @@ import NotFound from "./pages/NotFound";
 
 export default function App() {
   return (
+    <>
+    <ScrollToTop />
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/about" element={<About />} />
