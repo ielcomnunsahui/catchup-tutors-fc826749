@@ -3,6 +3,7 @@ import { ArrowRight, BookOpen, Sigma } from "lucide-react";
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { PremiumCTA, TutorCTA } from "./Resources";
+import ExamSubjectCatalog from "@/components/exam-subject-catalog";
 import { heroImages } from "@/assets/heroes";
 
 const PROGRAM_LIST = [
