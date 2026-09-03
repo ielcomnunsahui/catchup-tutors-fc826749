@@ -82,7 +82,7 @@ function AdminPage() {
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <Tabs defaultValue="overview">
           <div className="-mx-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <TabsList className="inline-flex w-max min-w-full gap-1 rounded-2xl bg-muted/60 p-1 lg:grid lg:grid-cols-13">
+            <TabsList className="inline-flex w-max min-w-full gap-1 rounded-2xl bg-muted/60 p-1 lg:grid lg:grid-cols-[repeat(13,minmax(0,1fr))]">
               <AdminTab value="overview" icon={LayoutDashboard} label="Overview" />
               <AdminTab value="registrations" icon={ClipboardList} label="Summer registrations" />
               <AdminTab value="students" icon={Users} label="Students" />
