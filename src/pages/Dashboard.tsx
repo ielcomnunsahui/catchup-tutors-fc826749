@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { StudentAttendance, TutorAttendance } from "@/components/attendance-panel";
 
 type Booking = {
   id: string; preferred_start: string; duration_minutes: number; status: string;
@@ -34,12 +35,15 @@ export default function Dashboard() {
   const [minutesThisWeek, setMinutesThisWeek] = useState(0);
   const [tutorStudents, setTutorStudents] = useState<TutorStudent[]>([]);
   const [isTutor, setIsTutor] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [tutorId, setTutorId] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       const { data } = await supabase.auth.getUser();
       if (!data.user) { navigate("/auth", { replace: true }); return; }
       const u = data.user;
+      setUserId(u.id);
       setName(String(u.user_metadata.full_name || u.email || "Student"));
       const { data: role } = await supabase.rpc("has_role", { _user_id: u.id, _role: "admin" });
       if (role) { navigate("/admin", { replace: true }); return; }
@@ -58,6 +62,7 @@ export default function Dashboard() {
 
       if (tp.data?.id && tp.data.is_approved) {
         setIsTutor(true);
+        setTutorId(tp.data.id);
         // Only students whose booking the admin has accepted (confirmed/completed) are visible,
         // and only name / programme / availability are selected.
         const { data: st } = await supabase
@@ -194,6 +199,10 @@ export default function Dashboard() {
                 </ul>
               )}
             </section>
+
+            {/* Attendance */}
+            <StudentAttendance userId={userId} />
+            {isTutor && <TutorAttendance tutorId={tutorId} />}
 
             {/* Tutor view: accepted students */}
             {isTutor && (
