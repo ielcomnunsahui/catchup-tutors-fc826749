@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePremium } from "@/hooks/use-premium";
 import { fetchPastPapers, paperFileName, SUBJECT_OPTIONS, type PastPaper } from "@/lib/past-papers";
 import { heroImages } from "@/assets/heroes";
+import PremiumTopicLibrary from "@/components/premium-topic-library";
 
 type PremiumSettings = {
   headline: string;
