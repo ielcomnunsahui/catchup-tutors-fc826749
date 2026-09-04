@@ -56,44 +56,82 @@ export default function Tutors() {
     audience: { "@type": "EducationalAudience", educationalRole: "student" },
   };
 
-  const [tutors, setTutors] = useState<Tutor[]>([]);
-  const [slots, setSlots] = useState<Slot[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
+  const [subjectFilter, setSubjectFilter] = useState<string>("All subjects");
   const [booking, setBooking] = useState<Tutor | null>(null);
 
-  useEffect(() => {
-    (async () => {
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
+    queryKey: ["tutors-page"],
+    queryFn: async () => {
       const [tRes, aRes, sRes] = await Promise.all([
         supabase.from("tutor_profiles").select("id,display_name,bio,photo_url,subjects,topics,qualifications,years_experience,pricing,rating,review_count,ref_code,highest_qualification").eq("is_approved", true).eq("is_visible", true).order("rating", { ascending: false }),
         supabase.from("tutor_availability").select("tutor_id,day_of_week,start_time,end_time").eq("is_active", true),
         supabase.from("subjects").select("id,name,program_id"),
       ]);
-      setTutors((tRes.data as Tutor[]) ?? []);
-      setSlots((aRes.data as Slot[]) ?? []);
-      setSubjects((sRes.data as Subject[]) ?? []);
-      setLoading(false);
-    })();
-  }, []);
+      if (tRes.error) throw tRes.error;
+      return {
+        tutors: (tRes.data as Tutor[]) ?? [],
+        slots: (aRes.data as Slot[]) ?? [],
+        subjects: (sRes.data as Subject[]) ?? [],
+      };
+    },
+  });
+
+  const tutors = data?.tutors ?? [];
+  const slots = data?.slots ?? [];
+  const subjects = data?.subjects ?? [];
+
+  const subjectChips = useMemo(() => {
+    const set = new Set<string>();
+    tutors.forEach((t) => (t.subjects ?? []).forEach((s) => set.add(s)));
+    return ["All subjects", ...[...set].sort()];
+  }, [tutors]);
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    if (!needle) return tutors;
-    return tutors.filter((t) =>
-      [t.display_name, t.bio, ...(t.subjects ?? []), ...(t.topics ?? [])]
-        .filter(Boolean).some((x) => x.toLowerCase().includes(needle))
-    );
-  }, [q, tutors]);
+    return tutors.filter((t) => {
+      const matchesSubject = subjectFilter === "All subjects" || (t.subjects ?? []).includes(subjectFilter);
+      if (!matchesSubject) return false;
+      if (!needle) return true;
+      return [t.display_name, t.bio, ...(t.subjects ?? []), ...(t.topics ?? [])]
+        .filter(Boolean).some((x) => x.toLowerCase().includes(needle));
+    });
+  }, [q, subjectFilter, tutors]);
 
   return (
     <SiteShell>
       <Seo title="Expert Mathematics Tutors | CatchUp Tutors" description="Find approved Cambridge and IGCSE Mathematics tutors and book one-to-one sessions." path="/tutors" jsonLd={jsonLd} />
       <PageHero image={heroImages.tutors} eyebrow="Approved experts" title="Find the tutor who understands your next step." description="Compare subjects, teaching focus, experience, availability, and tutor-set session pricing." />
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-3 rounded-2xl border bg-card px-4 shadow-soft">
-          <Search className="text-muted-foreground" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search tutors by subject or topic" aria-label="Search tutors" className="h-14 flex-1 bg-transparent outline-none" />
+        <ErrorBoundary title="The tutor list could not load">
+        <div className="rounded-3xl border bg-card p-4 shadow-soft sm:p-5">
+          <div className="flex items-center gap-3 rounded-2xl border bg-background px-4">
+            <Search className="size-5 shrink-0 text-muted-foreground" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search tutors by name, subject or topic" aria-label="Search tutors" className="h-12 flex-1 bg-transparent outline-none" />
+            {q && (
+              <button type="button" onClick={() => setQ("")} aria-label="Clear search" className="text-muted-foreground transition hover:text-foreground">
+                <X className="size-4" />
+              </button>
+            )}
+          </div>
+          <div className="-mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {subjectChips.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setSubjectFilter(s)}
+                className={`shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition active:scale-95 ${
+                  s === subjectFilter ? "border-primary bg-primary text-primary-foreground" : "bg-background hover:bg-muted"
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground" aria-live="polite">
+            {isLoading ? "Loading tutors…" : `Showing ${filtered.length} of ${tutors.length} approved tutor${tutors.length === 1 ? "" : "s"}`}
+            {isFetching && !isLoading ? " · refreshing" : ""}
+          </p>
         </div>
 
         <div className="mt-6 flex flex-wrap items-center gap-4 rounded-2xl border bg-muted/40 p-5">
@@ -104,14 +142,23 @@ export default function Tutors() {
           <Button asChild variant="outline"><Link to="/tutors/apply">Apply as a tutor</Link></Button>
         </div>
 
-        {loading ? (
-          <div className="mt-10 flex justify-center py-16 text-muted-foreground"><Loader2 className="animate-spin" /></div>
+        {isLoading ? (
+          <CardGridSkeleton count={6} className="mt-10" />
+        ) : isError ? (
+          <div className="mt-10 rounded-3xl border border-destructive/30 bg-destructive/5 p-12 text-center">
+            <h2 className="font-display text-xl font-bold">We couldn't load the tutors</h2>
+            <p className="mt-2 text-sm text-muted-foreground">Check your connection and try again.</p>
+            <Button className="mt-5" onClick={() => refetch()}>Retry</Button>
+          </div>
         ) : filtered.length === 0 ? (
           <div className="mt-10 rounded-3xl border border-dashed p-12 text-center">
             <BadgeCheck className="mx-auto h-10 w-10 text-primary" />
             <h2 className="mt-4 font-display text-2xl font-bold">No tutors match that search</h2>
             <p className="mx-auto mt-3 max-w-lg text-muted-foreground">Try a different subject or topic, or apply as a tutor.</p>
-            <Button asChild className="mt-6"><Link to="/tutors/apply">Apply as a tutor</Link></Button>
+            <div className="mt-6 flex flex-wrap justify-center gap-2">
+              <Button variant="outline" onClick={() => { setQ(""); setSubjectFilter("All subjects"); }}>Clear filters</Button>
+              <Button asChild><Link to="/tutors/apply">Apply as a tutor</Link></Button>
+            </div>
           </div>
         ) : (
           <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -119,20 +166,37 @@ export default function Tutors() {
               const sl = slots.filter((s) => s.tutor_id === t.id);
               const priceNGN = t.pricing?.hourly?.NGN; const priceGBP = t.pricing?.hourly?.GBP;
               return (
-                <article key={t.id} className="flex flex-col rounded-3xl border bg-card p-6 shadow-soft">
+                <article key={t.id} className="flex flex-col rounded-3xl border bg-card p-6 shadow-soft transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lift">
                   <div className="flex items-center gap-4">
-                    <img src={t.photo_url ?? "https://i.pravatar.cc/200"} alt={t.display_name} className="size-16 rounded-full object-cover" />
+                    <img src={t.photo_url ?? "https://i.pravatar.cc/200"} alt={t.display_name} loading="lazy" className="size-16 rounded-full object-cover ring-2 ring-primary/15" />
                     <div>
                       <h2 className="font-display text-lg font-bold leading-tight">{t.display_name}</h2>
                       {qualificationOf(t) && (
-                        <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-brand-green/10 px-2 py-0.5 text-xs font-bold text-brand-green">
-                          <GraduationCap className="size-3.5" /> {qualificationOf(t)}
-                        </p>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <p className="mt-1 inline-flex cursor-help items-center gap-1 rounded-full bg-brand-green/10 px-2 py-0.5 text-xs font-bold text-brand-green">
+                              <GraduationCap className="size-3.5" /> {qualificationOf(t)}
+                            </p>
+                          </TooltipTrigger>
+                          <TooltipContent>Highest academic qualification verified by our team</TooltipContent>
+                        </Tooltip>
                       )}
-                      <p className="mt-0.5 flex items-center gap-1 text-sm text-muted-foreground">
-                        <Star className="size-4 text-brand-orange" fill="currentColor" /> {Number(t.rating).toFixed(1)} · {t.review_count} reviews
-                      </p>
-                      {t.ref_code && <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">ID: {t.ref_code}</p>}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="mt-0.5 flex cursor-help items-center gap-1 text-sm text-muted-foreground">
+                            <Star className="size-4 text-brand-orange" fill="currentColor" /> {Number(t.rating).toFixed(1)} · {t.review_count} reviews
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent>Average rating from completed sessions</TooltipContent>
+                      </Tooltip>
+                      {t.ref_code && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <p className="mt-0.5 cursor-help font-mono text-[11px] text-muted-foreground">ID: {t.ref_code}</p>
+                          </TooltipTrigger>
+                          <TooltipContent>Unique CatchUp tutor reference — quote it when you contact us</TooltipContent>
+                        </Tooltip>
+                      )}
                     </div>
                   </div>
                   <p className="mt-4 line-clamp-3 text-sm text-muted-foreground">{t.bio}</p>
@@ -153,7 +217,7 @@ export default function Tutors() {
                       <p className="font-display text-xl font-bold">{priceNGN ? `₦${priceNGN.toLocaleString()}` : "—"}</p>
                       <p className="text-xs text-muted-foreground">{priceGBP ? `£${priceGBP} · per hour` : "per hour"}</p>
                     </div>
-                    <Button onClick={() => setBooking(t)}>Book session</Button>
+                    <Button className="transition active:scale-95" onClick={() => setBooking(t)}>Book session</Button>
                   </div>
                 </article>
               );
@@ -161,7 +225,9 @@ export default function Tutors() {
             })}
           </div>
         )}
+        </ErrorBoundary>
       </section>
+
 
       <BookingDialog tutor={booking} subjects={subjects} slots={booking ? slots.filter((s) => s.tutor_id === booking.id) : []} onClose={() => setBooking(null)} />
     </SiteShell>
