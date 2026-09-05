@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { BadgeCheck, Calendar, MessageCircle, Search, Star, Clock, Loader2, GraduationCap } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { BadgeCheck, Calendar, MessageCircle, Search, Star, Clock, Loader2, GraduationCap, X } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import ErrorBoundary from "@/components/error-boundary";
+import { CardGridSkeleton } from "@/components/skeletons";
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
