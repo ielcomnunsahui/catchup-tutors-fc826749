@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Check, Sparkles, GraduationCap, BookOpen, Star, Loader2 } from "lucide-react";
@@ -84,20 +85,23 @@ const COMPARE: [string, boolean, boolean, boolean, boolean][] = [
 
 export default function Pricing() {
   const navigate = useNavigate();
-  const [dbPlans, setDbPlans] = useState<DbPlan[]>([]);
-  const [paystackEnabled, setPaystackEnabled] = useState(false);
   const [busySlug, setBusySlug] = useState<string | null>(null);
 
-  useEffect(() => {
-    (async () => {
+  const { data: pricingData } = useQuery({
+    queryKey: ["pricing-plans"],
+    queryFn: async () => {
       const [plansRes, settingRes] = await Promise.all([
         supabase.from("subscription_plans").select("id,slug,name,price_ngn,price_usd").eq("is_active", true),
         supabase.from("settings").select("value").eq("key", "paystack").maybeSingle(),
       ]);
-      setDbPlans((plansRes.data as DbPlan[]) ?? []);
-      setPaystackEnabled(Boolean((settingRes.data?.value as { enabled?: boolean } | null)?.enabled));
-    })();
-  }, []);
+      return {
+        plans: (plansRes.data as DbPlan[]) ?? [],
+        paystackEnabled: Boolean((settingRes.data?.value as { enabled?: boolean } | null)?.enabled),
+      };
+    },
+  });
+  const dbPlans = pricingData?.plans ?? [];
+  const paystackEnabled = pricingData?.paystackEnabled ?? false;
 
   const subscribe = async (slug: string) => {
     const plan = dbPlans.find((p) => p.slug === slug);
