@@ -1,6 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Crown, FileText, Loader2, LockKeyhole, PlayCircle, Search, Sparkles, Unlock } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import ErrorBoundary from "@/components/error-boundary";
+import { CardGridSkeleton } from "@/components/skeletons";
+import { Crown, FileText, LockKeyhole, PlayCircle, Search, Sparkles, Unlock } from "lucide-react";
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
