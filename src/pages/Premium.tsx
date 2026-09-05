@@ -128,8 +128,9 @@ export default function Premium() {
           </ul>
         </div>
 
-
-        <PremiumTopicLibrary unlocked={unlocked} ctaLabel={settings.cta_label} />
+        <ErrorBoundary title="The topic library could not load" compact>
+          <PremiumTopicLibrary unlocked={unlocked} ctaLabel={settings.cta_label} />
+        </ErrorBoundary>
 
         {/* Search */}
         <div className="mt-10 flex flex-wrap items-center gap-3">
@@ -142,7 +143,8 @@ export default function Premium() {
         </div>
 
         {loading ? (
-          <div className="flex h-40 items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>
+          <CardGridSkeleton count={6} className="mt-6" />
+
         ) : filtered.length === 0 ? (
           <p className="mt-6 rounded-2xl border border-dashed p-10 text-center text-sm text-muted-foreground">
             No premium papers published yet — check back soon.
