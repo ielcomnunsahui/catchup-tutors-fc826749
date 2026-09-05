@@ -34,15 +34,11 @@ type PremiumVideo = { id: string; title: string; description: string; thumbnail_
 
 export default function Premium() {
   const premium = usePremium();
-  const [settings, setSettings] = useState<PremiumSettings>(DEFAULTS);
-  const [papers, setPapers] = useState<PastPaper[]>([]);
-  const [videos, setVideos] = useState<PremiumVideo[]>([]);
   const [q, setQ] = useState("");
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let active = true;
-    (async () => {
+  const { data, isLoading } = useQuery({
+    queryKey: ["premium-page"],
+    queryFn: async () => {
       const [s, allPapers, v] = await Promise.all([
         supabase.from("settings").select("value").eq("key", "premium_content").maybeSingle(),
         fetchPastPapers().catch(() => [] as PastPaper[]),
@@ -53,20 +49,24 @@ export default function Premium() {
           .eq("is_published", true)
           .limit(24),
       ]);
-      if (!active) return;
       const val = (s.data?.value ?? {}) as Partial<PremiumSettings>;
-      setSettings({
-        headline: val.headline || DEFAULTS.headline,
-        subheadline: val.subheadline || DEFAULTS.subheadline,
-        perks: val.perks?.length ? val.perks : DEFAULTS.perks,
-        cta_label: val.cta_label || DEFAULTS.cta_label,
-      });
-      setPapers(allPapers.filter((p) => p.access_level === "premium" && p.is_published));
-      setVideos((v.data ?? []) as PremiumVideo[]);
-      setLoading(false);
-    })();
-    return () => { active = false; };
-  }, []);
+      return {
+        settings: {
+          headline: val.headline || DEFAULTS.headline,
+          subheadline: val.subheadline || DEFAULTS.subheadline,
+          perks: val.perks?.length ? val.perks : DEFAULTS.perks,
+          cta_label: val.cta_label || DEFAULTS.cta_label,
+        } satisfies PremiumSettings,
+        papers: allPapers.filter((p) => p.access_level === "premium" && p.is_published),
+        videos: (v.data ?? []) as PremiumVideo[],
+      };
+    },
+  });
+
+  const settings = data?.settings ?? DEFAULTS;
+  const papers = data?.papers ?? [];
+  const videos = data?.videos ?? [];
+  const loading = isLoading;
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -78,6 +78,7 @@ export default function Premium() {
 
   const subjectLabel = (key: string) => SUBJECT_OPTIONS.find((s) => s.id === key)?.label ?? key;
   const unlocked = premium.isPremium;
+
 
   return (
     <SiteShell>
