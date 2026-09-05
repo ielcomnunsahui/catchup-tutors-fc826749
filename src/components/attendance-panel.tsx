@@ -64,11 +64,11 @@ function useSessions(role: "student" | "tutor", id: string | null) {
   }, [role, id]);
 
   useEffect(() => { load(); }, [load]);
-  return { rows, loading, reload: load };
+  return { rows, setRows, loading, reload: load };
 }
 
 function AttendanceList({ role, ownerId, title, subtitle }: { role: "student" | "tutor"; ownerId: string | null; title: string; subtitle: string }) {
-  const { rows, loading, reload } = useSessions(role, ownerId);
+  const { rows, setRows, loading, reload } = useSessions(role, ownerId);
   const [saving, setSaving] = useState<string | null>(null);
 
   const pending = useMemo(
@@ -78,6 +78,12 @@ function AttendanceList({ role, ownerId, title, subtitle }: { role: "student" | 
 
   async function mark(row: SessionRow, value: boolean) {
     setSaving(row.bookingId);
+    const key = role === "student" ? "studentMarked" : "tutorMarked";
+    const previous = rows;
+    // Optimistic: flip the button instantly, roll back if the save fails.
+    setRows((cur) => cur.map((r) =>
+      r.bookingId === row.bookingId && r.sessionDate === row.sessionDate ? { ...r, [key]: value } : r,
+    ));
     const payload: Record<string, unknown> = {
       booking_id: row.bookingId,
       student_id: row.studentId,
@@ -90,7 +96,7 @@ function AttendanceList({ role, ownerId, title, subtitle }: { role: "student" | 
       .from("attendance")
       .upsert(payload, { onConflict: "booking_id,session_date" });
     setSaving(null);
-    if (error) { toast.error(error.message); return; }
+    if (error) { setRows(previous); toast.error(error.message); return; }
     toast.success(value ? "Marked as attended" : "Marked as absent");
     reload();
   }
