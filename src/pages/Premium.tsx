@@ -1,6 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Crown, FileText, Loader2, LockKeyhole, PlayCircle, Search, Sparkles, Unlock } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import ErrorBoundary from "@/components/error-boundary";
+import { CardGridSkeleton } from "@/components/skeletons";
+import { Crown, FileText, LockKeyhole, PlayCircle, Search, Sparkles, Unlock } from "lucide-react";
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,15 +37,11 @@ type PremiumVideo = { id: string; title: string; description: string; thumbnail_
 
 export default function Premium() {
   const premium = usePremium();
-  const [settings, setSettings] = useState<PremiumSettings>(DEFAULTS);
-  const [papers, setPapers] = useState<PastPaper[]>([]);
-  const [videos, setVideos] = useState<PremiumVideo[]>([]);
   const [q, setQ] = useState("");
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let active = true;
-    (async () => {
+  const { data, isLoading } = useQuery({
+    queryKey: ["premium-page"],
+    queryFn: async () => {
       const [s, allPapers, v] = await Promise.all([
         supabase.from("settings").select("value").eq("key", "premium_content").maybeSingle(),
         fetchPastPapers().catch(() => [] as PastPaper[]),
@@ -53,20 +52,24 @@ export default function Premium() {
           .eq("is_published", true)
           .limit(24),
       ]);
-      if (!active) return;
       const val = (s.data?.value ?? {}) as Partial<PremiumSettings>;
-      setSettings({
-        headline: val.headline || DEFAULTS.headline,
-        subheadline: val.subheadline || DEFAULTS.subheadline,
-        perks: val.perks?.length ? val.perks : DEFAULTS.perks,
-        cta_label: val.cta_label || DEFAULTS.cta_label,
-      });
-      setPapers(allPapers.filter((p) => p.access_level === "premium" && p.is_published));
-      setVideos((v.data ?? []) as PremiumVideo[]);
-      setLoading(false);
-    })();
-    return () => { active = false; };
-  }, []);
+      return {
+        settings: {
+          headline: val.headline || DEFAULTS.headline,
+          subheadline: val.subheadline || DEFAULTS.subheadline,
+          perks: val.perks?.length ? val.perks : DEFAULTS.perks,
+          cta_label: val.cta_label || DEFAULTS.cta_label,
+        } satisfies PremiumSettings,
+        papers: allPapers.filter((p) => p.access_level === "premium" && p.is_published),
+        videos: (v.data ?? []) as PremiumVideo[],
+      };
+    },
+  });
+
+  const settings = data?.settings ?? DEFAULTS;
+  const papers = data?.papers ?? [];
+  const videos = data?.videos ?? [];
+  const loading = isLoading;
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -78,6 +81,7 @@ export default function Premium() {
 
   const subjectLabel = (key: string) => SUBJECT_OPTIONS.find((s) => s.id === key)?.label ?? key;
   const unlocked = premium.isPremium;
+
 
   return (
     <SiteShell>
@@ -124,8 +128,9 @@ export default function Premium() {
           </ul>
         </div>
 
-
-        <PremiumTopicLibrary unlocked={unlocked} ctaLabel={settings.cta_label} />
+        <ErrorBoundary title="The topic library could not load" compact>
+          <PremiumTopicLibrary unlocked={unlocked} ctaLabel={settings.cta_label} />
+        </ErrorBoundary>
 
         {/* Search */}
         <div className="mt-10 flex flex-wrap items-center gap-3">
@@ -138,7 +143,8 @@ export default function Premium() {
         </div>
 
         {loading ? (
-          <div className="flex h-40 items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>
+          <CardGridSkeleton count={6} className="mt-6" />
+
         ) : filtered.length === 0 ? (
           <p className="mt-6 rounded-2xl border border-dashed p-10 text-center text-sm text-muted-foreground">
             No premium papers published yet — check back soon.

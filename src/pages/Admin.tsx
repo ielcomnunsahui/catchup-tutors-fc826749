@@ -28,6 +28,8 @@ import StudentsTab from "@/components/admin/students-tab";
 import TutorApplicationsTab from "@/components/admin/tutor-applications-tab";
 import TopicQuestionsTab from "@/components/admin/topic-questions-tab";
 import AttendanceTab from "@/components/admin/attendance-tab";
+import ErrorBoundary from "@/components/error-boundary";
+import { KpiSkeleton, ListSkeleton } from "@/components/skeletons";
 
 
 
@@ -99,19 +101,19 @@ function AdminPage() {
             </TabsList>
           </div>
 
-          <TabsContent value="overview" className="mt-8"><OverviewTab /></TabsContent>
-          <TabsContent value="registrations" className="mt-8"><RegistrationsTab /></TabsContent>
-          <TabsContent value="students" className="mt-8"><StudentsTab /></TabsContent>
-          <TabsContent value="tutor-apps" className="mt-8"><TutorApplicationsTab /></TabsContent>
-          <TabsContent value="programs" className="mt-8"><ProgramsTab /></TabsContent>
-          <TabsContent value="subjects" className="mt-8"><SubjectsTab /></TabsContent>
-          <TabsContent value="topics" className="mt-8"><TopicsTab /></TabsContent>
-          <TabsContent value="resources" className="mt-8"><ResourcesTab /></TabsContent>
-          <TabsContent value="topic-questions" className="mt-8"><TopicQuestionsTab /></TabsContent>
-          <TabsContent value="past-papers" className="mt-8"><PastPapersTab /></TabsContent>
-          <TabsContent value="attendance" className="mt-8"><AttendanceTab /></TabsContent>
-          <TabsContent value="quiz" className="mt-8"><QuizBankTab /></TabsContent>
-          <TabsContent value="settings" className="mt-8"><SettingsTab /></TabsContent>
+          <TabsContent value="overview" className="mt-8"><ErrorBoundary title="This section could not load"><OverviewTab /></ErrorBoundary></TabsContent>
+          <TabsContent value="registrations" className="mt-8"><ErrorBoundary title="This section could not load"><RegistrationsTab /></ErrorBoundary></TabsContent>
+          <TabsContent value="students" className="mt-8"><ErrorBoundary title="This section could not load"><StudentsTab /></ErrorBoundary></TabsContent>
+          <TabsContent value="tutor-apps" className="mt-8"><ErrorBoundary title="This section could not load"><TutorApplicationsTab /></ErrorBoundary></TabsContent>
+          <TabsContent value="programs" className="mt-8"><ErrorBoundary title="This section could not load"><ProgramsTab /></ErrorBoundary></TabsContent>
+          <TabsContent value="subjects" className="mt-8"><ErrorBoundary title="This section could not load"><SubjectsTab /></ErrorBoundary></TabsContent>
+          <TabsContent value="topics" className="mt-8"><ErrorBoundary title="This section could not load"><TopicsTab /></ErrorBoundary></TabsContent>
+          <TabsContent value="resources" className="mt-8"><ErrorBoundary title="This section could not load"><ResourcesTab /></ErrorBoundary></TabsContent>
+          <TabsContent value="topic-questions" className="mt-8"><ErrorBoundary title="This section could not load"><TopicQuestionsTab /></ErrorBoundary></TabsContent>
+          <TabsContent value="past-papers" className="mt-8"><ErrorBoundary title="This section could not load"><PastPapersTab /></ErrorBoundary></TabsContent>
+          <TabsContent value="attendance" className="mt-8"><ErrorBoundary title="This section could not load"><AttendanceTab /></ErrorBoundary></TabsContent>
+          <TabsContent value="quiz" className="mt-8"><ErrorBoundary title="This section could not load"><QuizBankTab /></ErrorBoundary></TabsContent>
+          <TabsContent value="settings" className="mt-8"><ErrorBoundary title="This section could not load"><SettingsTab /></ErrorBoundary></TabsContent>
 
         </Tabs>
 
@@ -470,7 +472,7 @@ function DataTable<T extends { id: string; is_published: boolean }>({ rows, load
   rows: T[]; loading: boolean; columns: Column<T>[];
   onEdit: (r: T) => void; onPublishToggle: (r: T) => void; onDelete: (r: T) => void;
 }) {
-  if (loading) return <div className="flex h-40 items-center justify-center rounded-2xl border bg-card"><Loader2 className="animate-spin text-primary" /></div>;
+  if (loading) return <ListSkeleton rows={5} />;
   if (!rows.length) return <div className="rounded-2xl border border-dashed bg-card p-10 text-center text-muted-foreground">No items yet. Click <strong>New</strong> to create the first one.</div>;
   return (
     <div className="overflow-x-auto rounded-2xl border bg-card">
@@ -591,7 +593,7 @@ function OverviewTab() {
     })();
   }, []);
 
-  if (!stats) return <div className="flex h-40 items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
+  if (!stats) return <div className="space-y-8"><KpiSkeleton /><ListSkeleton rows={4} /></div>;
 
   return (
     <div className="space-y-8">
@@ -859,7 +861,7 @@ function StudentRegTable() {
     <div className="space-y-4">
       <StatusStrip rows={rows} />
       <FilterBar q={q} setQ={setQ} statusFilter={statusFilter} setStatusFilter={setStatusFilter} range={range} setRange={setRange} reload={reload} onExport={exportCsv} count={filtered.length} total={rows.length} placeholder="Search name, email, phone, class, exam…" />
-      {loading ? <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" /></div> : (
+      {loading ? <ListSkeleton rows={6} className="py-4" /> : (
         <div className="overflow-x-auto rounded-2xl border bg-card shadow-soft">
           <table className="min-w-full text-sm">
             <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
@@ -979,7 +981,7 @@ function TutorRegTable() {
     <div className="space-y-4">
       <StatusStrip rows={rows} />
       <FilterBar q={q} setQ={setQ} statusFilter={statusFilter} setStatusFilter={setStatusFilter} range={range} setRange={setRange} reload={reload} onExport={exportCsv} count={filtered.length} total={rows.length} placeholder="Search name, email, subject, availability…" />
-      {loading ? <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" /></div> : (
+      {loading ? <ListSkeleton rows={6} className="py-4" /> : (
         <div className="overflow-x-auto rounded-2xl border bg-card shadow-soft">
           <table className="min-w-full text-sm">
             <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">

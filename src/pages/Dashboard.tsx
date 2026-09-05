@@ -10,6 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { StudentAttendance, TutorAttendance } from "@/components/attendance-panel";
+import ErrorBoundary from "@/components/error-boundary";
+import { KpiSkeleton, ListSkeleton } from "@/components/skeletons";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 type Booking = {
   id: string; preferred_start: string; duration_minutes: number; status: string;
@@ -146,12 +149,16 @@ export default function Dashboard() {
         </section>
 
         {/* KPI cards */}
+        {loading ? (
+          <section aria-label="Overview" className="mt-8"><KpiSkeleton /></section>
+        ) : (
         <section aria-label="Overview" className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KpiCard icon={CalendarCheck} tone="primary" value={upcomingCount} label="Upcoming sessions" hint={upcomingCount ? "Next: " + new Date(upcoming[0].preferred_start).toLocaleDateString() : "None booked"} />
-          <KpiCard icon={Clock3} tone="orange" value={`${Math.round(minutesThisWeek / 60 * 10) / 10}h`} label="Learning this week" hint="Across all subjects" />
-          <KpiCard icon={Bookmark} tone="green" value={savedCount} label="Saved resources" hint="Ready to revisit" />
-          <KpiCard icon={TrendingUp} tone="navy" value={`${avgProgress}%`} label="Avg. topic progress" progress={avgProgress} />
+          <KpiCard icon={CalendarCheck} tone="primary" value={upcomingCount} label="Upcoming sessions" hint={upcomingCount ? "Next: " + new Date(upcoming[0].preferred_start).toLocaleDateString() : "None booked"} tip="Confirmed and pending bookings still ahead of today" />
+          <KpiCard icon={Clock3} tone="orange" value={`${Math.round(minutesThisWeek / 60 * 10) / 10}h`} label="Learning this week" hint="Across all subjects" tip="Estimated study time from the resources you opened this week" />
+          <KpiCard icon={Bookmark} tone="green" value={savedCount} label="Saved resources" hint="Ready to revisit" tip="Items you bookmarked in the library" />
+          <KpiCard icon={TrendingUp} tone="navy" value={`${avgProgress}%`} label="Avg. topic progress" progress={avgProgress} tip="Average completion across everything you've opened recently" />
         </section>
+        )}
 
         {/* Main grid */}
         <div className="mt-8 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
@@ -165,7 +172,7 @@ export default function Dashboard() {
                 cta={<Button asChild variant="ghost" size="sm"><Link to="/programs">Book new <ChevronRight className="h-4 w-4" /></Link></Button>}
               />
               {loading ? (
-                <div className="mt-6 h-24 animate-pulse rounded-2xl bg-muted/60" />
+                <ListSkeleton rows={3} className="mt-6" />
               ) : upcoming.length === 0 ? (
                 <EmptyState icon={CalendarCheck} title="No upcoming sessions" body="When a booking is confirmed it will appear here with a join link." ctaText="Explore programs" ctaTo="/programs" />
               ) : (
@@ -201,8 +208,8 @@ export default function Dashboard() {
             </section>
 
             {/* Attendance */}
-            <StudentAttendance userId={userId} />
-            {isTutor && <TutorAttendance tutorId={tutorId} />}
+            <ErrorBoundary title="Attendance could not load" compact><StudentAttendance userId={userId} /></ErrorBoundary>
+            {isTutor && <ErrorBoundary title="Attendance could not load" compact><TutorAttendance tutorId={tutorId} /></ErrorBoundary>}
 
             {/* Tutor view: accepted students */}
             {isTutor && (
@@ -247,7 +254,7 @@ export default function Dashboard() {
                 cta={<Button asChild variant="ghost" size="sm"><Link to="/resources">Library <ChevronRight className="h-4 w-4" /></Link></Button>}
               />
               {loading ? (
-                <div className="mt-6 grid gap-3 sm:grid-cols-2">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-20 animate-pulse rounded-2xl bg-muted/60" />)}</div>
+                <ListSkeleton rows={4} className="mt-6" />
               ) : activity.length === 0 ? (
                 <EmptyState icon={PlayCircle} title="Nothing in progress" body="Open a topic, video or resource to start tracking progress." ctaText="Browse library" ctaTo="/resources" />
               ) : (
@@ -325,9 +332,9 @@ export default function Dashboard() {
   );
 }
 
-function KpiCard({ icon: Icon, value, label, hint, progress, tone }: {
+function KpiCard({ icon: Icon, value, label, hint, progress, tone, tip }: {
   icon: typeof CalendarCheck; value: string | number; label: string; hint?: string; progress?: number;
-  tone: "primary" | "orange" | "green" | "navy";
+  tone: "primary" | "orange" | "green" | "navy"; tip?: string;
 }) {
   const map = {
     primary: "from-primary/15 to-primary/0 text-primary",
@@ -335,8 +342,8 @@ function KpiCard({ icon: Icon, value, label, hint, progress, tone }: {
     green: "from-emerald-500/15 to-emerald-500/0 text-emerald-600",
     navy: "from-brand-navy/15 to-brand-navy/0 text-brand-navy",
   } as const;
-  return (
-    <article className={`relative overflow-hidden rounded-2xl border bg-card p-5 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-lift`}>
+  const card = (
+    <article className={`relative overflow-hidden rounded-2xl border bg-card p-5 shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-lift`}>
       <div className={`absolute inset-0 -z-0 bg-gradient-to-br ${map[tone]} opacity-60`} aria-hidden />
       <div className="relative">
         <div className={`inline-flex h-10 w-10 items-center justify-center rounded-xl bg-background ring-1 ring-border ${map[tone].split(" ").at(-1)}`}>
@@ -347,6 +354,13 @@ function KpiCard({ icon: Icon, value, label, hint, progress, tone }: {
         {typeof progress === "number" ? <Progress value={progress} className="mt-3 h-1.5" /> : hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
       </div>
     </article>
+  );
+  if (!tip) return card;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{card}</TooltipTrigger>
+      <TooltipContent>{tip}</TooltipContent>
+    </Tooltip>
   );
 }
 
