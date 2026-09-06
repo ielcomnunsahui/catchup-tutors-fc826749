@@ -365,16 +365,47 @@ export default function Resources() {
         description="Filter by program, subject, topic or exam year — open PDFs in-browser, download for offline, or watch the worked-solution video."
       />
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        {/* ============ Quick start strip ============ */}
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { icon: CalendarDays, title: "Yearly past papers", note: "2018 – 2025 · all sessions", accent: "bg-primary/10 text-primary", onClick: () => { clearFilters(); setFType("yearly"); } },
+            { icon: Layers3, title: "Topical questions", note: "Practice by syllabus topic", accent: "bg-brand-orange/10 text-brand-orange", onClick: () => { clearFilters(); setFType("topic"); } },
+            { icon: PlayCircle, title: "Video solutions", note: "Worked walkthroughs", accent: "bg-brand-green/10 text-brand-green", to: "/premium" as const },
+            { icon: Sparkles, title: "Premium notes", note: "Unlock every subject", accent: "bg-brand-navy/10 text-brand-navy", to: "/pricing" as const },
+          ].map((t) => {
+            const inner = (
+              <>
+                <span className={cn("flex size-11 items-center justify-center rounded-xl transition group-hover:scale-105", t.accent)}>
+                  <t.icon className="size-5" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block font-display text-sm font-bold">{t.title}</span>
+                  <span className="block text-xs text-muted-foreground">{t.note}</span>
+                </span>
+                <ChevronRight className="ml-auto size-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />
+              </>
+            );
+            const cls = "group flex w-full items-center gap-3 rounded-2xl border bg-card p-4 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-soft";
+            return t.to
+              ? <Link key={t.title} to={t.to} className={cls}>{inner}</Link>
+              : <button key={t.title} type="button" onClick={t.onClick} className={cls}>{inner}</button>;
+          })}
+        </div>
+
         {/* ============ Advanced search ============ */}
-        <div className="rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
-          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+        <div className="mt-6 rounded-3xl border bg-card p-4 shadow-soft sm:p-5">
+          <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-foreground">
             <Search className="size-4 text-primary" /> Advanced search
             {hasFilters && (
-              <button onClick={clearFilters} className="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-primary">
-                <X className="size-3.5" /> Clear filters
-              </button>
+              <>
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">{results.length} match{results.length === 1 ? "" : "es"}</span>
+                <button onClick={clearFilters} className="ml-auto inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold text-muted-foreground transition hover:border-primary/40 hover:text-primary">
+                  <X className="size-3.5" /> Clear filters
+                </button>
+              </>
             )}
           </div>
+
           <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="lg:col-span-2">
               <Input
