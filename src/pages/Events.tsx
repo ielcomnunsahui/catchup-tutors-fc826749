@@ -4,6 +4,12 @@ import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { heroImages } from "@/assets/heroes";
+import tutorAhmedAsset from "@/assets/events/tutor-certificate-ahmed-abdulateem.jpeg.asset.json";
+import tutorOlohundeAsset from "@/assets/events/tutor-certificate-abdulrasaq-olohunde.jpeg.asset.json";
+import tutorAterereAsset from "@/assets/events/tutor-certificate-abdulrasaq-aterere.jpeg.asset.json";
+import beneficiaryAbdulbasitAsset from "@/assets/events/beneficiary-abdulbasit-parent.jpeg.asset.json";
+import beneficiaryQuasimAsset from "@/assets/events/beneficiary-quasim-parent.jpeg.asset.json";
+import beneficiaryAbdulrahmanAsset from "@/assets/events/beneficiary-abdulrahman-parent.jpeg.asset.json";
 
 /**
  * FEATURED EVENT SWITCH
@@ -42,9 +48,15 @@ const UPCOMING = [
 
 /** Academic Excellence Award 2026 recipients (Free Summer Lessons 2026, Ilorin). */
 const AWARDS_2026 = [
-  { name: "Abdulbasit Abdulrafiu", prize: "₦30,000 cash prize", img: s26.abdulbasit, note: "Overall best-performing student of the Free Summer Lessons 2026 cohort." },
-  { name: "Quasim 'O' Muh'd Kamaldeen", prize: "₦25,000 cash prize", img: s26.quasim, note: "Second place, Academic Excellence Award 2026." },
-  { name: "Abdulrahman Abdullateef", prize: "₦10,000 cash prize", img: s26.tenK, note: "Third place, Academic Excellence Award 2026." },
+  { name: "Abdulbasit Abdulrafiu", prize: "₦30,000 cash prize", img: beneficiaryAbdulbasitAsset.url, note: "Overall best-performing student of the Free Summer Lessons 2026 cohort, celebrated with his parent and the programme team." },
+  { name: "Quasim 'O' Muh'd Kamaldeen", prize: "₦25,000 cash prize", img: beneficiaryQuasimAsset.url, note: "Second place in the 2026 Academic Excellence Awards, celebrated with his parent and the programme team." },
+  { name: "Abdulrahman Abdullateef", prize: "₦10,000 cash prize", img: beneficiaryAbdulrahmanAsset.url, note: "Third place in the 2026 Academic Excellence Awards, celebrated with his parent and the programme team." },
+];
+
+const TUTOR_AWARDS_2026 = [
+  { name: "Ahmed Abdulateem", img: tutorAhmedAsset.url },
+  { name: "Abdulrasaq Abdulafeez Olohunde", img: tutorOlohundeAsset.url },
+  { name: "Abdulrasaq Sheu Aterere", img: tutorAterereAsset.url },
 ];
 
 const PAST = [
@@ -177,10 +189,19 @@ export default function Events() {
             our Academic Excellence Awards — cash prizes, gift items and exam support for our best scholars.
           </p>
 
+          <div className="mt-10 flex items-start gap-3">
+            <Trophy className="mt-1 h-6 w-6 shrink-0 text-primary" />
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Student achievement</p>
+              <h3 className="mt-2 max-w-4xl font-display text-2xl font-bold text-brand-navy sm:text-3xl">Celebrating Our 2026 Scholarship, Examination Sponsorship &amp; Cash Prize Beneficiaries</h3>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">Celebrating the students whose commitment and academic performance earned recognition, with their parents and guardians joining the presentation.</p>
+            </div>
+          </div>
+
           <div className="mt-8 grid gap-6 md:grid-cols-3">
             {AWARDS_2026.map((a) => (
               <article key={a.name} className="overflow-hidden rounded-2xl border bg-card shadow-soft">
-                <div className="aspect-[4/5] w-full overflow-hidden">
+                <div className="aspect-[4/3] w-full overflow-hidden">
                   <img src={a.img} alt={`${a.name} receiving the Academic Excellence Award 2026`} className="h-full w-full object-cover transition duration-500 hover:scale-105" loading="lazy" />
                 </div>
                 <div className="p-5">
@@ -193,26 +214,34 @@ export default function Events() {
           </div>
 
           {/* Volunteer tutor recognition */}
-          <div className="mt-10 grid items-center gap-8 rounded-3xl border bg-card p-6 shadow-soft md:grid-cols-2 sm:p-8">
-            <div className="overflow-hidden rounded-2xl">
-              <img src={s26.award} alt="Catch-Up Tutors volunteer tutors presenting an award to a student" className="h-full w-full object-cover" loading="lazy" />
-            </div>
+          <div className="mt-16 flex items-start gap-3 border-t pt-12">
+            <HeartHandshake className="mt-1 h-6 w-6 shrink-0 text-brand-green" />
             <div>
-              <div className="flex items-center gap-2 text-brand-green"><HeartHandshake className="h-5 w-5" /><span className="text-xs font-bold uppercase tracking-wider">Volunteer tutor awards</span></div>
-              <h3 className="mt-2 font-display text-xl font-bold text-brand-navy">Honouring our 2026 volunteer tutors</h3>
-              <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                Every volunteer tutor who taught through the 2026 Summer Lessons received a certificate of service and a commendation award
-                at the closing ceremony — recognition for weeks of free teaching, marking and mentoring that made the programme possible.
-              </p>
-              <ul className="mt-4 space-y-2 text-sm">
-                {["Certificate of volunteer service", "Commendation award for outstanding tutors", "Meals and local transport covered throughout", "Priority consideration for paid tutoring roles"].map((f) => (
-                  <li key={f} className="flex items-start gap-2.5"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-brand-green" /><span>{f}</span></li>
-                ))}
-              </ul>
-              <Button asChild className="mt-6">
-                <Link to="/tutors/apply">Join the tutor team <ArrowRight /></Link>
-              </Button>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-green">Volunteer recognition</p>
+              <h3 className="mt-2 max-w-4xl font-display text-2xl font-bold text-brand-navy sm:text-3xl">Honouring Our 2026 Volunteer Tutors with Awards &amp; Certificates of Participation</h3>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">Recognising the tutors who gave their time, knowledge and care throughout the six-week programme, from classroom teaching to marking and mentoring.</p>
             </div>
+          </div>
+
+          <div className="mt-8 grid gap-6 md:grid-cols-3">
+            {TUTOR_AWARDS_2026.map((tutor) => (
+              <figure key={tutor.name} className="group overflow-hidden rounded-2xl border bg-card shadow-soft">
+                <div className="aspect-[4/3] overflow-hidden">
+                  <img src={tutor.img} alt={`${tutor.name} receiving a 2026 volunteer tutor certificate of participation`} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" loading="lazy" />
+                </div>
+                <figcaption className="p-5">
+                  <div className="flex items-center gap-2 text-brand-green"><Award className="h-4 w-4" /><span className="text-xs font-bold uppercase tracking-wider">Certificate of participation</span></div>
+                  <p className="mt-2 font-display text-lg font-bold text-brand-navy">{tutor.name}</p>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+
+          <div className="mt-8 flex flex-col items-start justify-between gap-4 border-t pt-6 sm:flex-row sm:items-center">
+            <p className="max-w-3xl text-sm leading-6 text-muted-foreground">Their dedicated service helped make free, high-quality learning possible for every student who attended.</p>
+            <Button asChild>
+              <Link to="/tutors/apply">Join the tutor team <ArrowRight /></Link>
+            </Button>
           </div>
         </div>
       </section>
