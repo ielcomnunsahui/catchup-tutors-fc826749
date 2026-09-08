@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export const SESSIONS = ["Feb / March", "May / June", "Oct / Nov"] as const;
@@ -75,4 +76,40 @@ export const SUBJECT_OPTIONS = [
   { id: "fmath-0606", label: "IGCSE · Additional Mathematics (0606)" },
 ];
 
+/** Fallback list used before the admin-managed list loads. */
 export const PAPER_YEARS = [2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018];
+
+export const PAPER_YEARS_SETTING_KEY = "past_paper_years";
+
+const normaliseYears = (input: unknown): number[] => {
+  const arr = Array.isArray(input) ? input : [];
+  const nums = arr.map((v) => Number(v)).filter((n) => Number.isInteger(n) && n >= 1990 && n <= 2100);
+  return Array.from(new Set(nums)).sort((a, b) => b - a);
+};
+
+/** Admin-managed list of exam years (falls back to PAPER_YEARS). */
+export async function fetchPaperYears(): Promise<number[]> {
+  const { data } = await supabase
+    .from("settings")
+    .select("value")
+    .eq("key", PAPER_YEARS_SETTING_KEY)
+    .maybeSingle();
+  const value = data?.value as { years?: unknown } | null;
+  const years = normaliseYears(value?.years);
+  return years.length ? years : [...PAPER_YEARS];
+}
+
+export async function savePaperYears(years: number[]): Promise<number[]> {
+  const clean = normaliseYears(years);
+  const { error } = await supabase
+    .from("settings")
+    .upsert({ key: PAPER_YEARS_SETTING_KEY, value: { years: clean }, is_public: true }, { onConflict: "key" });
+  if (error) throw error;
+  return clean;
+}
+
+/** React Query hook for the exam-year list. */
+export function usePaperYears() {
+  const query = useQuery({ queryKey: ["paper-years"], queryFn: fetchPaperYears });
+  return { years: query.data ?? PAPER_YEARS, isLoading: query.isLoading, refetch: query.refetch };
+}

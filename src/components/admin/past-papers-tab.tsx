@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ExternalLink, Filter, Loader2, Save, Trash2 } from "lucide-react";
+import { CalendarPlus, ExternalLink, Filter, Loader2, Plus, Save, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,15 +9,23 @@ import { Badge } from "@/components/ui/badge";
 import { ListSkeleton } from "@/components/skeletons";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  PAPER_GROUPS, variantsOf, PAPER_YEARS, SESSIONS, SUBJECT_OPTIONS,
-  fetchPastPapers, indexPapers, paperKey, type PastPaper,
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  PAPER_GROUPS, variantsOf, SESSIONS, SUBJECT_OPTIONS,
+  fetchPastPapers, fetchPaperYears, savePaperYears, indexPapers, paperKey, type PastPaper,
 } from "@/lib/past-papers";
 
 type Draft = { url: string; access: "free" | "premium" };
 
 export default function PastPapersTab() {
   const [subject, setSubject] = useState(SUBJECT_OPTIONS[0].id);
-  const [year, setYear] = useState(String(PAPER_YEARS[0]));
+  const [years, setYears] = useState<number[]>([]);
+  const [year, setYear] = useState("");
   const [rows, setRows] = useState<PastPaper[]>([]);
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [loading, setLoading] = useState(true);
@@ -38,6 +46,28 @@ export default function PastPapersTab() {
   };
 
   useEffect(() => { reload(); /* eslint-disable-next-line */ }, [subject]);
+
+  useEffect(() => {
+    let active = true;
+    fetchPaperYears()
+      .then((ys) => { if (active) { setYears(ys); setYear((cur) => (cur && ys.includes(Number(cur)) ? cur : String(ys[0] ?? ""))); } })
+      .catch(() => { /* fallback handled by fetchPaperYears */ });
+    return () => { active = false; };
+  }, []);
+
+  const commitYears = async (next: number[]) => {
+    const prev = years;
+    setYears(next);
+    try {
+      const saved = await savePaperYears(next);
+      setYears(saved);
+      setYear((cur) => (cur && saved.includes(Number(cur)) ? cur : String(saved[0] ?? "")));
+      toast.success("Exam years updated");
+    } catch (e: any) {
+      setYears(prev);
+      toast.error(e.message ?? "Could not save years");
+    }
+  };
 
   const index = useMemo(() => indexPapers(rows), [rows]);
   const yearNum = Number(year);
@@ -118,12 +148,13 @@ export default function PastPapersTab() {
         <div className="grid gap-1.5">
           <Label className="text-xs">Year</Label>
           <Select value={year} onValueChange={setYear}>
-            <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-[120px]"><SelectValue placeholder="Year" /></SelectTrigger>
             <SelectContent>
-              {PAPER_YEARS.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+              {years.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
+        <YearManager years={years} onChange={commitYears} />
         <Badge variant="secondary" className="mb-1">{uploadedCount} of {totalSlots} filled in {yearNum}</Badge>
         <Button variant={onlyMissing ? "default" : "outline"} className="mb-0.5" onClick={() => setOnlyMissing((v) => !v)}>
           <Filter /> Only missing
@@ -210,5 +241,88 @@ export default function PastPapersTab() {
         </div>
       )}
     </div>
+  );
+}
+
+function YearManager({ years, onChange }: { years: number[]; onChange: (next: number[]) => void | Promise<void> }) {
+  const [open, setOpen] = useState(false);
+  const [input, setInput] = useState("");
+  const [removing, setRemoving] = useState<number | null>(null);
+
+  const add = () => {
+    const n = Number(input.trim());
+    if (!Number.isInteger(n) || n < 1990 || n > 2100) { toast.error("Enter a valid year, e.g. 2026"); return; }
+    if (years.includes(n)) { toast.error(`${n} is already in the list`); return; }
+    setInput("");
+    onChange([...years, n].sort((a, b) => b - a));
+  };
+
+  return (
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button variant="outline" className="mb-0.5"><CalendarPlus /> Manage years</Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Exam years</DialogTitle>
+            <DialogDescription>
+              Add a new year or remove one. These years appear in the admin uploader and on the public resources page.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex gap-2">
+            <Input
+              value={input}
+              inputMode="numeric"
+              placeholder="e.g. 2026"
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }}
+            />
+            <Button onClick={add}><Plus /> Add</Button>
+          </div>
+
+          <div className="flex flex-wrap gap-2 rounded-xl border bg-muted/30 p-3">
+            {years.length === 0 && <p className="text-sm text-muted-foreground">No years yet — add one above.</p>}
+            {years.map((y) => (
+              <span key={y} className="inline-flex items-center gap-1.5 rounded-full border bg-background px-3 py-1 text-sm font-semibold">
+                {y}
+                <button
+                  type="button"
+                  aria-label={`Remove ${y}`}
+                  className="rounded-full p-0.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+                  onClick={() => setRemoving(y)}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </span>
+            ))}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={removing !== null} onOpenChange={(o) => !o && setRemoving(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove {removing}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {removing} will no longer be listed for students. Papers already uploaded for {removing} are kept and reappear if you add the year back.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => { const y = removing; setRemoving(null); if (y !== null) onChange(years.filter((v) => v !== y)); }}
+            >
+              Remove year
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

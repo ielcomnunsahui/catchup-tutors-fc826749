@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { usePremium } from "@/hooks/use-premium";
-import { SESSIONS, PAPER_NUMBERS, PAPER_GROUPS, variantsOf, type Session, fetchPastPapers, indexPapers, paperKey, paperFileName, type PastPaper } from "@/lib/past-papers";
+import { SESSIONS, PAPER_NUMBERS, PAPER_GROUPS, variantsOf, type Session, fetchPastPapers, indexPapers, paperKey, paperFileName, usePaperYears, type PastPaper } from "@/lib/past-papers";
 import { fetchTopicQuestions, groupByPaper, type TopicQuestion } from "@/lib/topic-questions";
 import { drivePreview, driveDownload, driveOpen } from "@/lib/drive";
 import { heroImages } from "@/assets/heroes";
@@ -45,7 +45,7 @@ const SUBJECTS: Subject[] = [
 
 const subjectsByProgram = (pid: string) => SUBJECTS.filter((s) => s.programId === pid);
 
-const YEARS = [2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018];
+
 
 
 /** Topic past questions are organised per paper component, in syllabus order. */
@@ -198,7 +198,7 @@ type SearchItem = {
   assets: { paper?: string; scheme?: string; questions?: string; solutions?: string; videoUrl?: string };
 };
 
-function buildIndex(): SearchItem[] {
+function buildIndex(YEARS: number[]): SearchItem[] {
   const items: SearchItem[] = [];
   for (const subject of SUBJECTS) {
     const program = PROGRAMS.find((p) => p.id === subject.programId)!;
@@ -288,7 +288,8 @@ export default function Resources() {
   const [fType, setFType] = useState<string>("all");
   const [fAccess, setFAccess] = useState<string>("all");
 
-  const index = useMemo(() => buildIndex(), []);
+  const { years: YEARS } = usePaperYears();
+  const index = useMemo(() => buildIndex(YEARS), [YEARS]);
   const hasFilters = q.trim().length > 0 || fProgram !== "all" || fSubject !== "all" || fYear !== "all" || fSession !== "all" || fType !== "all" || fAccess !== "all";
 
   const results = useMemo(() => {
@@ -368,7 +369,7 @@ export default function Resources() {
         {/* ============ Quick start strip ============ */}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { icon: CalendarDays, title: "Yearly past papers", note: "2018 – 2025 · all sessions", accent: "bg-primary/10 text-primary", onClick: () => { clearFilters(); setFType("yearly"); } },
+            { icon: CalendarDays, title: "Yearly past papers", note: YEARS.length ? `${YEARS[YEARS.length - 1]} – ${YEARS[0]} · all sessions` : "All sessions", accent: "bg-primary/10 text-primary", onClick: () => { clearFilters(); setFType("yearly"); } },
             { icon: Layers3, title: "Topical questions", note: "Practice by syllabus topic", accent: "bg-brand-orange/10 text-brand-orange", onClick: () => { clearFilters(); setFType("topic"); } },
             { icon: PlayCircle, title: "Video solutions", note: "Worked walkthroughs", accent: "bg-brand-green/10 text-brand-green", to: "/premium" as const },
             { icon: Sparkles, title: "Premium notes", note: "Unlock every subject", accent: "bg-brand-navy/10 text-brand-navy", to: "/pricing" as const },
@@ -464,7 +465,7 @@ export default function Resources() {
                 </StepShell>
               )}
               {step === "yearly" && subject && program && (
-                <YearlyView program={program} subject={subject} premium={premium} onBack={() => go({ view: undefined })} onOpenPdf={openPdf} />
+                <YearlyView years={YEARS} program={program} subject={subject} premium={premium} onBack={() => go({ view: undefined })} onOpenPdf={openPdf} />
               )}
               {step === "topics" && subject && program && (
                 <TopicsView program={program} subject={subject} premium={premium} onBack={() => go({ view: undefined })} onOpenPdf={openPdf} onOpenVideo={openVideo} />
@@ -628,10 +629,11 @@ function ChoiceCard({ icon, badge, title, description, onClick }: { icon: React.
   );
 }
 
-function YearlyView({ program, subject, premium, onBack, onOpenPdf }: { program: Program; subject: Subject; premium: ReturnType<typeof usePremium>; onBack: () => void; onOpenPdf: OpenPdf }) {
+function YearlyView({ years: YEARS, program, subject, premium, onBack, onOpenPdf }: { years: number[]; program: Program; subject: Subject; premium: ReturnType<typeof usePremium>; onBack: () => void; onOpenPdf: OpenPdf }) {
   const [papers, setPapers] = useState<Map<string, PastPaper>>(new Map());
   const [loading, setLoading] = useState(true);
-  const [openYear, setOpenYear] = useState<number | null>(YEARS[0]);
+  const [openYear, setOpenYear] = useState<number | null>(YEARS[0] ?? null);
+  useEffect(() => { setOpenYear((cur) => (cur && YEARS.includes(cur) ? cur : YEARS[0] ?? null)); }, [YEARS]);
 
   useEffect(() => {
     let active = true;
