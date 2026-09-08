@@ -277,10 +277,26 @@ export default function TopicQuestionsTab() {
               <Select value={newPaper} onValueChange={setNewPaper}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {PAPER_CHOICES.map((p) => <SelectItem key={p} value={p}>Paper {p}</SelectItem>)}
+                  {papers.map((p) => <SelectItem key={p.paper} value={p.paper}>{p.label}</SelectItem>)}
+                  {PAPER_CHOICES.filter((p) => !papers.some((x) => x.paper === p)).map((p) => (
+                    <SelectItem key={p} value={p}>Paper {p}</SelectItem>
+                  ))}
+                  <SelectItem value={NEW_PAPER}>+ New paper…</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            {newPaper === NEW_PAPER && (
+              <div className="grid gap-3 rounded-xl border bg-muted/30 p-3 sm:grid-cols-2">
+                <div className="grid gap-1.5">
+                  <Label className="text-xs">Short code</Label>
+                  <Input value={customKey} onChange={(e) => setCustomKey(e.target.value)} placeholder="M1" />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label className="text-xs">Display name</Label>
+                  <Input value={customLabel} onChange={(e) => setCustomLabel(e.target.value)} placeholder="M1 Mechanics" />
+                </div>
+              </div>
+            )}
             <div className="grid gap-1.5">
               <Label className="text-xs">Topics</Label>
               <textarea
