@@ -441,13 +441,16 @@ function ResourcesTab() {
 
 /* ---------- Shared UI ---------- */
 
-function Toolbar({ title, onNew, extra }: { title: string; onNew: () => void; extra?: React.ReactNode }) {
+function Toolbar({ title, subtitle, onNew, newLabel = "New", extra }: { title: string; subtitle?: string; onNew: () => void; newLabel?: string; extra?: React.ReactNode }) {
   return (
-    <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-      <h2 className="font-display text-xl font-bold">{title}</h2>
-      <div className="flex items-center gap-3">
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <h2 className="font-display text-xl font-bold">{title}</h2>
+        {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
         {extra}
-        <Button onClick={onNew}><Plus /> New</Button>
+        <Button onClick={onNew} className="transition-transform active:scale-95"><Plus /> {newLabel}</Button>
       </div>
     </div>
   );
@@ -455,35 +458,104 @@ function Toolbar({ title, onNew, extra }: { title: string; onNew: () => void; ex
 
 type Column<T> = { key: keyof T; header: string; render?: (r: T) => React.ReactNode };
 
-function DataTable<T extends { id: string; is_published: boolean }>({ rows, loading, columns, onEdit, onPublishToggle, onDelete }: {
+function DataTable<T extends { id: string; is_published: boolean }>({ rows, loading, columns, onEdit, onPublishToggle, onDelete, searchPlaceholder = "Search…" }: {
   rows: T[]; loading: boolean; columns: Column<T>[];
-  onEdit: (r: T) => void; onPublishToggle: (r: T) => void; onDelete: (r: T) => void;
+  onEdit: (r: T) => void; onPublishToggle: (r: T) => Promise<void> | void; onDelete: (r: T) => Promise<boolean | void> | void;
+  searchPlaceholder?: string;
 }) {
+  const [q, setQ] = useState("");
+  const [pending, setPending] = useState<Record<string, boolean>>({});
+  const [confirming, setConfirming] = useState<T | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const filtered = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    if (!s) return rows;
+    return rows.filter((r) => columns.map((c) => String(r[c.key] ?? "")).join(" ").toLowerCase().includes(s));
+  }, [rows, q, columns]);
+
   if (loading) return <ListSkeleton rows={5} />;
   if (!rows.length) return <div className="rounded-2xl border border-dashed bg-card p-10 text-center text-muted-foreground">No items yet. Click <strong>New</strong> to create the first one.</div>;
+
   return (
-    <div className="overflow-x-auto rounded-2xl border bg-card">
-      <table className="w-full text-sm">
-        <thead className="bg-muted/50 text-left text-xs font-bold uppercase tracking-wide text-muted-foreground">
-          <tr>{columns.map((c) => <th key={String(c.key)} className="px-4 py-3">{c.header}</th>)}<th className="px-4 py-3">Status</th><th className="px-4 py-3 text-right">Actions</th></tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.id} className="border-t hover:bg-muted/30">
-              {columns.map((c) => <td key={String(c.key)} className="px-4 py-3">{c.render ? c.render(r) : String(r[c.key] ?? "")}</td>)}
-              <td className="px-4 py-3">{r.is_published ? <Badge className="bg-brand-green/15 text-brand-green hover:bg-brand-green/15"><CheckCircle2 className="mr-1 size-3" /> Published</Badge> : <Badge variant="secondary">Draft</Badge>}</td>
-              <td className="px-4 py-3"><div className="flex justify-end gap-1">
-                <Button size="sm" variant="ghost" onClick={() => onPublishToggle(r)} title={r.is_published ? "Unpublish" : "Publish"}>{r.is_published ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</Button>
-                <Button size="sm" variant="ghost" onClick={() => onEdit(r)}><Edit3 className="size-4" /></Button>
-                <Button size="sm" variant="ghost" onClick={() => onDelete(r)} className="text-destructive hover:text-destructive"><Trash2 className="size-4" /></Button>
-              </div></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2 rounded-2xl border bg-card p-3 shadow-soft">
+        <div className="relative min-w-[220px] flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={searchPlaceholder} className="pl-9" />
+        </div>
+        <span className="text-xs text-muted-foreground">{filtered.length} of {rows.length}</span>
+      </div>
+
+      <div className="overflow-x-auto rounded-2xl border bg-card shadow-soft">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/50 text-left text-xs font-bold uppercase tracking-wide text-muted-foreground">
+            <tr>{columns.map((c) => <th key={String(c.key)} className="px-4 py-3">{c.header}</th>)}<th className="px-4 py-3">Status</th><th className="px-4 py-3 text-right">Actions</th></tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 && (
+              <tr><td colSpan={columns.length + 2} className="px-4 py-10 text-center text-muted-foreground">Nothing matches “{q}”.</td></tr>
+            )}
+            {filtered.map((r) => (
+              <tr key={r.id} className={`border-t transition-colors hover:bg-muted/30 ${pending[r.id] ? "opacity-60" : ""}`}>
+                {columns.map((c) => <td key={String(c.key)} className="px-4 py-3">{c.render ? c.render(r) : String(r[c.key] ?? "")}</td>)}
+                <td className="px-4 py-3">{r.is_published ? <Badge className="bg-brand-green/15 text-brand-green hover:bg-brand-green/15"><CheckCircle2 className="mr-1 size-3" /> Published</Badge> : <Badge variant="secondary">Draft</Badge>}</td>
+                <td className="px-4 py-3"><div className="flex justify-end gap-1">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button size="sm" variant="ghost" disabled={pending[r.id]} onClick={async () => {
+                        setPending((p) => ({ ...p, [r.id]: true }));
+                        try { await onPublishToggle(r); } finally { setPending((p) => ({ ...p, [r.id]: false })); }
+                      }}>{r.is_published ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{r.is_published ? "Hide from students" : "Publish to students"}</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button size="sm" variant="ghost" onClick={() => onEdit(r)}><Edit3 className="size-4" /></Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Edit</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button size="sm" variant="ghost" onClick={() => setConfirming(r)} className="text-destructive hover:text-destructive"><Trash2 className="size-4" /></Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Delete</TooltipContent>
+                  </Tooltip>
+                </div></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <AlertDialog open={!!confirming} onOpenChange={(o) => !o && setConfirming(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this item?</AlertDialogTitle>
+            <AlertDialogDescription>This permanently removes it for everyone and cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep it</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleting}
+              onClick={async (e) => {
+                e.preventDefault();
+                if (!confirming) return;
+                setDeleting(true);
+                try { await onDelete(confirming); setConfirming(null); } finally { setDeleting(false); }
+              }}
+            >
+              {deleting ? <Loader2 className="animate-spin" /> : <Trash2 />} Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
+
 
 function EditDialog({ title, children, onClose, onSave }: { title: string; children: React.ReactNode; onClose: () => void; onSave: () => void }) {
   const [saving, setSaving] = useState(false);
