@@ -722,6 +722,18 @@ function OverviewTab({ onNavigate }: { onNavigate: (id: AdminSectionId) => void 
   );
 }
 
+function QuickAction({ icon: Icon, label, hint, onClick }: { icon: typeof Users; label: string; hint: string; onClick: () => void }) {
+  return (
+    <button onClick={onClick} className="group flex items-center gap-3 rounded-2xl border bg-card p-4 text-left shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lift active:scale-[0.99]">
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform duration-200 group-hover:scale-110"><Icon className="size-5" /></span>
+      <span className="min-w-0">
+        <span className="block truncate text-sm font-semibold">{label}</span>
+        <span className="block truncate text-xs text-muted-foreground">{hint}</span>
+      </span>
+    </button>
+  );
+}
+
 function OverviewKpi({ icon: Icon, value, label, hint, tone }: { icon: typeof Users; value: number | string; label: string; hint?: string; tone: "primary" | "orange" | "green" | "navy" }) {
   const map = {
     primary: "text-primary from-primary/15",
