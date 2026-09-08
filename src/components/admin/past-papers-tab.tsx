@@ -47,6 +47,28 @@ export default function PastPapersTab() {
 
   useEffect(() => { reload(); /* eslint-disable-next-line */ }, [subject]);
 
+  useEffect(() => {
+    let active = true;
+    fetchPaperYears()
+      .then((ys) => { if (active) { setYears(ys); setYear((cur) => (cur && ys.includes(Number(cur)) ? cur : String(ys[0] ?? ""))); } })
+      .catch(() => { /* fallback handled by fetchPaperYears */ });
+    return () => { active = false; };
+  }, []);
+
+  const commitYears = async (next: number[]) => {
+    const prev = years;
+    setYears(next);
+    try {
+      const saved = await savePaperYears(next);
+      setYears(saved);
+      setYear((cur) => (cur && saved.includes(Number(cur)) ? cur : String(saved[0] ?? "")));
+      toast.success("Exam years updated");
+    } catch (e: any) {
+      setYears(prev);
+      toast.error(e.message ?? "Could not save years");
+    }
+  };
+
   const index = useMemo(() => indexPapers(rows), [rows]);
   const yearNum = Number(year);
 
