@@ -9,15 +9,23 @@ import { Badge } from "@/components/ui/badge";
 import { ListSkeleton } from "@/components/skeletons";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  PAPER_GROUPS, variantsOf, PAPER_YEARS, SESSIONS, SUBJECT_OPTIONS,
-  fetchPastPapers, indexPapers, paperKey, type PastPaper,
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  PAPER_GROUPS, variantsOf, SESSIONS, SUBJECT_OPTIONS,
+  fetchPastPapers, fetchPaperYears, savePaperYears, indexPapers, paperKey, type PastPaper,
 } from "@/lib/past-papers";
 
 type Draft = { url: string; access: "free" | "premium" };
 
 export default function PastPapersTab() {
   const [subject, setSubject] = useState(SUBJECT_OPTIONS[0].id);
-  const [year, setYear] = useState(String(PAPER_YEARS[0]));
+  const [years, setYears] = useState<number[]>([]);
+  const [year, setYear] = useState("");
   const [rows, setRows] = useState<PastPaper[]>([]);
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [loading, setLoading] = useState(true);
