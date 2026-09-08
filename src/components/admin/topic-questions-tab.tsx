@@ -21,6 +21,7 @@ import { normalizeDriveUrl } from "@/lib/drive";
 type Draft = Partial<Pick<TopicQuestion, "questions_url" | "ms_url" | "video_url" | "access_level" | "topic">>;
 
 const PAPER_CHOICES = ["1", "2", "3", "4", "5", "6"];
+const NEW_PAPER = "__new__";
 
 export default function TopicQuestionsTab() {
   const [subject, setSubject] = useState(SUBJECT_OPTIONS[0].id);
@@ -33,6 +34,8 @@ export default function TopicQuestionsTab() {
   const [adding, setAdding] = useState(false);
   const [newTopics, setNewTopics] = useState("");
   const [newPaper, setNewPaper] = useState("1");
+  const [customKey, setCustomKey] = useState("");
+  const [customLabel, setCustomLabel] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<TopicQuestion | null>(null);
 
   const reload = async () => {
