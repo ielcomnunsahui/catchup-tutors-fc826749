@@ -16,7 +16,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +29,9 @@ import TopicQuestionsTab from "@/components/admin/topic-questions-tab";
 import AttendanceTab from "@/components/admin/attendance-tab";
 import ErrorBoundary from "@/components/error-boundary";
 import { KpiSkeleton, ListSkeleton } from "@/components/skeletons";
+import { AdminShell, useAdminSection, type AdminSectionId } from "@/components/admin/admin-shell";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 
 
@@ -109,7 +111,7 @@ function AdminBody() {
   return (
     <AdminShell section={section} setSection={setSection}>
       <ErrorBoundary key={section} title="This section could not load">
-        <div className="animate-fade-in">{panels[section]}</div>
+        <div className="animate-in fade-in duration-300">{panels[section]}</div>
       </ErrorBoundary>
     </AdminShell>
   );
