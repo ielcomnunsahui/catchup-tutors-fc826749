@@ -139,7 +139,6 @@ async function togglePublish(table: string, id: string, value: boolean) {
 }
 
 async function removeRow(table: string, id: string) {
-  if (!confirm("Delete this item? This cannot be undone.")) return false;
   const { error } = await (supabase as any).from(table).delete().eq("id", id);
   if (error) { toast.error(error.message); return false; }
   toast.success("Deleted"); return true;
@@ -621,7 +620,7 @@ type OverviewStats = {
 };
 type RecentReg = { id: string; full_name: string; email: string; status: string; created_at: string; kind: "student" | "tutor" };
 
-function OverviewTab() {
+function OverviewTab({ onNavigate }: { onNavigate: (id: AdminSectionId) => void }) {
   const [stats, setStats] = useState<OverviewStats | null>(null);
   const [recent, setRecent] = useState<RecentReg[]>([]);
 
