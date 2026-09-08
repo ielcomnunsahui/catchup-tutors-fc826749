@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ExternalLink, Loader2, Save, Trash2 } from "lucide-react";
+import { ExternalLink, Filter, Loader2, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { ListSkeleton } from "@/components/skeletons";
 import { supabase } from "@/integrations/supabase/client";
 import {
   PAPER_GROUPS, variantsOf, PAPER_YEARS, SESSIONS, SUBJECT_OPTIONS,
@@ -21,6 +22,7 @@ export default function PastPapersTab() {
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [onlyMissing, setOnlyMissing] = useState(false);
 
   const reload = async () => {
     setLoading(true);
@@ -98,6 +100,8 @@ export default function PastPapersTab() {
   };
 
   const uploadedCount = rows.filter((r) => r.year === yearNum).length;
+  const totalSlots = SESSIONS.length * 2 * PAPER_GROUPS.reduce((n, g) => n + variantsOf(g).length, 0);
+  const coverage = totalSlots ? Math.round((uploadedCount / totalSlots) * 100) : 0;
 
   return (
     <div className="space-y-6">
@@ -120,10 +124,22 @@ export default function PastPapersTab() {
             </SelectContent>
           </Select>
         </div>
-        <Badge variant="secondary" className="mb-1">{uploadedCount} file(s) in {yearNum}</Badge>
+        <Badge variant="secondary" className="mb-1">{uploadedCount} of {totalSlots} filled in {yearNum}</Badge>
+        <Button variant={onlyMissing ? "default" : "outline"} className="mb-0.5" onClick={() => setOnlyMissing((v) => !v)}>
+          <Filter /> Only missing
+        </Button>
         <Button className="ml-auto" onClick={saveAll} disabled={!dirtyKeys.length || saving}>
           {saving ? <Loader2 className="animate-spin" /> : <Save />} Save {dirtyKeys.length || ""} change{dirtyKeys.length === 1 ? "" : "s"}
         </Button>
+      </div>
+
+      <div className="rounded-2xl border bg-card p-4 shadow-soft">
+        <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
+          <span>{yearNum} coverage</span><span>{coverage}%</span>
+        </div>
+        <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
+          <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${coverage}%` }} />
+        </div>
       </div>
 
       <p className="text-sm text-muted-foreground">
@@ -131,7 +147,7 @@ export default function PastPapersTab() {
       </p>
 
       {loading ? (
-        <div className="flex h-40 items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>
+        <ListSkeleton rows={6} />
       ) : (
         <div className="grid gap-5 xl:grid-cols-3">
           {SESSIONS.map((session) => (
@@ -148,6 +164,7 @@ export default function PastPapersTab() {
                       <div className="mt-2 space-y-2">
                         {variantsOf(g).map((num) => {
                           const c = cellFor(session, num, doc);
+                          if (onlyMissing && c.url) return null;
                           return (
                             <div key={num} className="flex items-center gap-2">
                               <span className="w-8 shrink-0 text-xs font-bold text-primary">{num}</span>
