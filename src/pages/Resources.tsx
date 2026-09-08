@@ -717,13 +717,18 @@ function SessionCard({ session, year, subject, papers, premium, onOpenPdf }: {
     n + (papers.has(paperKey(subject.id, year, session, v, "question_paper")) ? 1 : 0)
       + (papers.has(paperKey(subject.id, year, session, v, "mark_scheme")) ? 1 : 0), 0);
 
+  const sessionCount = PAPER_GROUPS.reduce((n, g) => n + groupCount(g), 0);
+  if (sessionCount === 0) return null;
+
+  const visibleGroups = PAPER_GROUPS.filter((g) => groupCount(g) > 0);
+
   return (
     <div className="rounded-xl border bg-card p-4">
       <p className="font-display text-sm font-bold">{session}</p>
       <p className="mt-1 text-[11px] text-muted-foreground">Tap a paper to choose its variant</p>
 
       <div className="mt-3 grid grid-cols-3 gap-2">
-        {PAPER_GROUPS.map((g) => {
+        {visibleGroups.map((g) => {
           const count = groupCount(g);
           return (
             <button
@@ -749,7 +754,12 @@ function SessionCard({ session, year, subject, papers, premium, onOpenPdf }: {
             Choose a variant. Each question paper is shown with its matching mark scheme.
           </p>
           <div className="mt-2 space-y-3">
-            {group && variantsOf(group).map((num) => (
+            {group && variantsOf(group)
+              .filter((num) =>
+                papers.has(paperKey(subject.id, year, session, num, "question_paper")) ||
+                papers.has(paperKey(subject.id, year, session, num, "mark_scheme"))
+              )
+              .map((num) => (
               <div key={num} className="rounded-xl border bg-muted/20 p-3">
                 <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Variant · Paper {num}</p>
                 <div className="grid gap-2 sm:grid-cols-2">
