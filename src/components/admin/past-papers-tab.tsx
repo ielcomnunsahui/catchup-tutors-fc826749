@@ -243,3 +243,86 @@ export default function PastPapersTab() {
     </div>
   );
 }
+
+function YearManager({ years, onChange }: { years: number[]; onChange: (next: number[]) => void | Promise<void> }) {
+  const [open, setOpen] = useState(false);
+  const [input, setInput] = useState("");
+  const [removing, setRemoving] = useState<number | null>(null);
+
+  const add = () => {
+    const n = Number(input.trim());
+    if (!Number.isInteger(n) || n < 1990 || n > 2100) { toast.error("Enter a valid year, e.g. 2026"); return; }
+    if (years.includes(n)) { toast.error(`${n} is already in the list`); return; }
+    setInput("");
+    onChange([...years, n].sort((a, b) => b - a));
+  };
+
+  return (
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button variant="outline" className="mb-0.5"><CalendarPlus /> Manage years</Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Exam years</DialogTitle>
+            <DialogDescription>
+              Add a new year or remove one. These years appear in the admin uploader and on the public resources page.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex gap-2">
+            <Input
+              value={input}
+              inputMode="numeric"
+              placeholder="e.g. 2026"
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }}
+            />
+            <Button onClick={add}><Plus /> Add</Button>
+          </div>
+
+          <div className="flex flex-wrap gap-2 rounded-xl border bg-muted/30 p-3">
+            {years.length === 0 && <p className="text-sm text-muted-foreground">No years yet — add one above.</p>}
+            {years.map((y) => (
+              <span key={y} className="inline-flex items-center gap-1.5 rounded-full border bg-background px-3 py-1 text-sm font-semibold">
+                {y}
+                <button
+                  type="button"
+                  aria-label={`Remove ${y}`}
+                  className="rounded-full p-0.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+                  onClick={() => setRemoving(y)}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </span>
+            ))}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={removing !== null} onOpenChange={(o) => !o && setRemoving(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove {removing}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {removing} will no longer be listed for students. Papers already uploaded for {removing} are kept and reappear if you add the year back.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => { const y = removing; setRemoving(null); if (y !== null) onChange(years.filter((v) => v !== y)); }}
+            >
+              Remove year
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
