@@ -21,6 +21,7 @@ import { normalizeDriveUrl } from "@/lib/drive";
 type Draft = Partial<Pick<TopicQuestion, "questions_url" | "ms_url" | "video_url" | "access_level" | "topic">>;
 
 const PAPER_CHOICES = ["1", "2", "3", "4", "5", "6"];
+const NEW_PAPER = "__new__";
 
 export default function TopicQuestionsTab() {
   const [subject, setSubject] = useState(SUBJECT_OPTIONS[0].id);
@@ -33,6 +34,8 @@ export default function TopicQuestionsTab() {
   const [adding, setAdding] = useState(false);
   const [newTopics, setNewTopics] = useState("");
   const [newPaper, setNewPaper] = useState("1");
+  const [customKey, setCustomKey] = useState("");
+  const [customLabel, setCustomLabel] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<TopicQuestion | null>(null);
 
   const reload = async () => {
@@ -89,14 +92,20 @@ export default function TopicQuestionsTab() {
   /* ---- CRUD ---- */
 
   const addTopics = async () => {
+    const isNew = newPaper === NEW_PAPER;
+    const key = (isNew ? customKey : newPaper).trim();
+    if (isNew && !key) { toast.error("Give the paper a short code, e.g. M1"); return; }
     const names = newTopics.split("\n").map((t) => t.trim()).filter(Boolean);
     if (!names.length) { toast.error("Type at least one topic name"); return; }
-    const existing = rows.filter((r) => r.paper_key === newPaper);
+    const existing = rows.filter((r) => r.paper_key === key);
+    const label = isNew
+      ? (customLabel.trim() || key)
+      : (existing[0]?.paper_label ?? `Paper ${key}`);
     const start = existing.reduce((m, r) => Math.max(m, r.sort_order), 0);
     const payload = names.map((topic, i) => ({
       subject_key: subject,
-      paper_key: newPaper,
-      paper_label: existing[0]?.paper_label ?? `Paper ${newPaper}`,
+      paper_key: key,
+      paper_label: label,
       topic,
       sort_order: start + i + 1,
       access_level: "free",
@@ -104,9 +113,9 @@ export default function TopicQuestionsTab() {
     }));
     const { error } = await (supabase as any).from("topic_questions").insert(payload);
     if (error) return toast.error(error.message);
-    toast.success(`Added ${names.length} topic${names.length === 1 ? "" : "s"}`);
-    setAdding(false); setNewTopics("");
-    setPaper(newPaper);
+    toast.success(`Added ${names.length} topic${names.length === 1 ? "" : "s"} to ${label}`);
+    setAdding(false); setNewTopics(""); setCustomKey(""); setCustomLabel("");
+    setPaper(key);
     reload();
   };
 
@@ -268,10 +277,26 @@ export default function TopicQuestionsTab() {
               <Select value={newPaper} onValueChange={setNewPaper}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {PAPER_CHOICES.map((p) => <SelectItem key={p} value={p}>Paper {p}</SelectItem>)}
+                  {papers.map((p) => <SelectItem key={p.paper} value={p.paper}>{p.label}</SelectItem>)}
+                  {PAPER_CHOICES.filter((p) => !papers.some((x) => x.paper === p)).map((p) => (
+                    <SelectItem key={p} value={p}>Paper {p}</SelectItem>
+                  ))}
+                  <SelectItem value={NEW_PAPER}>+ New paper…</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            {newPaper === NEW_PAPER && (
+              <div className="grid gap-3 rounded-xl border bg-muted/30 p-3 sm:grid-cols-2">
+                <div className="grid gap-1.5">
+                  <Label className="text-xs">Short code</Label>
+                  <Input value={customKey} onChange={(e) => setCustomKey(e.target.value)} placeholder="M1" />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label className="text-xs">Display name</Label>
+                  <Input value={customLabel} onChange={(e) => setCustomLabel(e.target.value)} placeholder="M1 Mechanics" />
+                </div>
+              </div>
+            )}
             <div className="grid gap-1.5">
               <Label className="text-xs">Topics</Label>
               <textarea
