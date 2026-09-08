@@ -92,14 +92,20 @@ export default function TopicQuestionsTab() {
   /* ---- CRUD ---- */
 
   const addTopics = async () => {
+    const isNew = newPaper === NEW_PAPER;
+    const key = (isNew ? customKey : newPaper).trim();
+    if (isNew && !key) { toast.error("Give the paper a short code, e.g. M1"); return; }
     const names = newTopics.split("\n").map((t) => t.trim()).filter(Boolean);
     if (!names.length) { toast.error("Type at least one topic name"); return; }
-    const existing = rows.filter((r) => r.paper_key === newPaper);
+    const existing = rows.filter((r) => r.paper_key === key);
+    const label = isNew
+      ? (customLabel.trim() || key)
+      : (existing[0]?.paper_label ?? `Paper ${key}`);
     const start = existing.reduce((m, r) => Math.max(m, r.sort_order), 0);
     const payload = names.map((topic, i) => ({
       subject_key: subject,
-      paper_key: newPaper,
-      paper_label: existing[0]?.paper_label ?? `Paper ${newPaper}`,
+      paper_key: key,
+      paper_label: label,
       topic,
       sort_order: start + i + 1,
       access_level: "free",
@@ -107,9 +113,9 @@ export default function TopicQuestionsTab() {
     }));
     const { error } = await (supabase as any).from("topic_questions").insert(payload);
     if (error) return toast.error(error.message);
-    toast.success(`Added ${names.length} topic${names.length === 1 ? "" : "s"}`);
-    setAdding(false); setNewTopics("");
-    setPaper(newPaper);
+    toast.success(`Added ${names.length} topic${names.length === 1 ? "" : "s"} to ${label}`);
+    setAdding(false); setNewTopics(""); setCustomKey(""); setCustomLabel("");
+    setPaper(key);
     reload();
   };
 
