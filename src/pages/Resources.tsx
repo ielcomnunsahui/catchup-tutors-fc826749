@@ -685,17 +685,23 @@ function YearlyView({ years: YEARS, program, subject, premium, onBack, onOpenPdf
 
               {open && (
                 <div className="grid gap-4 border-t bg-muted/20 p-4 lg:grid-cols-3">
-                  {SESSIONS.map((session) => (
-                    <SessionCard
-                      key={session}
-                      session={session}
-                      year={y}
-                      subject={subject}
-                      papers={papers}
-                      premium={premium}
-                      onOpenPdf={onOpenPdf}
-                    />
-                  ))}
+                  {yearCount === 0 ? (
+                    <p className="col-span-full py-6 text-center text-sm text-muted-foreground">
+                      No papers uploaded for {y} yet.
+                    </p>
+                  ) : (
+                    SESSIONS.map((session) => (
+                      <SessionCard
+                        key={session}
+                        session={session}
+                        year={y}
+                        subject={subject}
+                        papers={papers}
+                        premium={premium}
+                        onOpenPdf={onOpenPdf}
+                      />
+                    ))
+                  )}
                 </div>
               )}
 
