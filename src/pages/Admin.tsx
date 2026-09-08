@@ -662,6 +662,15 @@ function OverviewTab({ onNavigate }: { onNavigate: (id: AdminSectionId) => void 
         <OverviewKpi icon={FileText} tone="navy" value={stats.resources} label="Published resources" hint={`${stats.programs} programs · ${stats.subjects} subjects`} />
       </div>
 
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <QuickAction icon={CalendarDays} label="Yearly past questions" hint="Add papers & mark schemes" onClick={() => onNavigate("past-papers")} />
+        <QuickAction icon={Layers3} label="Topical past questions" hint="Organise topics per paper" onClick={() => onNavigate("topic-questions")} />
+        <QuickAction icon={UserCheck} label="Tutor applications" hint={`${stats.tutorsPending} awaiting review`} onClick={() => onNavigate("tutor-apps")} />
+        <QuickAction icon={CalendarCheck} label="Attendance" hint="Check session marks" onClick={() => onNavigate("attendance")} />
+      </div>
+
+
+
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <section className="rounded-3xl border bg-card p-6 shadow-soft">
           <div className="flex items-center justify-between">
