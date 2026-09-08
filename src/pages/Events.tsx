@@ -4,12 +4,6 @@ import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { heroImages } from "@/assets/heroes";
-import tutorAhmedAsset from "@/assets/events/tutor-certificate-ahmed-abdulateem.jpeg.asset.json";
-import tutorOlohundeAsset from "@/assets/events/tutor-certificate-abdulrasaq-olohunde.jpeg.asset.json";
-import tutorAterereAsset from "@/assets/events/tutor-certificate-abdulrasaq-aterere.jpeg.asset.json";
-import beneficiaryAbdulbasitAsset from "@/assets/events/beneficiary-abdulbasit-parent.jpeg.asset.json";
-import beneficiaryQuasimAsset from "@/assets/events/beneficiary-quasim-parent.jpeg.asset.json";
-import beneficiaryAbdulrahmanAsset from "@/assets/events/beneficiary-abdulrahman-parent.jpeg.asset.json";
 
 /**
  * FEATURED EVENT SWITCH
@@ -48,15 +42,15 @@ const UPCOMING = [
 
 /** Academic Excellence Award 2026 recipients (Free Summer Lessons 2026, Ilorin). */
 const AWARDS_2026 = [
-  { name: "Abdulbasit Abdulrafiu", prize: "₦30,000 cash prize", img: beneficiaryAbdulbasitAsset.url, note: "Overall best-performing student of the Free Summer Lessons 2026 cohort, celebrated with his parent and the programme team." },
-  { name: "Quasim 'O' Muh'd Kamaldeen", prize: "₦25,000 cash prize", img: beneficiaryQuasimAsset.url, note: "Second place in the 2026 Academic Excellence Awards, celebrated with his parent and the programme team." },
-  { name: "Abdulrahman Abdullateef", prize: "₦10,000 cash prize", img: beneficiaryAbdulrahmanAsset.url, note: "Third place in the 2026 Academic Excellence Awards, celebrated with his parent and the programme team." },
+  { name: "Abdulbasit Abdulrafiu", prize: "₦30,000 cash prize", img: "/events/beneficiary-abdulbasit-parent.jpeg", note: "Overall best-performing student of the Free Summer Lessons 2026 cohort, celebrated with his parent and the programme team." },
+  { name: "Quasim 'O' Muh'd Kamaldeen", prize: "₦25,000 cash prize", img: "/events/beneficiary-quasim-parent.jpeg", note: "Second place in the 2026 Academic Excellence Awards, celebrated with his parent and the programme team." },
+  { name: "Abdulrahman Abdullateef", prize: "₦10,000 cash prize", img: "/events/beneficiary-abdulrahman-parent.jpeg", note: "Third place in the 2026 Academic Excellence Awards, celebrated with his parent and the programme team." },
 ];
 
 const TUTOR_AWARDS_2026 = [
-  { name: "Ahmed Abdulateem", img: tutorAhmedAsset.url },
-  { name: "Abdulrasaq Abdulafeez Olohunde", img: tutorOlohundeAsset.url },
-  { name: "Abdulrasaq Sheu Aterere", img: tutorAterereAsset.url },
+  { name: "Ahmed Abdulateem", img: "/events/tutor-certificate-ahmed-abdulateem.jpeg" },
+  { name: "Abdulrasaq Abdulafeez Olohunde", img: "/events/tutor-certificate-abdulrasaq-olohunde.jpeg" },
+  { name: "Abdulrasaq Sheu Aterere", img: "/events/tutor-certificate-abdulrasaq-aterere.jpeg" },
 ];
 
 const PAST = [
