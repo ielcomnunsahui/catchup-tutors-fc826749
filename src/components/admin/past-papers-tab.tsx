@@ -148,12 +148,13 @@ export default function PastPapersTab() {
         <div className="grid gap-1.5">
           <Label className="text-xs">Year</Label>
           <Select value={year} onValueChange={setYear}>
-            <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-[120px]"><SelectValue placeholder="Year" /></SelectTrigger>
             <SelectContent>
-              {PAPER_YEARS.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+              {years.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
+        <YearManager years={years} onChange={commitYears} />
         <Badge variant="secondary" className="mb-1">{uploadedCount} of {totalSlots} filled in {yearNum}</Badge>
         <Button variant={onlyMissing ? "default" : "outline"} className="mb-0.5" onClick={() => setOnlyMissing((v) => !v)}>
           <Filter /> Only missing
