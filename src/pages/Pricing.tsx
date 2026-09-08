@@ -41,8 +41,8 @@ const RESOURCE_PLANS: Plan[] = [
   {
     slug: "premium-quarterly",
     name: "Quarterly",
-    usd: "$70",
-    ngn: "₦100,000",
+    usd: "$50",
+    ngn: "₦75,000",
     period: "per quarter",
     features: [
       "Everything in Monthly",

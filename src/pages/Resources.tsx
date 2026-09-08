@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { usePremium } from "@/hooks/use-premium";
-import { SESSIONS, PAPER_NUMBERS, PAPER_GROUPS, variantsOf, type Session, fetchPastPapers, indexPapers, paperKey, paperFileName, type PastPaper } from "@/lib/past-papers";
+import { SESSIONS, PAPER_NUMBERS, PAPER_GROUPS, variantsOf, type Session, fetchPastPapers, indexPapers, paperKey, paperFileName, usePaperYears, type PastPaper } from "@/lib/past-papers";
 import { fetchTopicQuestions, groupByPaper, type TopicQuestion } from "@/lib/topic-questions";
 import { drivePreview, driveDownload, driveOpen } from "@/lib/drive";
 import { heroImages } from "@/assets/heroes";
