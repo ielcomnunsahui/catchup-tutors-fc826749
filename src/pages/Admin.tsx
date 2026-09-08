@@ -16,7 +16,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +29,9 @@ import TopicQuestionsTab from "@/components/admin/topic-questions-tab";
 import AttendanceTab from "@/components/admin/attendance-tab";
 import ErrorBoundary from "@/components/error-boundary";
 import { KpiSkeleton, ListSkeleton } from "@/components/skeletons";
+import { AdminShell, useAdminSection, type AdminSectionId } from "@/components/admin/admin-shell";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 
 
@@ -73,63 +75,48 @@ function AdminPage() {
   return (
     <SiteShell>
       <section className="border-b bg-gradient-to-br from-brand-navy via-brand-navy to-[#000E2E] text-hero-foreground">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#FF6B12]">Admin console</p>
-          <h1 className="mt-2 font-display text-4xl font-bold sm:text-5xl">Operations dashboard</h1>
-          <p className="mt-3 max-w-2xl text-sm text-hero-foreground/75 sm:text-base">
-            Manage curriculum, resources and summer program registrations. Every change is live for students the moment you save.
-          </p>
+        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-4 px-4 py-8 sm:px-6 lg:px-8">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#FF6B12]">Admin console</p>
+            <h2 className="mt-1.5 font-display text-2xl font-bold sm:text-3xl">CatchUp Tutors operations</h2>
+            <p className="mt-1 text-sm text-hero-foreground/70">Everything you publish here is live for students the moment you save.</p>
+          </div>
+          <Badge className="bg-white/10 text-hero-foreground hover:bg-white/10"><ShieldCheck className="mr-1 size-3.5" /> Signed in as admin</Badge>
         </div>
       </section>
-      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <Tabs defaultValue="overview">
-          <div className="-mx-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <TabsList className="inline-flex w-max min-w-full gap-1 rounded-2xl bg-muted/60 p-1 lg:grid lg:grid-cols-[repeat(13,minmax(0,1fr))]">
-              <AdminTab value="overview" icon={LayoutDashboard} label="Overview" />
-              <AdminTab value="registrations" icon={ClipboardList} label="Summer registrations" />
-              <AdminTab value="students" icon={Users} label="Students" />
-              <AdminTab value="tutor-apps" icon={UserCheck} label="Tutor applications" />
-              <AdminTab value="programs" icon={GraduationCap} label="Programs" />
-              <AdminTab value="subjects" icon={BookOpen} label="Subjects" />
-              <AdminTab value="topics" icon={FolderTree} label="Topics" />
-              <AdminTab value="resources" icon={FileText} label="Resources" />
-              <AdminTab value="topic-questions" icon={Layers3} label="Topic questions" />
-              <AdminTab value="past-papers" icon={CalendarDays} label="Past papers" />
-              <AdminTab value="attendance" icon={CalendarCheck} label="Attendance" />
-              <AdminTab value="quiz" icon={Brain} label="Quiz bank" />
-              <AdminTab value="settings" icon={Settings} label="Settings" />
-            </TabsList>
-          </div>
 
-          <TabsContent value="overview" className="mt-8"><ErrorBoundary title="This section could not load"><OverviewTab /></ErrorBoundary></TabsContent>
-          <TabsContent value="registrations" className="mt-8"><ErrorBoundary title="This section could not load"><RegistrationsTab /></ErrorBoundary></TabsContent>
-          <TabsContent value="students" className="mt-8"><ErrorBoundary title="This section could not load"><StudentsTab /></ErrorBoundary></TabsContent>
-          <TabsContent value="tutor-apps" className="mt-8"><ErrorBoundary title="This section could not load"><TutorApplicationsTab /></ErrorBoundary></TabsContent>
-          <TabsContent value="programs" className="mt-8"><ErrorBoundary title="This section could not load"><ProgramsTab /></ErrorBoundary></TabsContent>
-          <TabsContent value="subjects" className="mt-8"><ErrorBoundary title="This section could not load"><SubjectsTab /></ErrorBoundary></TabsContent>
-          <TabsContent value="topics" className="mt-8"><ErrorBoundary title="This section could not load"><TopicsTab /></ErrorBoundary></TabsContent>
-          <TabsContent value="resources" className="mt-8"><ErrorBoundary title="This section could not load"><ResourcesTab /></ErrorBoundary></TabsContent>
-          <TabsContent value="topic-questions" className="mt-8"><ErrorBoundary title="This section could not load"><TopicQuestionsTab /></ErrorBoundary></TabsContent>
-          <TabsContent value="past-papers" className="mt-8"><ErrorBoundary title="This section could not load"><PastPapersTab /></ErrorBoundary></TabsContent>
-          <TabsContent value="attendance" className="mt-8"><ErrorBoundary title="This section could not load"><AttendanceTab /></ErrorBoundary></TabsContent>
-          <TabsContent value="quiz" className="mt-8"><ErrorBoundary title="This section could not load"><QuizBankTab /></ErrorBoundary></TabsContent>
-          <TabsContent value="settings" className="mt-8"><ErrorBoundary title="This section could not load"><SettingsTab /></ErrorBoundary></TabsContent>
-
-        </Tabs>
-
-      </section>
+      <AdminBody />
     </SiteShell>
   );
 }
 
-function AdminTab({ value, icon: Icon, label }: { value: string; icon: typeof LayoutDashboard; label: string }) {
+function AdminBody() {
+  const { section, setSection } = useAdminSection();
+  const panels: Record<string, React.ReactNode> = {
+    overview: <OverviewTab onNavigate={setSection} />,
+    registrations: <RegistrationsTab />,
+    students: <StudentsTab />,
+    "tutor-apps": <TutorApplicationsTab />,
+    attendance: <AttendanceTab />,
+    programs: <ProgramsTab />,
+    subjects: <SubjectsTab />,
+    topics: <TopicsTab />,
+    resources: <ResourcesTab />,
+    "topic-questions": <TopicQuestionsTab />,
+    "past-papers": <PastPapersTab />,
+    quiz: <QuizBankTab />,
+    settings: <SettingsTab />,
+  };
+
   return (
-    <TabsTrigger value={value} className="shrink-0 gap-2 whitespace-nowrap rounded-xl px-3 text-xs data-[state=active]:bg-background data-[state=active]:shadow sm:text-sm lg:px-2">
-      <Icon className="h-4 w-4 shrink-0" /> <span className="lg:hidden xl:inline">{label}</span>
-      <span className="hidden lg:inline xl:hidden">{label.split(" ")[0]}</span>
-    </TabsTrigger>
+    <AdminShell section={section} setSection={setSection}>
+      <ErrorBoundary key={section} title="This section could not load">
+        <div className="animate-in fade-in duration-300">{panels[section]}</div>
+      </ErrorBoundary>
+    </AdminShell>
   );
 }
+
 
 
 function useTable<T extends { id: string }>(table: "programs" | "subjects" | "topics" | "resources", orderBy = "sort_order") {
@@ -152,7 +139,6 @@ async function togglePublish(table: string, id: string, value: boolean) {
 }
 
 async function removeRow(table: string, id: string) {
-  if (!confirm("Delete this item? This cannot be undone.")) return false;
   const { error } = await (supabase as any).from(table).delete().eq("id", id);
   if (error) { toast.error(error.message); return false; }
   toast.success("Deleted"); return true;
@@ -454,13 +440,16 @@ function ResourcesTab() {
 
 /* ---------- Shared UI ---------- */
 
-function Toolbar({ title, onNew, extra }: { title: string; onNew: () => void; extra?: React.ReactNode }) {
+function Toolbar({ title, subtitle, onNew, newLabel = "New", extra }: { title: string; subtitle?: string; onNew: () => void; newLabel?: string; extra?: React.ReactNode }) {
   return (
-    <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-      <h2 className="font-display text-xl font-bold">{title}</h2>
-      <div className="flex items-center gap-3">
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <h2 className="font-display text-xl font-bold">{title}</h2>
+        {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
         {extra}
-        <Button onClick={onNew}><Plus /> New</Button>
+        <Button onClick={onNew} className="transition-transform active:scale-95"><Plus /> {newLabel}</Button>
       </div>
     </div>
   );
@@ -468,35 +457,104 @@ function Toolbar({ title, onNew, extra }: { title: string; onNew: () => void; ex
 
 type Column<T> = { key: keyof T; header: string; render?: (r: T) => React.ReactNode };
 
-function DataTable<T extends { id: string; is_published: boolean }>({ rows, loading, columns, onEdit, onPublishToggle, onDelete }: {
+function DataTable<T extends { id: string; is_published: boolean }>({ rows, loading, columns, onEdit, onPublishToggle, onDelete, searchPlaceholder = "Search…" }: {
   rows: T[]; loading: boolean; columns: Column<T>[];
-  onEdit: (r: T) => void; onPublishToggle: (r: T) => void; onDelete: (r: T) => void;
+  onEdit: (r: T) => void; onPublishToggle: (r: T) => Promise<void> | void; onDelete: (r: T) => Promise<boolean | void> | void;
+  searchPlaceholder?: string;
 }) {
+  const [q, setQ] = useState("");
+  const [pending, setPending] = useState<Record<string, boolean>>({});
+  const [confirming, setConfirming] = useState<T | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const filtered = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    if (!s) return rows;
+    return rows.filter((r) => columns.map((c) => String(r[c.key] ?? "")).join(" ").toLowerCase().includes(s));
+  }, [rows, q, columns]);
+
   if (loading) return <ListSkeleton rows={5} />;
   if (!rows.length) return <div className="rounded-2xl border border-dashed bg-card p-10 text-center text-muted-foreground">No items yet. Click <strong>New</strong> to create the first one.</div>;
+
   return (
-    <div className="overflow-x-auto rounded-2xl border bg-card">
-      <table className="w-full text-sm">
-        <thead className="bg-muted/50 text-left text-xs font-bold uppercase tracking-wide text-muted-foreground">
-          <tr>{columns.map((c) => <th key={String(c.key)} className="px-4 py-3">{c.header}</th>)}<th className="px-4 py-3">Status</th><th className="px-4 py-3 text-right">Actions</th></tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.id} className="border-t hover:bg-muted/30">
-              {columns.map((c) => <td key={String(c.key)} className="px-4 py-3">{c.render ? c.render(r) : String(r[c.key] ?? "")}</td>)}
-              <td className="px-4 py-3">{r.is_published ? <Badge className="bg-brand-green/15 text-brand-green hover:bg-brand-green/15"><CheckCircle2 className="mr-1 size-3" /> Published</Badge> : <Badge variant="secondary">Draft</Badge>}</td>
-              <td className="px-4 py-3"><div className="flex justify-end gap-1">
-                <Button size="sm" variant="ghost" onClick={() => onPublishToggle(r)} title={r.is_published ? "Unpublish" : "Publish"}>{r.is_published ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</Button>
-                <Button size="sm" variant="ghost" onClick={() => onEdit(r)}><Edit3 className="size-4" /></Button>
-                <Button size="sm" variant="ghost" onClick={() => onDelete(r)} className="text-destructive hover:text-destructive"><Trash2 className="size-4" /></Button>
-              </div></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2 rounded-2xl border bg-card p-3 shadow-soft">
+        <div className="relative min-w-[220px] flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={searchPlaceholder} className="pl-9" />
+        </div>
+        <span className="text-xs text-muted-foreground">{filtered.length} of {rows.length}</span>
+      </div>
+
+      <div className="overflow-x-auto rounded-2xl border bg-card shadow-soft">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/50 text-left text-xs font-bold uppercase tracking-wide text-muted-foreground">
+            <tr>{columns.map((c) => <th key={String(c.key)} className="px-4 py-3">{c.header}</th>)}<th className="px-4 py-3">Status</th><th className="px-4 py-3 text-right">Actions</th></tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 && (
+              <tr><td colSpan={columns.length + 2} className="px-4 py-10 text-center text-muted-foreground">Nothing matches “{q}”.</td></tr>
+            )}
+            {filtered.map((r) => (
+              <tr key={r.id} className={`border-t transition-colors hover:bg-muted/30 ${pending[r.id] ? "opacity-60" : ""}`}>
+                {columns.map((c) => <td key={String(c.key)} className="px-4 py-3">{c.render ? c.render(r) : String(r[c.key] ?? "")}</td>)}
+                <td className="px-4 py-3">{r.is_published ? <Badge className="bg-brand-green/15 text-brand-green hover:bg-brand-green/15"><CheckCircle2 className="mr-1 size-3" /> Published</Badge> : <Badge variant="secondary">Draft</Badge>}</td>
+                <td className="px-4 py-3"><div className="flex justify-end gap-1">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button size="sm" variant="ghost" disabled={pending[r.id]} onClick={async () => {
+                        setPending((p) => ({ ...p, [r.id]: true }));
+                        try { await onPublishToggle(r); } finally { setPending((p) => ({ ...p, [r.id]: false })); }
+                      }}>{r.is_published ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{r.is_published ? "Hide from students" : "Publish to students"}</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button size="sm" variant="ghost" onClick={() => onEdit(r)}><Edit3 className="size-4" /></Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Edit</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button size="sm" variant="ghost" onClick={() => setConfirming(r)} className="text-destructive hover:text-destructive"><Trash2 className="size-4" /></Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Delete</TooltipContent>
+                  </Tooltip>
+                </div></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <AlertDialog open={!!confirming} onOpenChange={(o) => !o && setConfirming(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this item?</AlertDialogTitle>
+            <AlertDialogDescription>This permanently removes it for everyone and cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep it</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleting}
+              onClick={async (e) => {
+                e.preventDefault();
+                if (!confirming) return;
+                setDeleting(true);
+                try { await onDelete(confirming); setConfirming(null); } finally { setDeleting(false); }
+              }}
+            >
+              {deleting ? <Loader2 className="animate-spin" /> : <Trash2 />} Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
+
 
 function EditDialog({ title, children, onClose, onSave }: { title: string; children: React.ReactNode; onClose: () => void; onSave: () => void }) {
   const [saving, setSaving] = useState(false);
@@ -562,7 +620,7 @@ type OverviewStats = {
 };
 type RecentReg = { id: string; full_name: string; email: string; status: string; created_at: string; kind: "student" | "tutor" };
 
-function OverviewTab() {
+function OverviewTab({ onNavigate }: { onNavigate: (id: AdminSectionId) => void }) {
   const [stats, setStats] = useState<OverviewStats | null>(null);
   const [recent, setRecent] = useState<RecentReg[]>([]);
 
@@ -603,6 +661,15 @@ function OverviewTab() {
         <OverviewKpi icon={UserCheck} tone="green" value={stats.tutorsTotal} label="Volunteer tutors" hint={`${stats.tutorsPending} awaiting review`} />
         <OverviewKpi icon={FileText} tone="navy" value={stats.resources} label="Published resources" hint={`${stats.programs} programs · ${stats.subjects} subjects`} />
       </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <QuickAction icon={CalendarDays} label="Yearly past questions" hint="Add papers & mark schemes" onClick={() => onNavigate("past-papers")} />
+        <QuickAction icon={Layers3} label="Topical past questions" hint="Organise topics per paper" onClick={() => onNavigate("topic-questions")} />
+        <QuickAction icon={UserCheck} label="Tutor applications" hint={`${stats.tutorsPending} awaiting review`} onClick={() => onNavigate("tutor-apps")} />
+        <QuickAction icon={CalendarCheck} label="Attendance" hint="Check session marks" onClick={() => onNavigate("attendance")} />
+      </div>
+
+
 
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <section className="rounded-3xl border bg-card p-6 shadow-soft">
@@ -652,6 +719,18 @@ function OverviewTab() {
         </aside>
       </div>
     </div>
+  );
+}
+
+function QuickAction({ icon: Icon, label, hint, onClick }: { icon: typeof Users; label: string; hint: string; onClick: () => void }) {
+  return (
+    <button onClick={onClick} className="group flex items-center gap-3 rounded-2xl border bg-card p-4 text-left shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lift active:scale-[0.99]">
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform duration-200 group-hover:scale-110"><Icon className="size-5" /></span>
+      <span className="min-w-0">
+        <span className="block truncate text-sm font-semibold">{label}</span>
+        <span className="block truncate text-xs text-muted-foreground">{hint}</span>
+      </span>
+    </button>
   );
 }
 
