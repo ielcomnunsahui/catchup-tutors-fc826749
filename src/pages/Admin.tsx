@@ -73,63 +73,48 @@ function AdminPage() {
   return (
     <SiteShell>
       <section className="border-b bg-gradient-to-br from-brand-navy via-brand-navy to-[#000E2E] text-hero-foreground">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#FF6B12]">Admin console</p>
-          <h1 className="mt-2 font-display text-4xl font-bold sm:text-5xl">Operations dashboard</h1>
-          <p className="mt-3 max-w-2xl text-sm text-hero-foreground/75 sm:text-base">
-            Manage curriculum, resources and summer program registrations. Every change is live for students the moment you save.
-          </p>
+        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-4 px-4 py-8 sm:px-6 lg:px-8">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#FF6B12]">Admin console</p>
+            <h2 className="mt-1.5 font-display text-2xl font-bold sm:text-3xl">CatchUp Tutors operations</h2>
+            <p className="mt-1 text-sm text-hero-foreground/70">Everything you publish here is live for students the moment you save.</p>
+          </div>
+          <Badge className="bg-white/10 text-hero-foreground hover:bg-white/10"><ShieldCheck className="mr-1 size-3.5" /> Signed in as admin</Badge>
         </div>
       </section>
-      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <Tabs defaultValue="overview">
-          <div className="-mx-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <TabsList className="inline-flex w-max min-w-full gap-1 rounded-2xl bg-muted/60 p-1 lg:grid lg:grid-cols-[repeat(13,minmax(0,1fr))]">
-              <AdminTab value="overview" icon={LayoutDashboard} label="Overview" />
-              <AdminTab value="registrations" icon={ClipboardList} label="Summer registrations" />
-              <AdminTab value="students" icon={Users} label="Students" />
-              <AdminTab value="tutor-apps" icon={UserCheck} label="Tutor applications" />
-              <AdminTab value="programs" icon={GraduationCap} label="Programs" />
-              <AdminTab value="subjects" icon={BookOpen} label="Subjects" />
-              <AdminTab value="topics" icon={FolderTree} label="Topics" />
-              <AdminTab value="resources" icon={FileText} label="Resources" />
-              <AdminTab value="topic-questions" icon={Layers3} label="Topic questions" />
-              <AdminTab value="past-papers" icon={CalendarDays} label="Past papers" />
-              <AdminTab value="attendance" icon={CalendarCheck} label="Attendance" />
-              <AdminTab value="quiz" icon={Brain} label="Quiz bank" />
-              <AdminTab value="settings" icon={Settings} label="Settings" />
-            </TabsList>
-          </div>
 
-          <TabsContent value="overview" className="mt-8"><ErrorBoundary title="This section could not load"><OverviewTab /></ErrorBoundary></TabsContent>
-          <TabsContent value="registrations" className="mt-8"><ErrorBoundary title="This section could not load"><RegistrationsTab /></ErrorBoundary></TabsContent>
-          <TabsContent value="students" className="mt-8"><ErrorBoundary title="This section could not load"><StudentsTab /></ErrorBoundary></TabsContent>
-          <TabsContent value="tutor-apps" className="mt-8"><ErrorBoundary title="This section could not load"><TutorApplicationsTab /></ErrorBoundary></TabsContent>
-          <TabsContent value="programs" className="mt-8"><ErrorBoundary title="This section could not load"><ProgramsTab /></ErrorBoundary></TabsContent>
-          <TabsContent value="subjects" className="mt-8"><ErrorBoundary title="This section could not load"><SubjectsTab /></ErrorBoundary></TabsContent>
-          <TabsContent value="topics" className="mt-8"><ErrorBoundary title="This section could not load"><TopicsTab /></ErrorBoundary></TabsContent>
-          <TabsContent value="resources" className="mt-8"><ErrorBoundary title="This section could not load"><ResourcesTab /></ErrorBoundary></TabsContent>
-          <TabsContent value="topic-questions" className="mt-8"><ErrorBoundary title="This section could not load"><TopicQuestionsTab /></ErrorBoundary></TabsContent>
-          <TabsContent value="past-papers" className="mt-8"><ErrorBoundary title="This section could not load"><PastPapersTab /></ErrorBoundary></TabsContent>
-          <TabsContent value="attendance" className="mt-8"><ErrorBoundary title="This section could not load"><AttendanceTab /></ErrorBoundary></TabsContent>
-          <TabsContent value="quiz" className="mt-8"><ErrorBoundary title="This section could not load"><QuizBankTab /></ErrorBoundary></TabsContent>
-          <TabsContent value="settings" className="mt-8"><ErrorBoundary title="This section could not load"><SettingsTab /></ErrorBoundary></TabsContent>
-
-        </Tabs>
-
-      </section>
+      <AdminBody />
     </SiteShell>
   );
 }
 
-function AdminTab({ value, icon: Icon, label }: { value: string; icon: typeof LayoutDashboard; label: string }) {
+function AdminBody() {
+  const { section, setSection } = useAdminSection();
+  const panels: Record<string, React.ReactNode> = {
+    overview: <OverviewTab onNavigate={setSection} />,
+    registrations: <RegistrationsTab />,
+    students: <StudentsTab />,
+    "tutor-apps": <TutorApplicationsTab />,
+    attendance: <AttendanceTab />,
+    programs: <ProgramsTab />,
+    subjects: <SubjectsTab />,
+    topics: <TopicsTab />,
+    resources: <ResourcesTab />,
+    "topic-questions": <TopicQuestionsTab />,
+    "past-papers": <PastPapersTab />,
+    quiz: <QuizBankTab />,
+    settings: <SettingsTab />,
+  };
+
   return (
-    <TabsTrigger value={value} className="shrink-0 gap-2 whitespace-nowrap rounded-xl px-3 text-xs data-[state=active]:bg-background data-[state=active]:shadow sm:text-sm lg:px-2">
-      <Icon className="h-4 w-4 shrink-0" /> <span className="lg:hidden xl:inline">{label}</span>
-      <span className="hidden lg:inline xl:hidden">{label.split(" ")[0]}</span>
-    </TabsTrigger>
+    <AdminShell section={section} setSection={setSection}>
+      <ErrorBoundary key={section} title="This section could not load">
+        <div className="animate-fade-in">{panels[section]}</div>
+      </ErrorBoundary>
+    </AdminShell>
   );
 }
+
 
 
 function useTable<T extends { id: string }>(table: "programs" | "subjects" | "topics" | "resources", orderBy = "sort_order") {
