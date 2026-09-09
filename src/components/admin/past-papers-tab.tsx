@@ -32,6 +32,7 @@ export default function PastPapersTab() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [onlyMissing, setOnlyMissing] = useState(false);
+  const [variants, setVariants] = useState<string[]>([...PAPER_VARIANTS]);
 
   const reload = async () => {
     setLoading(true);
@@ -55,6 +56,25 @@ export default function PastPapersTab() {
       .catch(() => { /* fallback handled by fetchPaperYears */ });
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    fetchPaperVariants().then((v) => { if (active) setVariants(v); }).catch(() => {});
+    return () => { active = false; };
+  }, []);
+
+  const commitVariants = async (next: string[]) => {
+    const prev = variants;
+    setVariants(next);
+    try {
+      const saved = await savePaperVariants(next);
+      setVariants(saved);
+      toast.success("Paper variants updated");
+    } catch (e: any) {
+      setVariants(prev);
+      toast.error(e.message ?? "Could not save variants");
+    }
+  };
 
   const commitYears = async (next: number[]) => {
     const prev = years;
@@ -131,7 +151,7 @@ export default function PastPapersTab() {
   };
 
   const uploadedCount = rows.filter((r) => r.year === yearNum).length;
-  const totalSlots = SESSIONS.length * 2 * PAPER_GROUPS.reduce((n, g) => n + variantsOf(g).length, 0);
+  const totalSlots = SESSIONS.length * 2 * PAPER_GROUPS.length * variants.length;
   const coverage = totalSlots ? Math.round((uploadedCount / totalSlots) * 100) : 0;
 
   return (
@@ -156,6 +176,7 @@ export default function PastPapersTab() {
           </Select>
         </div>
         <YearManager years={years} onChange={commitYears} />
+        <VariantManager variants={variants} onChange={commitVariants} />
         <Badge variant="secondary" className="mb-1">{uploadedCount} of {totalSlots} filled in {yearNum}</Badge>
         <Button variant={onlyMissing ? "default" : "outline"} className="mb-0.5" onClick={() => setOnlyMissing((v) => !v)}>
           <Filter /> Only missing
@@ -194,7 +215,7 @@ export default function PastPapersTab() {
                     <div key={g} className="mt-3">
                       <p className="text-[11px] font-semibold text-muted-foreground">Paper {g}</p>
                       <div className="mt-2 space-y-2">
-                        {variantsOf(g).map((num) => {
+                        {variantsOf(g, variants).map((num) => {
                           const c = cellFor(session, num, doc);
                           if (onlyMissing && c.url) return null;
                           return (
@@ -325,5 +346,66 @@ function YearManager({ years, onChange }: { years: number[]; onChange: (next: nu
         </AlertDialogContent>
       </AlertDialog>
     </>
+  );
+}
+
+function VariantManager({ variants, onChange }: { variants: string[]; onChange: (next: string[]) => void | Promise<void> }) {
+  const [open, setOpen] = useState(false);
+  const [input, setInput] = useState("");
+
+  const add = () => {
+    const v = input.trim();
+    if (!/^[1-9]$/.test(v)) { toast.error("Enter a single digit 1-9, e.g. 4"); return; }
+    if (variants.includes(v)) { toast.error(`Variant ${v} already exists`); return; }
+    setInput("");
+    onChange([...variants, v].sort());
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" className="mb-0.5"><Plus /> Manage variants</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Paper variants</DialogTitle>
+          <DialogDescription>
+            Variants apply to every paper. Adding 4 creates slots 14, 24, 34, 44, 54 and 64. Removing a variant hides its slots; any papers already uploaded are kept.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex gap-2">
+          <Input
+            value={input}
+            inputMode="numeric"
+            placeholder="e.g. 4"
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }}
+          />
+          <Button onClick={add}><Plus /> Add</Button>
+        </div>
+
+        <div className="flex flex-wrap gap-2 rounded-xl border bg-muted/30 p-3">
+          {variants.length === 0 && <p className="text-sm text-muted-foreground">No variants yet — add one above.</p>}
+          {variants.map((v) => (
+            <span key={v} className="inline-flex items-center gap-1.5 rounded-full border bg-background px-3 py-1 text-sm font-semibold">
+              x{v} <span className="text-xs font-normal text-muted-foreground">(1{v}, 2{v}, 3{v}…)</span>
+              <button
+                type="button"
+                aria-label={`Remove variant ${v}`}
+                className="rounded-full p-0.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+                onClick={() => onChange(variants.filter((x) => x !== v))}
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </span>
+          ))}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>Done</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
