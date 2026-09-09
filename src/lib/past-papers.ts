@@ -114,3 +114,44 @@ export function usePaperYears() {
   const query = useQuery({ queryKey: ["paper-years"], queryFn: fetchPaperYears });
   return { years: query.data ?? PAPER_YEARS, isLoading: query.isLoading, refetch: query.refetch };
 }
+
+export const PAPER_VARIANTS_SETTING_KEY = "past_paper_variants";
+
+const normaliseVariants = (input: unknown): string[] => {
+  const arr = Array.isArray(input) ? input : [];
+  const vals = arr
+    .map((v) => String(v).trim())
+    .filter((v) => /^[1-9]$/.test(v));
+  return Array.from(new Set(vals)).sort();
+};
+
+/** Admin-managed variant digits (falls back to 1, 2, 3). */
+export async function fetchPaperVariants(): Promise<string[]> {
+  const { data } = await supabase
+    .from("settings")
+    .select("value")
+    .eq("key", PAPER_VARIANTS_SETTING_KEY)
+    .maybeSingle();
+  const value = data?.value as { variants?: unknown } | null;
+  const variants = normaliseVariants(value?.variants);
+  return variants.length ? variants : [...PAPER_VARIANTS];
+}
+
+export async function savePaperVariants(variants: string[]): Promise<string[]> {
+  const clean = normaliseVariants(variants);
+  const { error } = await supabase
+    .from("settings")
+    .upsert({ key: PAPER_VARIANTS_SETTING_KEY, value: { variants: clean }, is_public: true }, { onConflict: "key" });
+  if (error) throw error;
+  return clean;
+}
+
+/** React Query hook for the variant list. */
+export function usePaperVariants() {
+  const query = useQuery({ queryKey: ["paper-variants"], queryFn: fetchPaperVariants });
+  return {
+    variants: query.data ?? [...PAPER_VARIANTS],
+    isLoading: query.isLoading,
+    refetch: query.refetch,
+  };
+}
