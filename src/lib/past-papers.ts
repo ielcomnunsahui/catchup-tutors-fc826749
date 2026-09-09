@@ -8,12 +8,13 @@ export type Session = (typeof SESSIONS)[number];
 export const PAPER_GROUPS = ["1", "2", "3", "4", "5", "6"] as const;
 export type PaperGroup = (typeof PAPER_GROUPS)[number];
 
-/** Variants within each component: paper 1 -> 11, 12, 13. */
+/** Default variants within each component: paper 1 -> 11, 12, 13. */
 export const PAPER_VARIANTS = ["1", "2", "3"] as const;
 
-export const variantsOf = (group: string) => PAPER_VARIANTS.map((v) => `${group}${v}`);
+export const variantsOf = (group: string, variants: readonly string[] = PAPER_VARIANTS) =>
+  variants.map((v) => `${group}${v}`);
 
-/** All 18 paper codes (11,12,13,21,…,63). */
+/** All default paper codes (11,12,13,21,…,63). */
 export const PAPER_NUMBERS = PAPER_GROUPS.flatMap((g) => variantsOf(g));
 export type PaperNumber = string;
 
@@ -112,4 +113,45 @@ export async function savePaperYears(years: number[]): Promise<number[]> {
 export function usePaperYears() {
   const query = useQuery({ queryKey: ["paper-years"], queryFn: fetchPaperYears });
   return { years: query.data ?? PAPER_YEARS, isLoading: query.isLoading, refetch: query.refetch };
+}
+
+export const PAPER_VARIANTS_SETTING_KEY = "past_paper_variants";
+
+const normaliseVariants = (input: unknown): string[] => {
+  const arr = Array.isArray(input) ? input : [];
+  const vals = arr
+    .map((v) => String(v).trim())
+    .filter((v) => /^[1-9]$/.test(v));
+  return Array.from(new Set(vals)).sort();
+};
+
+/** Admin-managed variant digits (falls back to 1, 2, 3). */
+export async function fetchPaperVariants(): Promise<string[]> {
+  const { data } = await supabase
+    .from("settings")
+    .select("value")
+    .eq("key", PAPER_VARIANTS_SETTING_KEY)
+    .maybeSingle();
+  const value = data?.value as { variants?: unknown } | null;
+  const variants = normaliseVariants(value?.variants);
+  return variants.length ? variants : [...PAPER_VARIANTS];
+}
+
+export async function savePaperVariants(variants: string[]): Promise<string[]> {
+  const clean = normaliseVariants(variants);
+  const { error } = await supabase
+    .from("settings")
+    .upsert({ key: PAPER_VARIANTS_SETTING_KEY, value: { variants: clean }, is_public: true }, { onConflict: "key" });
+  if (error) throw error;
+  return clean;
+}
+
+/** React Query hook for the variant list. */
+export function usePaperVariants() {
+  const query = useQuery({ queryKey: ["paper-variants"], queryFn: fetchPaperVariants });
+  return {
+    variants: query.data ?? [...PAPER_VARIANTS],
+    isLoading: query.isLoading,
+    refetch: query.refetch,
+  };
 }

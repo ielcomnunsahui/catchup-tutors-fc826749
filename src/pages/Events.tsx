@@ -15,7 +15,7 @@ import { heroImages } from "@/assets/heroes";
 const FEATURED: "tutor-recruitment" | "summer-academy" = "tutor-recruitment";
 
 /** Replace this with the tutor vacancy flyer once uploaded (e.g. "/tutor-vacancy-flyer.jpeg"). */
-const TUTOR_FLYER = "/summer2026-banner.jpeg";
+const TUTOR_FLYER = "/tutor-vacancy-flyer.png";
 
 const summerBanner = { url: "/summer-banner.jpeg" };
 const summerGroup = { url: "/summer-group.jpeg" };
@@ -118,16 +118,13 @@ function TutorRecruitmentFeature() {
       </div>
 
       <div className="overflow-hidden rounded-3xl border bg-card shadow-soft">
-        <div className="relative aspect-[16/7] w-full overflow-hidden bg-brand-navy">
-          <img src={TUTOR_FLYER} alt="Catch-Up Tutors tutor vacancy flyer" className="h-full w-full object-cover opacity-80" />
-          <div className="absolute inset-0 bg-gradient-to-r from-brand-navy/90 via-brand-navy/40 to-transparent" />
-          <div className="absolute inset-0 flex flex-col justify-end p-6 text-white sm:p-10">
-            <Badge className="w-fit bg-[#FF6B12] text-white hover:bg-[#FF6B12]">Applications open</Badge>
-            <h3 className="mt-3 font-display text-2xl font-bold sm:text-4xl">We're hiring tutors</h3>
-            <p className="mt-2 max-w-xl text-sm text-white/85 sm:text-base">
-              Teach Mathematics, Sciences, Business and Humanities for WAEC, NECO, JAMB, IGCSE, A-Level, SAT and more. Flexible online hours, competitive pay per contact.
-            </p>
-          </div>
+        <div className="relative w-full overflow-hidden bg-white">
+          <Badge className="absolute left-4 top-4 z-10 bg-[#FF6B12] text-white hover:bg-[#FF6B12]">Applications open</Badge>
+          <img
+            src={TUTOR_FLYER}
+            alt="Catch-Up Tutors tutor vacancy flyer — join our global team of online tutors, earn from ₦10,000+ per hour"
+            className="h-auto w-full object-contain"
+          />
         </div>
         <div className="grid gap-4 border-t bg-muted/40 p-6 sm:grid-cols-2 sm:p-8">
           <Button asChild size="lg" className="w-full">

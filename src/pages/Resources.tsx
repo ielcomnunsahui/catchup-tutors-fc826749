@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { usePremium } from "@/hooks/use-premium";
-import { SESSIONS, PAPER_NUMBERS, PAPER_GROUPS, variantsOf, type Session, fetchPastPapers, indexPapers, paperKey, paperFileName, usePaperYears, type PastPaper } from "@/lib/past-papers";
+import { SESSIONS, PAPER_NUMBERS, PAPER_GROUPS, variantsOf, type Session, fetchPastPapers, indexPapers, paperKey, paperFileName, usePaperYears, usePaperVariants, type PastPaper } from "@/lib/past-papers";
 import { fetchTopicQuestions, groupByPaper, type TopicQuestion } from "@/lib/topic-questions";
 import { drivePreview, driveDownload, driveOpen } from "@/lib/drive";
 import { heroImages } from "@/assets/heroes";
@@ -719,7 +719,8 @@ function SessionCard({ session, year, subject, papers, premium, onOpenPdf }: {
 }) {
   const [group, setGroup] = useState<string | null>(null);
 
-  const groupCount = (g: string) => variantsOf(g).reduce((n, v) =>
+  const { variants } = usePaperVariants();
+  const groupCount = (g: string) => variantsOf(g, variants).reduce((n, v) =>
     n + (papers.has(paperKey(subject.id, year, session, v, "question_paper")) ? 1 : 0)
       + (papers.has(paperKey(subject.id, year, session, v, "mark_scheme")) ? 1 : 0), 0);
 
@@ -760,7 +761,7 @@ function SessionCard({ session, year, subject, papers, premium, onOpenPdf }: {
             Choose a variant. Each question paper is shown with its matching mark scheme.
           </p>
           <div className="mt-2 space-y-3">
-            {group && variantsOf(group)
+            {group && variantsOf(group, variants)
               .filter((num) =>
                 papers.has(paperKey(subject.id, year, session, num, "question_paper")) ||
                 papers.has(paperKey(subject.id, year, session, num, "mark_scheme"))
