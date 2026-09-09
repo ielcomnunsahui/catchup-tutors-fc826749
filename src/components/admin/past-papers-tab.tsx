@@ -16,8 +16,9 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  PAPER_GROUPS, variantsOf, SESSIONS, SUBJECT_OPTIONS,
-  fetchPastPapers, fetchPaperYears, savePaperYears, indexPapers, paperKey, type PastPaper,
+  PAPER_GROUPS, variantsOf, SESSIONS, SUBJECT_OPTIONS, PAPER_VARIANTS,
+  fetchPastPapers, fetchPaperYears, savePaperYears, fetchPaperVariants, savePaperVariants,
+  indexPapers, paperKey, type PastPaper,
 } from "@/lib/past-papers";
 
 type Draft = { url: string; access: "free" | "premium" };
