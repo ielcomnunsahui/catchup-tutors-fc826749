@@ -8,12 +8,13 @@ export type Session = (typeof SESSIONS)[number];
 export const PAPER_GROUPS = ["1", "2", "3", "4", "5", "6"] as const;
 export type PaperGroup = (typeof PAPER_GROUPS)[number];
 
-/** Variants within each component: paper 1 -> 11, 12, 13. */
+/** Default variants within each component: paper 1 -> 11, 12, 13. */
 export const PAPER_VARIANTS = ["1", "2", "3"] as const;
 
-export const variantsOf = (group: string) => PAPER_VARIANTS.map((v) => `${group}${v}`);
+export const variantsOf = (group: string, variants: readonly string[] = PAPER_VARIANTS) =>
+  variants.map((v) => `${group}${v}`);
 
-/** All 18 paper codes (11,12,13,21,…,63). */
+/** All default paper codes (11,12,13,21,…,63). */
 export const PAPER_NUMBERS = PAPER_GROUPS.flatMap((g) => variantsOf(g));
 export type PaperNumber = string;
 
