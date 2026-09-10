@@ -18,6 +18,7 @@ import PaymentCallback from "./pages/PaymentCallback";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
+import TutorDashboard from "./pages/TutorDashboard";
 import Admin from "./pages/Admin";
 import SummerLessons from "./pages/SummerLessons";
 import Events from "./pages/Events";
@@ -49,6 +50,7 @@ export default function App() {
       <Route path="/auth" element={<Auth />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/tutor" element={<TutorDashboard />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="/events" element={<Events />} />
       <Route path="/partnership" element={<Partnership />} />

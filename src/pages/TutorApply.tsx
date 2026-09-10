@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { CheckCircle2, GraduationCap, Loader2, Upload } from "lucide-react";
+import { CheckCircle2, Clock3, GraduationCap, Loader2, Upload, XCircle, AlertTriangle } from "lucide-react";
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,6 +90,9 @@ export default function TutorApply() {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<string | null>(null);
+  const [existing, setExisting] = useState<{ id: string; status: string; admin_feedback: string | null } | null>(null);
+  const [statusLoading, setStatusLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
 
   const [f, setF] = useState({
     fullName: "", email: "", password: "", phone: "", location: "",
@@ -114,6 +117,25 @@ export default function TutorApply() {
     return () => URL.revokeObjectURL(url);
   }, [photo]);
 
+
+  useEffect(() => {
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) { setStatusLoading(false); return; }
+      const { data } = await supabase
+        .from("tutor_applications")
+        .select("id,status,admin_feedback,full_name,email,phone")
+        .eq("user_id", auth.user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data) {
+        setExisting({ id: data.id, status: data.status as string, admin_feedback: data.admin_feedback ?? null });
+        setF((s) => ({ ...s, fullName: s.fullName || (data.full_name ?? ""), email: s.email || (data.email ?? ""), phone: s.phone || (data.phone ?? "") }));
+      }
+      setStatusLoading(false);
+    })();
+  }, []);
 
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setF((s) => ({ ...s, [k]: e.target.value }));
@@ -200,6 +222,22 @@ export default function TutorApply() {
             <Button onClick={() => navigate("/dashboard")}>Go to dashboard</Button>
             <Button variant="outline" asChild><Link to="/tutors">Back to tutors</Link></Button>
           </div>
+        </div>
+      </SiteShell>
+    );
+  }
+
+  if (!statusLoading && existing && !editing) {
+    return (
+      <SiteShell>
+        <Seo title="Your tutor application | Catch-Up Tutors" description="Track the status of your Catch-Up Tutors tutor application." path="/tutors/apply" noindex />
+        <div className="mx-auto max-w-2xl px-4 py-24 sm:px-6">
+          <ApplicationStatus
+            status={existing.status}
+            feedback={existing.admin_feedback}
+            reference={existing.id}
+            onResubmit={() => { setEditing(true); window.scrollTo({ top: 0 }); }}
+          />
         </div>
       </SiteShell>
     );
@@ -323,5 +361,51 @@ export default function TutorApply() {
         </div>
       </form>
     </SiteShell>
+  );
+}
+
+function ApplicationStatus({ status, feedback, reference, onResubmit }: {
+  status: string; feedback: string | null; reference: string; onResubmit: () => void;
+}) {
+  const map: Record<string, { icon: typeof CheckCircle2; tone: string; title: string; body: string }> = {
+    pending: {
+      icon: Clock3, tone: "text-primary",
+      title: "Your application is under review",
+      body: "Our recruitment team is reviewing your qualifications and experience. We'll email you as soon as there's an update.",
+    },
+    approved: {
+      icon: CheckCircle2, tone: "text-brand-green",
+      title: "You're approved — welcome to Catch-Up Tutors",
+      body: "Open your tutor workspace to complete your profile, set your prices and publish your teaching hours.",
+    },
+    changes_requested: {
+      icon: AlertTriangle, tone: "text-amber-500",
+      title: "We need a few updates",
+      body: "Please review the note below, update your details and resubmit your application.",
+    },
+    rejected: {
+      icon: XCircle, tone: "text-destructive",
+      title: "Application not successful",
+      body: "Thank you for the time you invested. You're welcome to apply again in the future.",
+    },
+  };
+  const s = map[status] ?? map.pending;
+  const Icon = s.icon;
+
+  return (
+    <div className="rounded-3xl border bg-card p-8 text-center shadow-soft sm:p-10">
+      <Icon className={`mx-auto h-14 w-14 ${s.tone}`} />
+      <h1 className="mt-6 font-display text-3xl font-bold">{s.title}</h1>
+      <p className="mt-4 text-muted-foreground">{s.body}</p>
+      {feedback && (
+        <p className="mt-6 rounded-2xl border-l-4 border-brand-orange bg-muted/50 p-4 text-left text-sm">{feedback}</p>
+      )}
+      <p className="mt-6 rounded-xl bg-muted p-4 text-sm">Reference: <code className="font-mono text-xs">{reference}</code></p>
+      <div className="mt-8 flex flex-wrap justify-center gap-3">
+        {status === "approved" && <Button asChild><Link to="/tutor">Open tutor workspace</Link></Button>}
+        {status === "changes_requested" && <Button onClick={onResubmit}>Update and resubmit</Button>}
+        <Button variant="outline" asChild><Link to="/tutors">Back to tutors</Link></Button>
+      </div>
+    </div>
   );
 }

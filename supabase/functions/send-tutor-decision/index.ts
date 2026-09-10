@@ -107,15 +107,16 @@ Deno.serve(async (req) => {
         <b style="color:#0F8A3C">approved</b>. Your profile has been reviewed and meets our standards of
         academic excellence and student-centered engagement.</p>
         ${message ? `<p style="background:#FFF4EC;border-left:3px solid #FF6B12;padding:12px 14px">${message}</p>` : ""}
-        <p>Sign in to your account to complete your tutor profile, set your subjects, availability and
-        session pricing so students can start booking you.</p>
+        <p>Sign in and open your <b>Tutor workspace</b> to complete your profile, set your subjects,
+        weekly teaching hours and session pricing so students can start booking you.</p>
         <p style="margin-top:24px">Warm regards,<br/><b>The Recruitment Team</b><br/>Catch-Up Tutors.</p>`;
     } else if (decision === "changes_requested") {
       subject = "Action needed on your Catch-Up Tutors application";
       inner = `<p>Dear <b>${app.full_name}</b>,</p>
         <p>Thank you for your application. Before we can proceed, our team needs a few updates from you:</p>
         <p style="background:#FFF4EC;border-left:3px solid #FF6B12;padding:12px 14px">${message ?? "Please review and resubmit your application details."}</p>
-        <p>Sign in to your account to update and resubmit your application.</p>
+        <p>Sign in and open the tutor application page — your details are waiting there so you can update
+        and resubmit them in a few clicks.</p>
         <p style="margin-top:24px">Warm regards,<br/><b>The Recruitment Team</b><br/>Catch-Up Tutors.</p>`;
     } else {
       subject = "Update on your Catch-Up Tutors application";

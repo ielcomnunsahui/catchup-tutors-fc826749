@@ -9,6 +9,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 
 type Application = {
@@ -112,7 +116,6 @@ export default function TutorApplicationsTab() {
   };
 
   const manage = async (tutorProfileId: string, action: "suspend" | "reinstate" | "revoke") => {
-    if (action === "revoke" && !confirm("Revoke this tutor's access? Their tutor role will be removed.")) return;
     const { data, error } = await supabase.functions.invoke("manage-tutor", { body: { tutorProfileId, action } });
     const err = (data as { error?: string } | null)?.error;
     if (error || err) return toast.error(err ?? error?.message ?? "Action failed");
@@ -245,7 +248,24 @@ export default function TutorApplicationsTab() {
                         <Button variant="outline" size="sm" onClick={() => manage(t.id, "reinstate")}><ShieldCheck className="h-4 w-4" /> Reinstate</Button>
                       )}
                       {t.is_approved && (
-                        <Button variant="destructive" size="sm" onClick={() => manage(t.id, "revoke")}><XCircle className="h-4 w-4" /> Revoke</Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm"><XCircle className="h-4 w-4" /> Revoke</Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Revoke {t.display_name}'s tutor access?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Their tutor role is removed, their workspace closes and their profile is hidden from the
+                                public directory. You can reinstate them later.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => manage(t.id, "revoke")}>Revoke access</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       )}
                     </div>
                   </td>

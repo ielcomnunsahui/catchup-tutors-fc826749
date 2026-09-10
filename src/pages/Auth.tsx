@@ -37,7 +37,12 @@ export default function Auth() {
       if (error) setMessage(error.message);
       else if (signIn.user) {
         const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: signIn.user.id, _role: "admin" });
-        navigate(isAdmin ? "/admin" : "/dashboard");
+        if (isAdmin) { navigate("/admin"); }
+        else {
+          const { data: tutor } = await supabase
+            .from("tutor_profiles").select("is_approved").eq("user_id", signIn.user.id).maybeSingle();
+          navigate(tutor?.is_approved ? "/tutor" : "/dashboard");
+        }
       }
     } else {
       const { data, error } = await supabase.auth.signUp({

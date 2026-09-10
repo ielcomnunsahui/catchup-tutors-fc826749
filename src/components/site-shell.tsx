@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import {
   Menu, X, GraduationCap, Instagram, Facebook, Youtube, Mail, Phone, MapPin, MessageCircle, ArrowUpRight,
-  ChevronDown, LayoutDashboard, LogOut, ShieldCheck,
+  ChevronDown, LayoutDashboard, LogOut, ShieldCheck, Presentation,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
@@ -36,20 +36,26 @@ export function SiteShell({ children }: { children: ReactNode }) {
   // undefined = still resolving, null = signed out
   const [session, setSession] = useState<NavUser | null | undefined>(undefined);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isTutor, setIsTutor] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     const resolve = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (cancelled) return;
-      if (!user) { setSession(null); setIsAdmin(false); return; }
+      if (!user) { setSession(null); setIsAdmin(false); setIsTutor(false); return; }
       setSession({
         id: user.id,
         email: user.email ?? "",
         name: (user.user_metadata?.full_name as string) ?? user.email?.split("@")[0] ?? "Account",
       });
-      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
-      if (!cancelled) setIsAdmin(!!roles?.some((r) => r.role === "admin"));
+      const [{ data: roles }, { data: tutor }] = await Promise.all([
+        supabase.from("user_roles").select("role").eq("user_id", user.id),
+        supabase.from("tutor_profiles").select("id,is_approved").eq("user_id", user.id).maybeSingle(),
+      ]);
+      if (cancelled) return;
+      setIsAdmin(!!roles?.some((r) => r.role === "admin"));
+      setIsTutor(!!tutor?.is_approved);
     };
     resolve();
     const { data: sub } = supabase.auth.onAuthStateChange(() => resolve());
@@ -63,6 +69,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
     setSession(null);
     setIsAdmin(false);
+    setIsTutor(false);
     navigate("/");
   };
 
@@ -136,6 +143,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
                   <DropdownMenuLabel className="truncate font-normal text-muted-foreground">{session.email}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild><Link to="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard</Link></DropdownMenuItem>
+                  {isTutor && <DropdownMenuItem asChild><Link to="/tutor"><Presentation className="mr-2 h-4 w-4" /> Tutor workspace</Link></DropdownMenuItem>}
                   {isAdmin && <DropdownMenuItem asChild><Link to="/admin"><ShieldCheck className="mr-2 h-4 w-4" /> Admin</Link></DropdownMenuItem>}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={signOut}><LogOut className="mr-2 h-4 w-4" /> Sign out</DropdownMenuItem>
@@ -156,6 +164,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
               {session ? (
                 <>
                   <Button asChild variant="outline" onClick={() => setOpen(false)}><Link to="/dashboard">Dashboard</Link></Button>
+                  {isTutor && <Button asChild variant="outline" onClick={() => setOpen(false)}><Link to="/tutor">Tutor workspace</Link></Button>}
                   {isAdmin && <Button asChild variant="outline" onClick={() => setOpen(false)}><Link to="/admin">Admin</Link></Button>}
                   <Button onClick={() => { setOpen(false); signOut(); }}><LogOut className="h-4 w-4" /> Sign out</Button>
                 </>

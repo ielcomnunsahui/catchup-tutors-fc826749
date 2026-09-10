@@ -19,6 +19,22 @@ type SessionRow = {
 
 const dateKey = (iso: string) => new Date(iso).toISOString().slice(0, 10);
 
+const WEEK_MS = 7 * 864e5;
+const MAX_WEEKS = 26;
+
+/** Bookings recur weekly: expand each one into every weekly session up to today. */
+function weeklyDates(startIso: string) {
+  const start = new Date(startIso).getTime();
+  const now = Date.now();
+  const out: string[] = [];
+  for (let i = 0; i < MAX_WEEKS; i++) {
+    const t = start + i * WEEK_MS;
+    if (t > now) break;
+    out.push(new Date(t).toISOString());
+  }
+  return out.length ? out : [new Date(start).toISOString()];
+}
+
 function useSessions(role: "student" | "tutor", id: string | null) {
   const [rows, setRows] = useState<SessionRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,22 +60,25 @@ function useSessions(role: "student" | "tutor", id: string | null) {
       .in("booking_id", list.map((b) => b.id));
 
     const byKey = new Map((marks ?? []).map((m: any) => [`${m.booking_id}|${m.session_date}`, m]));
-    setRows(
-      list.map((b: any) => {
-        const sd = dateKey(b.preferred_start);
+    const expanded: SessionRow[] = [];
+    for (const b of list as any[]) {
+      for (const iso of weeklyDates(b.preferred_start)) {
+        const sd = dateKey(iso);
         const m: any = byKey.get(`${b.id}|${sd}`);
-        return {
+        expanded.push({
           bookingId: b.id,
           tutorId: b.tutor_id,
           studentId: b.student_id,
           sessionDate: sd,
-          startsAt: b.preferred_start,
+          startsAt: iso,
           label: role === "tutor" ? (b.student_name || b.ref_code || "Student") : (b.ref_code || "Session"),
           studentMarked: m?.student_marked ?? null,
           tutorMarked: m?.tutor_marked ?? null,
-        };
-      }),
-    );
+        });
+      }
+    }
+    expanded.sort((a, b) => (a.startsAt < b.startsAt ? 1 : -1));
+    setRows(expanded);
     setLoading(false);
   }, [role, id]);
 
@@ -77,7 +96,8 @@ function AttendanceList({ role, ownerId, title, subtitle }: { role: "student" | 
   );
 
   async function mark(row: SessionRow, value: boolean) {
-    setSaving(row.bookingId);
+    const sKey = `${row.bookingId}|${row.sessionDate}`;
+    setSaving(sKey);
     const key = role === "student" ? "studentMarked" : "tutorMarked";
     const previous = rows;
     // Optimistic: flip the button instantly, roll back if the save fails.
@@ -138,7 +158,7 @@ function AttendanceList({ role, ownerId, title, subtitle }: { role: "student" | 
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  {saving === r.bookingId && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
+                  {saving === `${r.bookingId}|${r.sessionDate}` && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
                   <Button
                     size="sm"
                     variant={mine === true ? "default" : "outline"}
