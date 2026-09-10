@@ -63,22 +63,10 @@ export default function Dashboard() {
       setActivity((act.data ?? []) as ActivityRow[]);
       setSavedCount(saved.count ?? 0);
 
+      // Approved tutors have their own workspace.
       if (tp.data?.id && tp.data.is_approved) {
         navigate("/tutor", { replace: true });
         return;
-      }
-      if (false) {
-        setIsTutor(true);
-        setTutorId(tp.data.id);
-        // Only students whose booking the admin has accepted (confirmed/completed) are visible,
-        // and only name / programme / availability are selected.
-        const { data: st } = await supabase
-          .from("bookings")
-          .select("id,ref_code,student_name,programme,available_days,available_times,preferred_start,status")
-          .eq("tutor_id", tp.data.id)
-          .in("status", ["confirmed", "completed"])
-          .order("preferred_start", { ascending: true });
-        setTutorStudents((st ?? []) as TutorStudent[]);
       }
 
       const weekAct = (act.data ?? []).filter((a: ActivityRow) => a.last_viewed_at && a.last_viewed_at >= weekAgo);
