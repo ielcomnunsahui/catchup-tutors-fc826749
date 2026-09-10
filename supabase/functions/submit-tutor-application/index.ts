@@ -77,10 +77,15 @@ Deno.serve(async (req) => {
       createdAccount = true;
     }
 
+    // An applicant asked for changes may resubmit; a pending/approved one may not.
     const { data: existing } = await db
       .from("tutor_applications").select("id,status").eq("user_id", userId)
-      .in("status", ["pending", "approved"]).maybeSingle();
-    if (existing) return json({ error: "You already have an application in progress." }, 409);
+      .in("status", ["pending", "approved", "changes_requested"])
+      .order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (existing && existing.status !== "changes_requested") {
+      return json({ error: "You already have an application in progress." }, 409);
+    }
+    const resubmitId = existing?.status === "changes_requested" ? existing.id : null;
 
     // Uploads
     const upload = async (f: { name: string; type: string; base64: string } | undefined, kind: string) => {
@@ -98,7 +103,7 @@ Deno.serve(async (req) => {
     const cvPath = await upload(p.cv, "cv");
     const photoPath = await upload(p.photo, "photo");
 
-    const { data: app, error } = await db.from("tutor_applications").insert({
+    const record = {
       user_id: userId,
       full_name: p.fullName,
       email: p.email,
@@ -125,8 +130,13 @@ Deno.serve(async (req) => {
       intro_video_url: p.introVideoUrl || null,
       cv_path: cvPath,
       photo_path: photoPath,
-      status: "pending",
-    }).select("id").single();
+      status: "pending" as const,
+      admin_feedback: null,
+    };
+
+    const { data: app, error } = resubmitId
+      ? await db.from("tutor_applications").update(record).eq("id", resubmitId).select("id").single()
+      : await db.from("tutor_applications").insert(record).select("id").single();
     if (error) return json({ error: error.message }, 400);
 
     // Acknowledgement + admin notification (non-blocking)
