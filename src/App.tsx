@@ -50,6 +50,7 @@ export default function App() {
       <Route path="/auth" element={<Auth />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/tutor" element={<TutorDashboard />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="/events" element={<Events />} />
       <Route path="/partnership" element={<Partnership />} />
