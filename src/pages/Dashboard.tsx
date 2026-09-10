@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { StudentAttendance, TutorAttendance } from "@/components/attendance-panel";
+import { StudentAttendance } from "@/components/attendance-panel";
 import ErrorBoundary from "@/components/error-boundary";
 import { KpiSkeleton, ListSkeleton } from "@/components/skeletons";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -17,10 +17,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 type Booking = {
   id: string; preferred_start: string; duration_minutes: number; status: string;
   session_type: string; meeting_url: string | null; student_notes: string | null;
-};
-type TutorStudent = {
-  id: string; ref_code: string | null; student_name: string | null; programme: string | null;
-  available_days: string[] | null; available_times: string | null; preferred_start: string; status: string;
 };
 type ActivityRow = {
   id: string; activity_type: string; progress: number | null; last_viewed_at: string | null;
@@ -36,10 +32,7 @@ export default function Dashboard() {
   const [activity, setActivity] = useState<ActivityRow[]>([]);
   const [savedCount, setSavedCount] = useState(0);
   const [minutesThisWeek, setMinutesThisWeek] = useState(0);
-  const [tutorStudents, setTutorStudents] = useState<TutorStudent[]>([]);
-  const [isTutor, setIsTutor] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [tutorId, setTutorId] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -201,42 +194,6 @@ export default function Dashboard() {
 
             {/* Attendance */}
             <ErrorBoundary title="Attendance could not load" compact><StudentAttendance userId={userId} /></ErrorBoundary>
-            {isTutor && <ErrorBoundary title="Attendance could not load" compact><TutorAttendance tutorId={tutorId} /></ErrorBoundary>}
-
-            {/* Tutor view: accepted students */}
-            {isTutor && (
-              <section className="rounded-3xl border bg-card p-6 shadow-soft sm:p-7">
-                <SectionHead title="Your students" subtitle="Students whose bookings the admin has accepted" />
-                {tutorStudents.length === 0 ? (
-                  <div className="mt-5 rounded-2xl border border-dashed bg-background/30 p-10 text-center">
-                    <Users className="mx-auto h-9 w-9 text-muted-foreground" />
-                    <h3 className="mt-3 font-semibold">No accepted students yet</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">Once admin confirms a booking, the student appears here.</p>
-                  </div>
-                ) : (
-                  <ul className="mt-5 divide-y">
-                    {tutorStudents.map((s) => (
-                      <li key={s.id} className="flex flex-col gap-2 py-4 sm:flex-row sm:items-start sm:justify-between">
-                        <div>
-                          <p className="font-semibold">{s.student_name ?? "Student"}</p>
-                          <p className="text-xs text-muted-foreground">{s.programme ?? "Programme not specified"}</p>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            Available: {(s.available_days?.length ? s.available_days.join(", ") : "Not specified")}
-                            {s.available_times ? ` · ${s.available_times}` : ""}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {s.ref_code && <span className="font-mono text-[11px] text-muted-foreground">{s.ref_code}</span>}
-                          <StatusChip status={s.status} />
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
-            )}
-
-
 
             {/* Continue learning */}
             <section className="rounded-3xl border bg-card p-6 shadow-soft sm:p-7">
