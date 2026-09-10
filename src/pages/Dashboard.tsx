@@ -64,6 +64,10 @@ export default function Dashboard() {
       setSavedCount(saved.count ?? 0);
 
       if (tp.data?.id && tp.data.is_approved) {
+        navigate("/tutor", { replace: true });
+        return;
+      }
+      if (false) {
         setIsTutor(true);
         setTutorId(tp.data.id);
         // Only students whose booking the admin has accepted (confirmed/completed) are visible,
