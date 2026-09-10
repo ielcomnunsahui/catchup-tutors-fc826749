@@ -18,6 +18,7 @@ import PaymentCallback from "./pages/PaymentCallback";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
+import TutorDashboard from "./pages/TutorDashboard";
 import Admin from "./pages/Admin";
 import SummerLessons from "./pages/SummerLessons";
 import Events from "./pages/Events";
