@@ -198,6 +198,9 @@ export default function Index() {
               <Button asChild size="lg" variant="outline" className="border-hero-foreground/50 bg-transparent text-hero-foreground hover:bg-hero-foreground hover:text-brand-navy focus-visible:ring-2 focus-visible:ring-hero-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-brand-navy">
                 <Link to="/programs">Explore Programmes</Link>
               </Button>
+              <Button asChild size="lg" variant="outline" className="border-hero-foreground/50 bg-transparent text-hero-foreground hover:bg-hero-foreground hover:text-brand-navy focus-visible:ring-2 focus-visible:ring-hero-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-brand-navy">
+                <Link to="/tutors/apply">Apply as Tutor <ArrowUpRight aria-hidden="true" /></Link>
+              </Button>
             </div>
           </motion.div>
         </div>
