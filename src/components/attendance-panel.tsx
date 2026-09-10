@@ -96,7 +96,8 @@ function AttendanceList({ role, ownerId, title, subtitle }: { role: "student" | 
   );
 
   async function mark(row: SessionRow, value: boolean) {
-    setSaving(row.bookingId);
+    const sKey = `${row.bookingId}|${row.sessionDate}`;
+    setSaving(sKey);
     const key = role === "student" ? "studentMarked" : "tutorMarked";
     const previous = rows;
     // Optimistic: flip the button instantly, roll back if the save fails.
@@ -157,7 +158,7 @@ function AttendanceList({ role, ownerId, title, subtitle }: { role: "student" | 
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  {saving === r.bookingId && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
+                  {saving === `${r.bookingId}|${r.sessionDate}` && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
                   <Button
                     size="sm"
                     variant={mine === true ? "default" : "outline"}
