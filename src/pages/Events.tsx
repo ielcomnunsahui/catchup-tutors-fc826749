@@ -26,7 +26,7 @@ const s26 = {
   banner: "/summer2026-banner.jpeg",
   gifts: "/summer2026-gifts.jpeg",
   winners: "/summer2026-winners.jpeg",
-  award: "/summer2026-abdulbasit-award.jpeg",
+  award: "/tutor-certificate-abdulrasaq-aterere.jpeg",
   tenK: "/summer2026-10k.jpeg",
   quasim: "/summer2026-quasim.jpeg",
   abdulbasit: "/summer2026-abdulbasit.jpeg",
