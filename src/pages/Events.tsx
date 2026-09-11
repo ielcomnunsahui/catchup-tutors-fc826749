@@ -4,6 +4,7 @@ import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { heroImages } from "@/assets/heroes";
+import summer2026Banner from "@/assets/events/summer2026-banner.jpg.asset.json";
 
 /**
  * FEATURED EVENT SWITCH
@@ -23,7 +24,7 @@ const summerPrize1 = { url: "/summer-prize-1.jpeg" };
 const summerPrize2 = { url: "/summer-prize-2.jpeg" };
 
 const s26 = {
-  banner: "/summer2026-banner.jpeg",
+  banner: summer2026Banner.url,
   gifts: "/summer2026-gifts.jpeg",
   winners: "/summer2026-winners.jpeg",
   award: "/tutor-certificate-abdulrasaq-aterere.jpeg",
