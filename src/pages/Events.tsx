@@ -26,8 +26,8 @@ import { heroImages } from "@/assets/heroes";
  */
 const FEATURED: "tutor-recruitment" | "summer-academy" = "tutor-recruitment";
 
-/** Replace this with the tutor vacancy flyer once uploaded (e.g. "/tutor-vacancy-flyer.jpeg"). */
-const TUTOR_FLYER = "/tutor-vacancy-flyer.png";
+/** Bundled locally so it is served reliably on Vercel deployments. */
+const TUTOR_FLYER = "/tutor-vacancy-flyer.jpg";
 
 const summerBanner = { url: "/summer-banner.jpeg" };
 const summerGroup = { url: "/summer-group.jpeg" };
