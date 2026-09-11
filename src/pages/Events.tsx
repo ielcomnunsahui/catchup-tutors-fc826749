@@ -4,6 +4,7 @@ import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { heroImages } from "@/assets/heroes";
+import summer2026Banner from "@/assets/events/summer2026-banner.jpg.asset.json";
 
 /**
  * FEATURED EVENT SWITCH
