@@ -134,7 +134,7 @@ export default function TutorApply() {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<string | null>(null);
-  const [existing, setExisting] = useState<{ id: string; status: string; admin_feedback: string | null } | null>(null);
+  const [existing, setExisting] = useState<{ id: string; ref_code: string | null; status: string; admin_feedback: string | null } | null>(null);
   const [statusLoading, setStatusLoading] = useState(true);
   const [editing, setEditing] = useState(false);
 
