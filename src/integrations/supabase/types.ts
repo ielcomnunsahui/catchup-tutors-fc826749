@@ -1230,6 +1230,7 @@ export type Database = {
           photo_path: string | null
           pricing: Json
           qualifications: string
+          ref_code: string | null
           sample_video_url: string | null
           status: Database["public"]["Enums"]["application_status"]
           subjects: string[]
@@ -1263,6 +1264,7 @@ export type Database = {
           photo_path?: string | null
           pricing?: Json
           qualifications?: string
+          ref_code?: string | null
           sample_video_url?: string | null
           status?: Database["public"]["Enums"]["application_status"]
           subjects?: string[]
@@ -1296,6 +1298,7 @@ export type Database = {
           photo_path?: string | null
           pricing?: Json
           qualifications?: string
+          ref_code?: string | null
           sample_video_url?: string | null
           status?: Database["public"]["Enums"]["application_status"]
           subjects?: string[]

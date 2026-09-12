@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.set_application_ref_code() FROM PUBLIC, anon, authenticated;

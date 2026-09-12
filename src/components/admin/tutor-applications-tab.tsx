@@ -16,7 +16,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 
 type Application = {
-  id: string; user_id: string; full_name: string; email: string; phone: string; location: string | null;
+  id: string; ref_code: string | null; user_id: string; full_name: string; email: string; phone: string; location: string | null;
   occupation: string | null; highest_qualification: string | null; field_of_study: string | null;
   experience_band: string | null; years_experience: number | null; subjects: string[]; curricula: string[] | null;
   teaching_philosophy: string | null; biography: string | null; video_experience: string | null;
@@ -87,7 +87,7 @@ export default function TutorApplicationsTab() {
     return apps.filter((a) => {
       if (statusFilter !== "all" && a.status !== statusFilter) return false;
       if (!s) return true;
-      return [a.full_name, a.email, a.phone, a.location ?? "", (a.subjects ?? []).join(" ")]
+      return [a.ref_code ?? "", a.full_name, a.email, a.phone, a.location ?? "", (a.subjects ?? []).join(" ")]
         .join(" ").toLowerCase().includes(s);
     });
   }, [apps, q, statusFilter]);
@@ -173,6 +173,7 @@ export default function TutorApplicationsTab() {
                   onClick={() => { setSelected(a); setDecision("approved"); setNote(""); }}>
                 <td className="px-4 py-3">
                   <div className="font-semibold">{a.full_name}</div>
+                  {a.ref_code && <div className="font-mono text-[11px] text-muted-foreground">{a.ref_code}</div>}
                   <div className="text-xs text-muted-foreground">{a.email}</div>
                   <div className="text-xs text-muted-foreground">{a.phone}{a.location ? ` · ${a.location}` : ""}</div>
                 </td>
@@ -284,6 +285,7 @@ export default function TutorApplicationsTab() {
                 <DialogTitle className="flex items-center gap-3">
                   {links.photo && <img src={links.photo} alt="" className="h-12 w-12 rounded-full object-cover" />}
                   <span>{selected.full_name}</span>
+                  {selected.ref_code && <span className="font-mono text-xs text-muted-foreground">{selected.ref_code}</span>}
                   <AppStatusBadge status={selected.status} />
                 </DialogTitle>
               </DialogHeader>

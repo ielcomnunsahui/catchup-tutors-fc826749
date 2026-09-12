@@ -134,7 +134,7 @@ export default function TutorApply() {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<string | null>(null);
-  const [existing, setExisting] = useState<{ id: string; status: string; admin_feedback: string | null } | null>(null);
+  const [existing, setExisting] = useState<{ id: string; ref_code: string | null; status: string; admin_feedback: string | null } | null>(null);
   const [statusLoading, setStatusLoading] = useState(true);
   const [editing, setEditing] = useState(false);
 
@@ -168,13 +168,13 @@ export default function TutorApply() {
       if (!auth.user) { setStatusLoading(false); return; }
       const { data } = await supabase
         .from("tutor_applications")
-        .select("id,status,admin_feedback,full_name,email,phone")
+        .select("id,ref_code,status,admin_feedback,full_name,email,phone")
         .eq("user_id", auth.user.id)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
       if (data) {
-        setExisting({ id: data.id, status: data.status as string, admin_feedback: data.admin_feedback ?? null });
+        setExisting({ id: data.id, ref_code: (data as { ref_code?: string | null }).ref_code ?? null, status: data.status as string, admin_feedback: data.admin_feedback ?? null });
         setF((s) => ({ ...s, fullName: s.fullName || (data.full_name ?? ""), email: s.email || (data.email ?? ""), phone: s.phone || (data.phone ?? "") }));
       }
       setStatusLoading(false);
@@ -250,7 +250,8 @@ export default function TutorApply() {
       if (!signedIn && f.password) {
         await supabase.auth.signInWithPassword({ email: f.email.trim(), password: f.password });
       }
-      setDone((data as { applicationId: string }).applicationId);
+      const res = data as { applicationId: string; refCode?: string | null };
+      setDone(res.refCode ?? res.applicationId);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e) {
       toast.error((e as Error).message);
@@ -288,7 +289,7 @@ export default function TutorApply() {
           <ApplicationStatus
             status={existing.status}
             feedback={existing.admin_feedback}
-            reference={existing.id}
+            reference={existing.ref_code ?? existing.id}
             onResubmit={() => { setEditing(true); window.scrollTo({ top: 0 }); }}
           />
         </div>
