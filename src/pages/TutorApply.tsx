@@ -168,7 +168,7 @@ export default function TutorApply() {
       if (!auth.user) { setStatusLoading(false); return; }
       const { data } = await supabase
         .from("tutor_applications")
-        .select("id,status,admin_feedback,full_name,email,phone")
+        .select("id,ref_code,status,admin_feedback,full_name,email,phone")
         .eq("user_id", auth.user.id)
         .order("created_at", { ascending: false })
         .limit(1)
