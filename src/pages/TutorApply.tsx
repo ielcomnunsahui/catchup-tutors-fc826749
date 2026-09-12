@@ -33,14 +33,58 @@ const HOURS = ["1–5 hours", "5–10 hours", "10–20 hours", "20+ hours"];
 const AVAILABILITY = ["Weekday Mornings", "Weekday Afternoons/Evenings", "Weekends"];
 
 const MAX_FILE_MB = 5;
+/** Edge function requests are capped well below 10MB; keep the encoded payload small. */
+const MAX_ENCODED_BYTES = 5_000_000;
 
 const toBase64 = (file: File) =>
   new Promise<string>((resolve, reject) => {
     const r = new FileReader();
     r.onload = () => resolve(String(r.result));
-    r.onerror = reject;
+    r.onerror = () => reject(new Error(`Could not read ${file.name}. Please try a different file.`));
     r.readAsDataURL(file);
   });
+
+/** Downscale a passport photo so the upload stays small. */
+const photoToBase64 = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const max = 800;
+      const scale = Math.min(1, max / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      const ctx = canvas.getContext("2d");
+      URL.revokeObjectURL(url);
+      if (!ctx) return reject(new Error("Could not process the photograph."));
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL("image/jpeg", 0.82));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("That photograph could not be read. Please upload a JPG or PNG.")); };
+    img.src = url;
+  });
+
+/** Supabase invoke hides the response body on non-2xx; dig the real message out. */
+const readFunctionError = async (error: unknown): Promise<string | null> => {
+  const res = (error as { context?: Response })?.context;
+  if (!res || typeof res.text !== "function") return null;
+  try {
+    const body = await res.text();
+    const parsed = JSON.parse(body) as { error?: unknown };
+    const e = parsed.error;
+    if (typeof e === "string") return e;
+    if (e && typeof e === "object") {
+      const fields = Object.entries(e as Record<string, string[]>)
+        .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`)
+        .join("; ");
+      if (fields) return `Please check these answers — ${fields}`;
+    }
+    return body.slice(0, 300) || null;
+  } catch {
+    return null;
+  }
+};
 
 function Section({ step, title, description, children }: { step: number; title: string; description?: string; children: React.ReactNode }) {
   return (
