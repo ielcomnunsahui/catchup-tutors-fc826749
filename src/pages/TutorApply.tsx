@@ -250,7 +250,8 @@ export default function TutorApply() {
       if (!signedIn && f.password) {
         await supabase.auth.signInWithPassword({ email: f.email.trim(), password: f.password });
       }
-      setDone((data as { applicationId: string }).applicationId);
+      const res = data as { applicationId: string; refCode?: string | null };
+      setDone(res.refCode ?? res.applicationId);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e) {
       toast.error((e as Error).message);
