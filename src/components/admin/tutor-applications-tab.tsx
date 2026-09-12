@@ -173,6 +173,7 @@ export default function TutorApplicationsTab() {
                   onClick={() => { setSelected(a); setDecision("approved"); setNote(""); }}>
                 <td className="px-4 py-3">
                   <div className="font-semibold">{a.full_name}</div>
+                  {a.ref_code && <div className="font-mono text-[11px] text-muted-foreground">{a.ref_code}</div>}
                   <div className="text-xs text-muted-foreground">{a.email}</div>
                   <div className="text-xs text-muted-foreground">{a.phone}{a.location ? ` · ${a.location}` : ""}</div>
                 </td>
