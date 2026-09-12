@@ -87,7 +87,7 @@ export default function TutorApplicationsTab() {
     return apps.filter((a) => {
       if (statusFilter !== "all" && a.status !== statusFilter) return false;
       if (!s) return true;
-      return [a.full_name, a.email, a.phone, a.location ?? "", (a.subjects ?? []).join(" ")]
+      return [a.ref_code ?? "", a.full_name, a.email, a.phone, a.location ?? "", (a.subjects ?? []).join(" ")]
         .join(" ").toLowerCase().includes(s);
     });
   }, [apps, q, statusFilter]);
