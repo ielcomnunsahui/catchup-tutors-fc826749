@@ -310,7 +310,15 @@ export default function TutorApply() {
         description="Our mission is to bridge educational gaps and provide student-centered, impactful learning experiences, particularly for students preparing for IGCSE, Cambridge A-Level, Edexcel, IB, TMUA and SAT. Shortlisted candidates will be contacted for an interview and a teaching demonstration."
       />
 
-      <form onSubmit={submit} className="mx-auto max-w-3xl space-y-6 px-4 py-16 sm:px-6">
+      <form
+        onSubmit={submit}
+        onInvalid={(e) => {
+          const el = e.target as HTMLElement;
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          toast.error("Some required answers are still missing — we've scrolled you to the first one.");
+        }}
+        className="mx-auto max-w-3xl space-y-6 px-4 py-16 sm:px-6"
+      >
         <Section step={1} title="Personal information">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="grid gap-1.5"><Label>Full name *</Label><Input required value={f.fullName} onChange={set("fullName")} /></div>
