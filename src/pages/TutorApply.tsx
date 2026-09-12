@@ -174,7 +174,7 @@ export default function TutorApply() {
         .limit(1)
         .maybeSingle();
       if (data) {
-        setExisting({ id: data.id, status: data.status as string, admin_feedback: data.admin_feedback ?? null });
+        setExisting({ id: data.id, ref_code: (data as { ref_code?: string | null }).ref_code ?? null, status: data.status as string, admin_feedback: data.admin_feedback ?? null });
         setF((s) => ({ ...s, fullName: s.fullName || (data.full_name ?? ""), email: s.email || (data.email ?? ""), phone: s.phone || (data.phone ?? "") }));
       }
       setStatusLoading(false);
