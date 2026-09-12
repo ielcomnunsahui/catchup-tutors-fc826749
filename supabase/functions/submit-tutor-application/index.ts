@@ -135,8 +135,8 @@ Deno.serve(async (req) => {
     };
 
     const { data: app, error } = resubmitId
-      ? await db.from("tutor_applications").update(record).eq("id", resubmitId).select("id").single()
-      : await db.from("tutor_applications").insert(record).select("id").single();
+      ? await db.from("tutor_applications").update(record).eq("id", resubmitId).select("id,ref_code").single()
+      : await db.from("tutor_applications").insert(record).select("id,ref_code").single();
     if (error) return json({ error: error.message }, 400);
 
     // Acknowledgement + admin notification (non-blocking)
