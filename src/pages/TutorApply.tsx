@@ -289,7 +289,7 @@ export default function TutorApply() {
           <ApplicationStatus
             status={existing.status}
             feedback={existing.admin_feedback}
-            reference={existing.id}
+            reference={existing.ref_code ?? existing.id}
             onResubmit={() => { setEditing(true); window.scrollTo({ top: 0 }); }}
           />
         </div>
