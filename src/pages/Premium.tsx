@@ -94,11 +94,12 @@ export default function Premium() {
         eyebrow="Premium"
         title={settings.headline}
         description={settings.subheadline}
+        className="pb-12"
       />
 
       <div className="mx-auto max-w-7xl px-4 pb-24 sm:px-6 lg:px-8">
         {/* Status / CTA banner */}
-        <div className="-mt-8 rounded-2xl border bg-card p-5 shadow-soft sm:p-6">
+        <div className="mt-0 rounded-2xl border bg-card p-5 shadow-soft sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             <div className={`flex size-12 shrink-0 items-center justify-center rounded-xl ${unlocked ? "bg-brand-green/10 text-brand-green" : "bg-brand-orange/10 text-brand-orange"}`}>
               {unlocked ? <Unlock /> : <Crown />}
