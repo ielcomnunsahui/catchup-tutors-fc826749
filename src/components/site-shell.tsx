@@ -274,9 +274,11 @@ function FooterCol({ title, links }: { title: string; links: [string, string][] 
   );
 }
 
-export function PageHero({ eyebrow, title, description, image, children }: { eyebrow: string; title: string; description: string; image?: string; children?: ReactNode }) {
+import { cn } from "@/lib/utils";
+
+export function PageHero({ eyebrow, title, description, image, children, className }: { eyebrow: string; title: string; description: string; image?: string; children?: ReactNode; className?: string }) {
   return (
-    <section className="relative isolate overflow-hidden bg-hero text-hero-foreground">
+    <section className={cn("relative isolate overflow-hidden bg-hero text-hero-foreground", className)}>
       {image && (
         <>
           <img src={image} alt="" aria-hidden="true" loading="eager" className="absolute inset-0 -z-20 h-full w-full object-cover" />

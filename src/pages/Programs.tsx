@@ -70,10 +70,10 @@ export default function Programs() {
   return (
     <SiteShell>
       <Seo title="Cambridge & IGCSE Programs | CatchUp Tutors" description="Explore Cambridge and IGCSE Mathematics and Further Mathematics learning programs." path="/programs" jsonLd={jsonLd} />
-      <PageHero image={heroImages.programs} eyebrow="Learning pathways" title="Choose the program that moves you forward." description="Structured exam preparation, targeted practice, premium lessons, and tutor support—organized around your curriculum." />
+      <PageHero image={heroImages.programs} eyebrow="Learning pathways" title="Choose the program that moves you forward." description="Structured exam preparation, targeted practice, premium lessons, and tutor support—organized around your curriculum." className="pb-12" />
 
       {/* Stats strip */}
-      <section className="mx-auto -mt-8 max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section className="mx-auto mt-0 max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-3 rounded-3xl border bg-card p-4 shadow-lift sm:grid-cols-2 lg:grid-cols-4 lg:p-5">
           {stats.map((s) => (
             <div key={s.label} className="flex items-center gap-3 rounded-2xl p-3 transition hover:bg-muted/50">
