@@ -16,7 +16,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 
 type Application = {
-  id: string; user_id: string; full_name: string; email: string; phone: string; location: string | null;
+  id: string; ref_code: string | null; user_id: string; full_name: string; email: string; phone: string; location: string | null;
   occupation: string | null; highest_qualification: string | null; field_of_study: string | null;
   experience_band: string | null; years_experience: number | null; subjects: string[]; curricula: string[] | null;
   teaching_philosophy: string | null; biography: string | null; video_experience: string | null;
