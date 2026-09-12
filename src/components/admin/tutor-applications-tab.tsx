@@ -285,6 +285,7 @@ export default function TutorApplicationsTab() {
                 <DialogTitle className="flex items-center gap-3">
                   {links.photo && <img src={links.photo} alt="" className="h-12 w-12 rounded-full object-cover" />}
                   <span>{selected.full_name}</span>
+                  {selected.ref_code && <span className="font-mono text-xs text-muted-foreground">{selected.ref_code}</span>}
                   <AppStatusBadge status={selected.status} />
                 </DialogTitle>
               </DialogHeader>
