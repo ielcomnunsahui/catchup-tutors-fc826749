@@ -230,12 +230,21 @@ export default function TutorApply() {
         availability,
         introVideoUrl: f.introVideoUrl.trim(),
         cv: cv ? { name: cv.name, type: cv.type, base64: await toBase64(cv) } : undefined,
-        photo: photo ? { name: photo.name, type: photo.type, base64: await toBase64(photo) } : undefined,
+        photo: photo ? { name: photo.name, type: "image/jpeg", base64: await photoToBase64(photo) } : undefined,
       };
+
+      const encoded = (payload.cv?.base64.length ?? 0) + (payload.photo?.base64.length ?? 0);
+      if (encoded > MAX_ENCODED_BYTES) {
+        setBusy(false);
+        return toast.error("Your CV is too large to upload. Please attach a PDF under 3MB and try again.");
+      }
 
       const { data, error } = await supabase.functions.invoke("submit-tutor-application", { body: payload });
       const err = (data as { error?: string } | null)?.error;
-      if (error || err) throw new Error(err ?? error?.message ?? "Could not submit your application");
+      if (error || err) {
+        const detail = error ? await readFunctionError(error) : null;
+        throw new Error(detail ?? err ?? error?.message ?? "Could not submit your application");
+      }
 
       // Sign the new applicant in so they can track their application.
       if (!signedIn && f.password) {
