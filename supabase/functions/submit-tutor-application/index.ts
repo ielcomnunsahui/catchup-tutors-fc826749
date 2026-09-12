@@ -149,12 +149,12 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({
           fullName: p.fullName, email: p.email, phone: p.phone,
-          applicationId: app.id, subjects: p.subjects, curricula: p.curricula,
+          applicationId: app.ref_code ?? app.id, subjects: p.subjects, curricula: p.curricula,
         }),
       });
     } catch (_) { /* email failure must not block the application */ }
 
-    return json({ ok: true, applicationId: app.id, createdAccount });
+    return json({ ok: true, applicationId: app.id, refCode: app.ref_code ?? null, createdAccount });
   } catch (e) {
     return json({ error: (e as Error).message }, 400);
   }
