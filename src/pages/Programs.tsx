@@ -1,14 +1,35 @@
 import { Link } from "react-router-dom";
 import {
-  ArrowRight, BookOpen, CalendarDays, CheckCircle2, GraduationCap, Layers3,
+  ArrowRight, BookOpen, CalendarDays, CheckCircle2, Flag, GraduationCap, Layers3,
   PlayCircle, Sigma, Sparkles, Target, Users,
 } from "lucide-react";
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { PremiumCTA, TutorCTA } from "./Resources";
 import ExamSubjectCatalog from "@/components/exam-subject-catalog";
+import AdmissionRequirements from "@/components/admission-requirements";
+import { quizLink } from "@/lib/nigerian-exams";
 import { EXAMS, CATALOG_SUBJECTS } from "@/lib/catalog";
 import { heroImages } from "@/assets/heroes";
+
+const LOCAL_PATHWAYS = [
+  {
+    name: "JAMB",
+    text: "UTME preparation across four subjects, with timed objective practice and explanations for every answer.",
+    subjects: ["Mathematics", "English Language", "Physics", "Chemistry", "Biology", "Economics"],
+  },
+  {
+    name: "WAEC",
+    text: "WASSCE coverage with topic-by-topic revision and past objective questions by year.",
+    subjects: ["Mathematics", "English Language", "Further Mathematics", "Biology", "Accounting", "Government"],
+  },
+  {
+    name: "NECO",
+    text: "SSCE preparation mirroring the NECO syllabus, with worked explanations after every attempt.",
+    subjects: ["Mathematics", "English Language", "Physics", "Chemistry", "Agricultural Science", "Commerce"],
+  },
+];
+
 
 const PROGRAM_LIST = [
   { name: "Cambridge Mathematics", description: "Cambridge IGCSE/AS/A-Level Mathematics program with deep conceptual learning." },
@@ -143,6 +164,38 @@ export default function Programs() {
             ))}
           </div>
         </div>
+      </section>
+
+      {/* Nigerian examinations */}
+      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Nigerian examinations</p>
+        <h2 className="mt-2 font-display text-2xl font-bold sm:text-3xl">JAMB, WAEC &amp; NECO pathways</h2>
+        <p className="mt-2 max-w-2xl text-muted-foreground">
+          Practise real objective past questions with explanations, and check what each university course expects of you.
+        </p>
+
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
+          {LOCAL_PATHWAYS.map((p) => (
+            <article key={p.name} className="flex flex-col rounded-3xl border bg-card p-6 shadow-soft transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-lift">
+              <div className="flex items-center gap-3">
+                <span className="flex size-11 items-center justify-center rounded-xl bg-brand-green/10 text-brand-green"><Flag className="size-5" /></span>
+                <h3 className="font-display text-xl font-bold">{p.name}</h3>
+              </div>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">{p.text}</p>
+              <div className="mt-4 flex flex-wrap gap-1.5">
+                {p.subjects.map((s) => (
+                  <span key={s} className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium">{s}</span>
+                ))}
+              </div>
+              <div className="mt-6 flex flex-wrap gap-2">
+                <Button asChild size="sm"><Link to={quizLink(p.name)}>Practise questions <ArrowRight className="size-4" /></Link></Button>
+                <Button asChild size="sm" variant="outline"><Link to="/tutors">Book a tutor</Link></Button>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <div className="mt-8"><AdmissionRequirements /></div>
       </section>
 
       {/* Catalogue */}

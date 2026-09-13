@@ -16,6 +16,7 @@ import { fetchTopicQuestions, groupByPaper, type TopicQuestion } from "@/lib/top
 import { drivePreview, driveDownload, driveOpen } from "@/lib/drive";
 import { heroImages } from "@/assets/heroes";
 import ExamSubjectCatalog from "@/components/exam-subject-catalog";
+import NigerianExamsSection from "@/components/nigerian-exams-section";
 
 
 // ---------- helpers ----------
@@ -473,6 +474,15 @@ export default function Resources() {
             </div>
           </div>
         )}
+
+        <div className="mt-16 border-t pt-12">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Local examinations</p>
+          <h2 className="mt-2 font-display text-2xl font-bold sm:text-3xl">JAMB, WAEC &amp; NECO past questions</h2>
+          <p className="mt-2 max-w-2xl text-muted-foreground">
+            Objective past questions with the correct answer and an explanation for every question — practise by subject or year.
+          </p>
+          <div className="mt-8"><NigerianExamsSection /></div>
+        </div>
 
         <div className="mt-16 border-t pt-12">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Full coverage</p>

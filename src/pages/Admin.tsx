@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import PastPapersTab from "@/components/admin/past-papers-tab";
 import QuizBankTab from "@/components/admin/quiz-bank-tab";
+import MyschoolImportTab from "@/components/admin/myschool-import-tab";
 import SettingsTab from "@/components/admin/settings-tab";
 import StudentsTab from "@/components/admin/students-tab";
 import TutorApplicationsTab from "@/components/admin/tutor-applications-tab";
@@ -105,6 +106,7 @@ function AdminBody() {
     "topic-questions": <TopicQuestionsTab />,
     "past-papers": <PastPapersTab />,
     quiz: <QuizBankTab />,
+    "ng-questions": <MyschoolImportTab />,
     settings: <SettingsTab />,
   };
 
