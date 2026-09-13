@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ListSkeleton } from "@/components/skeletons";
+import { MathText } from "@/components/math-text";
 import { NG_EXAMS, NG_SUBJECTS, callMyschool, type MyschoolQuestion, type NgExamId } from "@/lib/nigerian-exams";
 
 const PAGE_SIZE = 5; // the API returns 5 questions per credit
@@ -199,18 +200,20 @@ export default function MyschoolImportTab() {
                   {q.exam_year && <Badge variant="secondary">{q.exam_year}</Badge>}
                   {q.topic && <Badge variant="secondary">{q.topic}</Badge>}
                 </div>
-                <p className="mt-2 text-sm font-medium">{i + 1}. {q.question_text}</p>
+                <div className="mt-2 flex gap-1 text-sm font-medium">
+                  <span>{i + 1}.</span><MathText>{q.question_text}</MathText>
+                </div>
                 <ul className="mt-2 grid gap-1 sm:grid-cols-2">
                   {q.options.map((o, oi) => (
                     <li
                       key={oi}
                       className={`rounded-lg px-3 py-1.5 text-sm ${oi === q.correct_index ? "bg-brand-green/10 font-semibold text-brand-green" : "bg-muted/50"}`}
                     >
-                      {String.fromCharCode(65 + oi)}. {o}
+                      {String.fromCharCode(65 + oi)}. <MathText>{o}</MathText>
                     </li>
                   ))}
                 </ul>
-                {q.explanation && <p className="mt-2 text-xs text-muted-foreground">{q.explanation}</p>}
+                {q.explanation && <MathText block className="mt-2 text-xs text-muted-foreground">{q.explanation}</MathText>}
               </li>
             ))}
           </ol>

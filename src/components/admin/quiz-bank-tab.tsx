@@ -19,6 +19,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ListSkeleton } from "@/components/skeletons";
 import { supabase } from "@/integrations/supabase/client";
+import { MathText } from "@/components/math-text";
 
 type Row = {
   id: string;
@@ -448,19 +449,19 @@ export default function QuizBankTab() {
                 {r.access_level === "premium" && <Badge className="bg-brand-orange/10 text-brand-orange"><Crown className="mr-1 size-3" />Premium</Badge>}
                 {!r.is_published && <Badge variant="outline" className="text-muted-foreground">Hidden</Badge>}
               </div>
-              <p className="mt-2 whitespace-pre-wrap text-sm">{r.question_text}</p>
+              <MathText block className="mt-2 text-sm">{r.question_text}</MathText>
               <p className="mt-1 text-xs text-muted-foreground">
-                Answer: {String.fromCharCode(65 + r.correct_index)} — {r.options[r.correct_index]}
+                Answer: {String.fromCharCode(65 + r.correct_index)} — <MathText>{r.options[r.correct_index]}</MathText>
               </p>
 
               {expanded === r.id && (
                 <div className="mt-3 space-y-1.5 rounded-xl bg-muted/40 p-3 text-sm">
                   {r.options.map((o, i) => (
                     <p key={i} className={i === r.correct_index ? "font-medium text-emerald-600" : "text-muted-foreground"}>
-                      {String.fromCharCode(65 + i)}. {o}
+                      {String.fromCharCode(65 + i)}. <MathText>{o}</MathText>
                     </p>
                   ))}
-                  {r.explanation && <p className="pt-2 text-xs text-muted-foreground">Explanation: {r.explanation}</p>}
+                  {r.explanation && <div className="pt-2 text-xs text-muted-foreground">Explanation: <MathText>{r.explanation}</MathText></div>}
                 </div>
               )}
 
