@@ -198,9 +198,6 @@ export default function Index() {
               <Button asChild size="lg" variant="outline" className="border-hero-foreground/50 bg-transparent text-hero-foreground hover:bg-hero-foreground hover:text-brand-navy focus-visible:ring-2 focus-visible:ring-hero-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-brand-navy">
                 <Link to="/programs">Explore Programmes</Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="border-hero-foreground/50 bg-transparent text-hero-foreground hover:bg-hero-foreground hover:text-brand-navy focus-visible:ring-2 focus-visible:ring-hero-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-brand-navy">
-                <Link to="/tutors/apply">Apply as Tutor <ArrowUpRight aria-hidden="true" /></Link>
-              </Button>
             </div>
           </motion.div>
         </div>
@@ -370,26 +367,6 @@ export default function Index() {
       </section>
 
       <Testimonials />
-
-      {/* Apply as tutor */}
-      <section className="border-b border-border bg-background">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-8 px-4 py-16 text-center sm:px-6 sm:py-20 lg:flex-row lg:justify-between lg:px-8 lg:text-left">
-          <Reveal className="max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">Join the team</p>
-            <h2 className="mt-4 font-display text-3xl font-bold leading-tight text-brand-navy sm:text-4xl">
-              Love teaching? Become a Catch-Up tutor.
-            </h2>
-            <p className="mt-4 text-base leading-8 text-muted-foreground sm:text-lg">
-              Share your expertise, set your schedule, and help students turn struggle into success across Nigeria, the UK and beyond.
-            </p>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <Button asChild size="lg" className="bg-brand-navy text-hero-foreground hover:bg-brand-navy/90 focus-visible:ring-2 focus-visible:ring-brand-navy focus-visible:ring-offset-2">
-              <Link to="/tutors/apply">Apply as Tutor <ArrowRight aria-hidden="true" /></Link>
-            </Button>
-          </Reveal>
-        </div>
-      </section>
 
       {/* CTA */}
       <section className="bg-brand-navy text-hero-foreground">

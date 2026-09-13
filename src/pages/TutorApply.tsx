@@ -35,6 +35,7 @@ const AVAILABILITY = ["Weekday Mornings", "Weekday Afternoons/Evenings", "Weeken
 const MAX_FILE_MB = 5;
 /** Edge function requests are capped well below 10MB; keep the encoded payload small. */
 const MAX_ENCODED_BYTES = 5_000_000;
+const APPLICATION_DEADLINE = new Date("2026-09-14T00:00:00+01:00");
 
 const toBase64 = (file: File) =>
   new Promise<string>((resolve, reject) => {
@@ -153,6 +154,17 @@ export default function TutorApply() {
   const [cv, setCv] = useState<File | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [applicationsClosed, setApplicationsClosed] = useState(() => Date.now() >= APPLICATION_DEADLINE.getTime());
+
+  useEffect(() => {
+    const remaining = APPLICATION_DEADLINE.getTime() - Date.now();
+    if (remaining <= 0) {
+      setApplicationsClosed(true);
+      return;
+    }
+    const timer = window.setTimeout(() => setApplicationsClosed(true), remaining);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (!photo) { setPhotoPreview(null); return; }
@@ -186,6 +198,10 @@ export default function TutorApply() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (Date.now() >= APPLICATION_DEADLINE.getTime()) {
+      toast.error("Tutor applications closed on 13 September 2026.");
+      return;
+    }
     const allSubjects = [...subjects, ...otherSubjects.split(",").map((s) => s.trim()).filter(Boolean)];
     const occupation = f.occupation === "Other" ? f.occupationOther.trim() : f.occupation;
     const qualification = f.highestQualification === "Other" ? f.qualificationOther.trim() : f.highestQualification;
@@ -281,7 +297,17 @@ export default function TutorApply() {
     );
   }
 
-  if (!statusLoading && existing && !editing) {
+  if (statusLoading) {
+    return (
+      <SiteShell>
+        <div className="flex min-h-[50vh] items-center justify-center" aria-label="Loading application status">
+          <Loader2 className="size-7 animate-spin text-primary" />
+        </div>
+      </SiteShell>
+    );
+  }
+
+  if (existing && !editing) {
     return (
       <SiteShell>
         <Seo title="Your tutor application | Catch-Up Tutors" description="Track the status of your Catch-Up Tutors tutor application." path="/tutors/apply" noindex />
@@ -293,6 +319,29 @@ export default function TutorApply() {
             onResubmit={() => { setEditing(true); window.scrollTo({ top: 0 }); }}
           />
         </div>
+      </SiteShell>
+    );
+  }
+
+  if (applicationsClosed) {
+    return (
+      <SiteShell>
+        <Seo title="Tutor Applications Closed | Catch-Up Tutors" description="Tutor applications for Catch-Up Tutors closed on 13 September 2026." path="/tutors/apply" noindex />
+        <PageHero
+          image={heroImages.tutors}
+          eyebrow="Tutor recruitment"
+          title="Tutor applications are closed"
+          description="Tutor applications closed on 13 September 2026. Thank you to everyone who applied."
+        />
+        <section className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6">
+          <Clock3 className="mx-auto size-12 text-primary" />
+          <h2 className="mt-5 font-display text-2xl font-bold">Applications closed on 13 September 2026</h2>
+          <p className="mt-3 text-muted-foreground">Existing applicants can sign in to view their application status and any updates from our team.</p>
+          <div className="mt-7 flex flex-wrap justify-center gap-3">
+            <Button asChild><Link to="/auth">Sign in to check status</Link></Button>
+            <Button variant="outline" asChild><Link to="/tutors">View our tutors</Link></Button>
+          </div>
+        </section>
       </SiteShell>
     );
   }
@@ -311,6 +360,12 @@ export default function TutorApply() {
         description="Our mission is to bridge educational gaps and provide student-centered, impactful learning experiences, particularly for students preparing for IGCSE, Cambridge A-Level, Edexcel, IB, TMUA and SAT. Shortlisted candidates will be contacted for an interview and a teaching demonstration."
       />
 
+      <div className="mx-auto max-w-3xl px-4 pt-10 sm:px-6">
+        <div className="rounded-xl border border-brand-orange/30 bg-brand-orange/5 p-4 text-center text-sm font-semibold">
+          Tutor applications close on 13 September 2026 at 12 midnight (Lagos time).
+        </div>
+      </div>
+
       <form
         onSubmit={submit}
         onInvalid={(e) => {
@@ -318,7 +373,7 @@ export default function TutorApply() {
           el.scrollIntoView({ behavior: "smooth", block: "center" });
           toast.error("Some required answers are still missing — we've scrolled you to the first one.");
         }}
-        className="mx-auto max-w-3xl space-y-6 px-4 py-16 sm:px-6"
+        className="mx-auto max-w-3xl space-y-6 px-4 pb-16 pt-8 sm:px-6"
       >
         <Section step={1} title="Personal information">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -465,7 +520,7 @@ function ApplicationStatus({ status, feedback, reference, onResubmit }: {
       <p className="mt-6 rounded-xl bg-muted p-4 text-sm">Reference: <code className="font-mono text-xs">{reference}</code></p>
       <div className="mt-8 flex flex-wrap justify-center gap-3">
         {status === "approved" && <Button asChild><Link to="/tutor">Open tutor workspace</Link></Button>}
-        {status === "changes_requested" && <Button onClick={onResubmit}>Update and resubmit</Button>}
+        {status === "changes_requested" && Date.now() < APPLICATION_DEADLINE.getTime() && <Button onClick={onResubmit}>Update and resubmit</Button>}
         <Button variant="outline" asChild><Link to="/tutors">Back to tutors</Link></Button>
       </div>
     </div>

@@ -33,6 +33,7 @@ const Body = z.object({
 });
 
 const YEARS: Record<string, number> = { "Less than 1 year": 0, "1–3 years": 2, "3–5 years": 4, "5+ years": 6 };
+const APPLICATION_DEADLINE = Date.parse("2026-09-14T00:00:00+01:00");
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -40,6 +41,9 @@ Deno.serve(async (req) => {
     new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   try {
+    if (Date.now() >= APPLICATION_DEADLINE) {
+      return json({ error: "Tutor applications closed on 13 September 2026." }, 403);
+    }
     const parsed = Body.safeParse(await req.json());
     if (!parsed.success) return json({ error: parsed.error.flatten().fieldErrors }, 400);
     const p = parsed.data;
