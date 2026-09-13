@@ -15,6 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { usePremium } from "@/hooks/use-premium";
 import { heroImages } from "@/assets/heroes";
+import { MathText } from "@/components/math-text";
 
 type Question = {
   id: string;
@@ -350,7 +351,7 @@ function Runner({ quiz, current, answers, onPick, onGo, onSubmit, onQuit, remain
           {q.year && <Badge variant="outline">{q.year}{q.session ? ` · ${q.session}` : ""}</Badge>}
           {q.topic && <Badge variant="outline">{q.topic}</Badge>}
         </div>
-        <p className="whitespace-pre-wrap text-base leading-7">{q.question_text}</p>
+        <MathText block className="text-base leading-7">{q.question_text}</MathText>
         {q.image_url && <img src={q.image_url} alt="Question figure" loading="lazy" className="mt-4 max-h-80 w-auto rounded-xl border" />}
 
         <div className="mt-5 grid gap-2">
@@ -366,7 +367,7 @@ function Runner({ quiz, current, answers, onPick, onGo, onSubmit, onQuit, remain
                 <span className={`grid size-6 shrink-0 place-items-center rounded-full border text-xs font-bold ${picked ? "border-primary bg-primary text-primary-foreground" : ""}`}>
                   {String.fromCharCode(65 + i)}
                 </span>
-                <span className="min-w-0 break-words">{opt}</span>
+                <MathText className="min-w-0">{opt}</MathText>
               </button>
             );
           })}
@@ -416,7 +417,7 @@ function Results({ quiz, answers, score, onRetry }: {
               </span>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Question {idx + 1}</p>
-                <p className="mt-1 whitespace-pre-wrap text-sm leading-6">{q.question_text}</p>
+                <MathText block className="mt-1 text-sm leading-6">{q.question_text}</MathText>
                 <div className="mt-3 grid gap-2">
                   {q.options.map((opt, i) => {
                     const isCorrect = i === q.correct_index;
@@ -430,7 +431,7 @@ function Results({ quiz, answers, score, onRetry }: {
                         }`}
                       >
                         <span className="grid size-6 shrink-0 place-items-center rounded-full border text-xs font-bold">{String.fromCharCode(65 + i)}</span>
-                        <span className="min-w-0 break-words">{opt}</span>
+                        <MathText className="min-w-0">{opt}</MathText>
                         {isCorrect && <span className="ml-auto shrink-0 text-xs font-semibold text-brand-green">Correct</span>}
                         {isChosen && !isCorrect && <span className="ml-auto shrink-0 text-xs font-semibold text-destructive">Your answer</span>}
                       </div>
@@ -441,7 +442,7 @@ function Results({ quiz, answers, score, onRetry }: {
                 {q.explanation && (
                   <div className="mt-3 rounded-xl border bg-muted/40 p-3 text-sm">
                     <p className="font-semibold">Explanation</p>
-                    <p className="mt-1 whitespace-pre-wrap leading-6 text-muted-foreground">{q.explanation}</p>
+                    <MathText block className="mt-1 leading-6 text-muted-foreground">{q.explanation}</MathText>
                   </div>
                 )}
               </div>

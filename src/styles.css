@@ -173,6 +173,8 @@
 @layer utilities {
   .shadow-soft { box-shadow: var(--shadow-soft); }
   .shadow-lift { box-shadow: var(--shadow-lift); }
+  .math-text .katex-display { margin: 0.75rem 0; overflow-x: auto; overflow-y: hidden; text-align: left; }
+  .math-text .katex { font-size: 1.05em; }
   .hero-grid {
     background-image: linear-gradient(color-mix(in oklab, var(--hero-foreground) 5%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in oklab, var(--hero-foreground) 5%, transparent) 1px, transparent 1px);
     background-size: 42px 42px;
