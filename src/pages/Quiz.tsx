@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Brain, Timer, Shuffle, CheckCircle2, XCircle, Crown, Loader2, RotateCcw, ArrowLeft, ArrowRight, Trophy,
@@ -57,13 +57,14 @@ const uniq = (values: (string | null)[]) =>
 
 export default function Quiz() {
   const { isPremium, isAuthed } = usePremium();
+  const [params] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [bank, setBank] = useState<Question[]>([]);
 
-  const [examType, setExamType] = useState(ANY);
-  const [subject, setSubject] = useState(ANY);
-  const [year, setYear] = useState(ANY); // ANY = shuffle years
-  const [topic, setTopic] = useState(ANY);
+  const [examType, setExamType] = useState(params.get("exam") ?? ANY);
+  const [subject, setSubject] = useState(params.get("subject") ?? ANY);
+  const [year, setYear] = useState(params.get("year") ?? ANY); // ANY = shuffle years
+  const [topic, setTopic] = useState(params.get("topic") ?? ANY);
   const [length, setLength] = useState(10);
   const [timeLimit, setTimeLimit] = useState(0); // minutes
   const [remaining, setRemaining] = useState<number | null>(null);
