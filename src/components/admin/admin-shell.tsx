@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Settings, LayoutDashboard, GraduationCap, BookOpen, FolderTree, FileText, ClipboardList,
-  Users, UserCheck, CalendarDays, CalendarCheck, Brain, Layers3, Search, Command as CommandIcon,
+  Users, UserCheck, CalendarDays, CalendarCheck, Brain, Layers3, Search, Command as CommandIcon, Flag,
   ChevronRight, PanelLeftClose, PanelLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 export type AdminSectionId =
   | "overview" | "registrations" | "students" | "tutor-apps" | "attendance"
   | "programs" | "subjects" | "topics" | "resources"
-  | "topic-questions" | "past-papers" | "quiz" | "settings";
+  | "topic-questions" | "past-papers" | "quiz" | "ng-questions" | "settings";
 
 export type AdminSection = {
   id: AdminSectionId;
@@ -47,6 +47,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { id: "past-papers", label: "Yearly past questions", icon: CalendarDays, description: "Papers and mark schemes by year and session" },
       { id: "topic-questions", label: "Topical past questions", icon: Layers3, description: "Topic sets with questions, mark schemes and videos" },
       { id: "quiz", label: "Quiz bank", icon: Brain, description: "Practice questions students answer online" },
+      { id: "ng-questions", label: "JAMB / WAEC / NECO", icon: Flag, description: "Import Nigerian exam questions from myschool" },
     ],
   },
   {
