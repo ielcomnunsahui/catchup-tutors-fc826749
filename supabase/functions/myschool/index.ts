@@ -153,7 +153,8 @@ Deno.serve(async (req) => {
         credits += 1;
         total_questions = Number(data.total_questions ?? total_questions) || total_questions;
         total_pages = Number(data.total_pages ?? total_pages) || total_pages;
-        const list = (Array.isArray(data.questions) ? data.questions : []) as Json[];
+        const raw = data.questions ?? data.results ?? data.items ?? data.data;
+        const list = (Array.isArray(raw) ? raw : []) as Json[];
         if (!list.length) break;
         collected.push(...list.map(normalise).filter((q) => q.question_text && q.options.length >= 2));
       }
