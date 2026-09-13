@@ -1,14 +1,35 @@
 import { Link } from "react-router-dom";
 import {
-  ArrowRight, BookOpen, CalendarDays, CheckCircle2, GraduationCap, Layers3,
+  ArrowRight, BookOpen, CalendarDays, CheckCircle2, Flag, GraduationCap, Layers3,
   PlayCircle, Sigma, Sparkles, Target, Users,
 } from "lucide-react";
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { PremiumCTA, TutorCTA } from "./Resources";
 import ExamSubjectCatalog from "@/components/exam-subject-catalog";
+import AdmissionRequirements from "@/components/admission-requirements";
+import { quizLink } from "@/lib/nigerian-exams";
 import { EXAMS, CATALOG_SUBJECTS } from "@/lib/catalog";
 import { heroImages } from "@/assets/heroes";
+
+const LOCAL_PATHWAYS = [
+  {
+    name: "JAMB",
+    text: "UTME preparation across four subjects, with timed objective practice and explanations for every answer.",
+    subjects: ["Mathematics", "English Language", "Physics", "Chemistry", "Biology", "Economics"],
+  },
+  {
+    name: "WAEC",
+    text: "WASSCE coverage with topic-by-topic revision and past objective questions by year.",
+    subjects: ["Mathematics", "English Language", "Further Mathematics", "Biology", "Accounting", "Government"],
+  },
+  {
+    name: "NECO",
+    text: "SSCE preparation mirroring the NECO syllabus, with worked explanations after every attempt.",
+    subjects: ["Mathematics", "English Language", "Physics", "Chemistry", "Agricultural Science", "Commerce"],
+  },
+];
+
 
 const PROGRAM_LIST = [
   { name: "Cambridge Mathematics", description: "Cambridge IGCSE/AS/A-Level Mathematics program with deep conceptual learning." },
