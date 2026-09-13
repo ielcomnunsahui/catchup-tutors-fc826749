@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      admission_requirements_cache: {
+        Row: {
+          course_name: string | null
+          course_slug: string
+          created_at: string
+          fetched_at: string
+          id: string
+          payload: Json
+          requirements_path: string
+          school_name: string | null
+          school_slug: string
+          updated_at: string
+        }
+        Insert: {
+          course_name?: string | null
+          course_slug: string
+          created_at?: string
+          fetched_at?: string
+          id?: string
+          payload?: Json
+          requirements_path: string
+          school_name?: string | null
+          school_slug: string
+          updated_at?: string
+        }
+        Update: {
+          course_name?: string | null
+          course_slug?: string
+          created_at?: string
+          fetched_at?: string
+          id?: string
+          payload?: Json
+          requirements_path?: string
+          school_name?: string | null
+          school_slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           created_at: string
@@ -696,6 +735,7 @@ export type Database = {
           paper_number: string | null
           question_text: string
           session: string | null
+          source: string | null
           subject_key: string
           topic: string | null
           updated_at: string
@@ -715,6 +755,7 @@ export type Database = {
           paper_number?: string | null
           question_text: string
           session?: string | null
+          source?: string | null
           subject_key: string
           topic?: string | null
           updated_at?: string
@@ -734,6 +775,7 @@ export type Database = {
           paper_number?: string | null
           question_text?: string
           session?: string | null
+          source?: string | null
           subject_key?: string
           topic?: string | null
           updated_at?: string
