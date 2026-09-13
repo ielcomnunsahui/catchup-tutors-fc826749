@@ -154,7 +154,17 @@ export default function TutorApply() {
   const [cv, setCv] = useState<File | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const applicationsClosed = Date.now() >= APPLICATION_DEADLINE.getTime();
+  const [applicationsClosed, setApplicationsClosed] = useState(() => Date.now() >= APPLICATION_DEADLINE.getTime());
+
+  useEffect(() => {
+    const remaining = APPLICATION_DEADLINE.getTime() - Date.now();
+    if (remaining <= 0) {
+      setApplicationsClosed(true);
+      return;
+    }
+    const timer = window.setTimeout(() => setApplicationsClosed(true), remaining);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (!photo) { setPhotoPreview(null); return; }
