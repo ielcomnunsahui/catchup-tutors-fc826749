@@ -29,6 +29,13 @@ export type StudentProfile = {
 };
 
 /** Signed-in user plus the role checks that decide where they belong. */
+export type TutorApplicationSummary = {
+  id: string;
+  ref_code: string | null;
+  status: string;
+  admin_feedback: string | null;
+};
+
 export function useStudentIdentity() {
   return useQuery({
     queryKey: ["student", "identity"],
@@ -36,15 +43,23 @@ export function useStudentIdentity() {
     queryFn: async () => {
       const { data } = await supabase.auth.getUser();
       const user = data.user;
-      if (!user) return { user: null, isAdmin: false, tutorId: null as string | null };
-      const [{ data: isAdmin }, { data: tutor }] = await Promise.all([
+      if (!user) return { user: null, isAdmin: false, tutorId: null as string | null, application: null as TutorApplicationSummary | null };
+      const [{ data: isAdmin }, { data: tutor }, { data: application }] = await Promise.all([
         supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }),
         supabase.from("tutor_profiles").select("id,is_approved").eq("user_id", user.id).maybeSingle(),
+        supabase
+          .from("tutor_applications")
+          .select("id,ref_code,status,admin_feedback")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
       ]);
       return {
         user,
         isAdmin: !!isAdmin,
         tutorId: tutor?.is_approved ? (tutor.id as string) : null,
+        application: (application as TutorApplicationSummary | null) ?? null,
       };
     },
   });

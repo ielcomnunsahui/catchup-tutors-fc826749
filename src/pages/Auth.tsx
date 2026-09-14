@@ -62,7 +62,16 @@ export default function Auth() {
         else {
           const { data: tutor } = await supabase
             .from("tutor_profiles").select("is_approved").eq("user_id", signIn.user.id).maybeSingle();
-          navigate(tutor?.is_approved ? "/tutor" : "/dashboard");
+          if (tutor?.is_approved) { navigate("/tutor"); }
+          else {
+            const { data: application } = await supabase
+              .from("tutor_applications").select("status")
+              .eq("user_id", signIn.user.id)
+              .order("created_at", { ascending: false })
+              .limit(1).maybeSingle();
+            const awaiting = application?.status === "pending" || application?.status === "changes_requested";
+            navigate(awaiting ? "/dashboard#application" : "/dashboard");
+          }
         }
       }
     } else {
