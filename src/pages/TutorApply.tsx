@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { heroImages } from "@/assets/heroes";
+import { ApplicationStatus, APPLICATION_DEADLINE } from "@/components/tutor/application-status";
 
 const OCCUPATIONS = ["Full-time Teacher", "Professional Tutor", "University Student / Graduate", "Other"];
 const QUALIFICATIONS = ["Bachelor's Degree", "Master's Degree / PhD", "Undergraduate Student", "Other"];
@@ -35,7 +36,6 @@ const AVAILABILITY = ["Weekday Mornings", "Weekday Afternoons/Evenings", "Weeken
 const MAX_FILE_MB = 5;
 /** Edge function requests are capped well below 10MB; keep the encoded payload small. */
 const MAX_ENCODED_BYTES = 5_000_000;
-const APPLICATION_DEADLINE = new Date("2026-09-14T00:00:00+01:00");
 
 const toBase64 = (file: File) =>
   new Promise<string>((resolve, reject) => {
@@ -478,51 +478,5 @@ export default function TutorApply() {
         </div>
       </form>
     </SiteShell>
-  );
-}
-
-function ApplicationStatus({ status, feedback, reference, onResubmit }: {
-  status: string; feedback: string | null; reference: string; onResubmit: () => void;
-}) {
-  const map: Record<string, { icon: typeof CheckCircle2; tone: string; title: string; body: string }> = {
-    pending: {
-      icon: Clock3, tone: "text-primary",
-      title: "Your application is under review",
-      body: "Our recruitment team is reviewing your qualifications and experience. We'll email you as soon as there's an update.",
-    },
-    approved: {
-      icon: CheckCircle2, tone: "text-brand-green",
-      title: "You're approved — welcome to Catch-Up Tutors",
-      body: "Open your tutor workspace to complete your profile, set your prices and publish your teaching hours.",
-    },
-    changes_requested: {
-      icon: AlertTriangle, tone: "text-amber-500",
-      title: "We need a few updates",
-      body: "Please review the note below, update your details and resubmit your application.",
-    },
-    rejected: {
-      icon: XCircle, tone: "text-destructive",
-      title: "Application not successful",
-      body: "Thank you for the time you invested. You're welcome to apply again in the future.",
-    },
-  };
-  const s = map[status] ?? map.pending;
-  const Icon = s.icon;
-
-  return (
-    <div className="rounded-3xl border bg-card p-8 text-center shadow-soft sm:p-10">
-      <Icon className={`mx-auto h-14 w-14 ${s.tone}`} />
-      <h1 className="mt-6 font-display text-3xl font-bold">{s.title}</h1>
-      <p className="mt-4 text-muted-foreground">{s.body}</p>
-      {feedback && (
-        <p className="mt-6 rounded-2xl border-l-4 border-brand-orange bg-muted/50 p-4 text-left text-sm">{feedback}</p>
-      )}
-      <p className="mt-6 rounded-xl bg-muted p-4 text-sm">Reference: <code className="font-mono text-xs">{reference}</code></p>
-      <div className="mt-8 flex flex-wrap justify-center gap-3">
-        {status === "approved" && <Button asChild><Link to="/tutor">Open tutor workspace</Link></Button>}
-        {status === "changes_requested" && Date.now() < APPLICATION_DEADLINE.getTime() && <Button onClick={onResubmit}>Update and resubmit</Button>}
-        <Button variant="outline" asChild><Link to="/tutors">Back to tutors</Link></Button>
-      </div>
-    </div>
   );
 }
