@@ -17,6 +17,7 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { StudentAttendance } from "@/components/attendance-panel";
+import { ApplicationStatus } from "@/components/tutor/application-status";
 import ErrorBoundary from "@/components/error-boundary";
 import { KpiSkeleton, ListSkeleton, CardGridSkeleton } from "@/components/skeletons";
 import {
@@ -45,6 +46,22 @@ export default function Dashboard() {
     if (identity.isAdmin) { navigate("/admin", { replace: true }); return; }
     if (identity.tutorId) { navigate("/tutor", { replace: true }); return; }
   }, [identity, identityLoading, navigate]);
+
+  const application = identity?.application ?? null;
+  const awaitingApplication = application?.status === "pending" || application?.status === "changes_requested";
+
+  // Applicants land on their status first, unless they asked for another section.
+  useEffect(() => {
+    if (!awaitingApplication) return;
+    if (window.location.hash.replace("#", "") === "") setSection("application");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [awaitingApplication]);
+
+  // Nothing to show when there is no application.
+  useEffect(() => {
+    if (section === "application" && !application && !identityLoading) setSection("overview");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [section, application, identityLoading]);
 
   const bookings = useStudentBookings(userId);
   const activity = useStudentActivity(userId);
@@ -85,6 +102,14 @@ export default function Dashboard() {
   }
 
   const panels: Record<StudentSectionId, React.ReactNode> = {
+    application: application ? (
+      <ApplicationStatus
+        status={application.status}
+        feedback={application.admin_feedback}
+        reference={application.ref_code ?? application.id}
+        compact
+      />
+    ) : null,
     overview: (
       <OverviewSection
         firstName={firstName}
@@ -116,10 +141,24 @@ export default function Dashboard() {
 
       <StudentTopbar name={name} onSignOut={signOut} />
 
+      {awaitingApplication && section !== "application" && (
+        <div className="border-b bg-primary/10">
+          <div className="mx-auto flex max-w-[1400px] flex-wrap items-center gap-3 px-4 py-2.5 text-sm sm:px-6 lg:px-8">
+            <span className="font-medium">
+              Tutor application {application?.ref_code ?? ""} — {application?.status === "changes_requested" ? "changes requested" : "under review"}
+            </span>
+            <Button variant="link" size="sm" className="h-auto p-0" onClick={() => setSection("application")}>
+              View status
+            </Button>
+          </div>
+        </div>
+      )}
+
       <StudentShell
         section={section}
         setSection={setSection}
         badges={{ sessions: upcoming.length, library: (saved.data ?? []).length }}
+        hidden={application ? [] : ["application"]}
       >
         <div key={section} className={fade}>
           <ErrorBoundary key={`eb-${section}`} title="This section could not load" compact>

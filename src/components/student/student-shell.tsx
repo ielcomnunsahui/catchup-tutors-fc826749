@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   LayoutDashboard, CalendarCheck, ClipboardCheck, Library, Brain, Crown, UserRound,
-  Search, Command as CommandIcon, ChevronRight, PanelLeft, PanelLeftClose, LogOut, GraduationCap,
+  FileBadge, Search, Command as CommandIcon, ChevronRight, PanelLeft, PanelLeftClose, LogOut, GraduationCap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export type StudentSectionId =
-  | "overview" | "sessions" | "attendance" | "library" | "quiz" | "premium" | "profile";
+  | "application" | "overview" | "sessions" | "attendance" | "library" | "quiz" | "premium" | "profile";
 
 export type StudentSection = {
   id: StudentSectionId;
@@ -27,6 +27,12 @@ export type StudentSection = {
 export type StudentGroup = { label: string; items: StudentSection[] };
 
 export const STUDENT_GROUPS: StudentGroup[] = [
+  {
+    label: "My application",
+    items: [
+      { id: "application", label: "My application", icon: FileBadge, description: "The status of your tutor application" },
+    ],
+  },
   {
     label: "Overview",
     items: [
@@ -109,16 +115,24 @@ export function StudentTopbar({ name, onSignOut }: { name: string; onSignOut: ()
 }
 
 export function StudentShell({
-  section, setSection, badges, children,
+  section, setSection, badges, hidden, children,
 }: {
   section: StudentSectionId;
   setSection: (id: StudentSectionId) => void;
   badges?: Partial<Record<StudentSectionId, number>>;
+  /** Sections to leave out of the menus (e.g. the application status when there is none). */
+  hidden?: StudentSectionId[];
   children: React.ReactNode;
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const active = useMemo(() => findStudentSection(section)!, [section]);
+  const active = useMemo(() => findStudentSection(section) ?? findStudentSection("overview")!, [section]);
+  const groups = useMemo(
+    () => STUDENT_GROUPS
+      .map((g) => ({ ...g, items: g.items.filter((s) => !(hidden ?? []).includes(s.id)) }))
+      .filter((g) => g.items.length > 0),
+    [hidden],
+  );
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -143,7 +157,7 @@ export function StudentShell({
             </div>
           </SelectTrigger>
           <SelectContent>
-            {STUDENT_GROUPS.map((g) => (
+            {groups.map((g) => (
               <SelectGroup key={g.label}>
                 <SelectLabel>{g.label}</SelectLabel>
                 {g.items.map((s) => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}
@@ -177,7 +191,7 @@ export function StudentShell({
           </button>
 
           <nav className="space-y-4">
-            {STUDENT_GROUPS.map((g) => (
+            {groups.map((g) => (
               <div key={g.label}>
                 {!collapsed && (
                   <p className="px-2 pb-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70">{g.label}</p>
@@ -246,7 +260,7 @@ export function StudentShell({
         <CommandInput placeholder="Search your dashboard…" />
         <CommandList>
           <CommandEmpty>Nothing matches that.</CommandEmpty>
-          {STUDENT_GROUPS.map((g) => (
+          {groups.map((g) => (
             <CommandGroup key={g.label} heading={g.label}>
               {g.items.map((s) => (
                 <CommandItem key={s.id} value={`${s.label} ${s.description}`} onSelect={() => { setSection(s.id); setPaletteOpen(false); }}>
