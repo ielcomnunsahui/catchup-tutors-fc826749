@@ -78,18 +78,59 @@ export default function TutorApplicationsTab() {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [links, setLinks] = useState<{ cv?: string; photo?: string }>({});
+  const [tags, setTags] = useState<AppTag[]>([]);
+  const [tagFilter, setTagFilter] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState("");
 
   const reload = async () => {
     setLoading(true);
-    const [a, t] = await Promise.all([
+    const [a, t, g] = await Promise.all([
       supabase.from("tutor_applications").select("*").order("created_at", { ascending: false }),
       supabase.from("tutor_profiles").select("*").order("created_at", { ascending: false }),
+      supabase.from("tutor_application_tags").select("id, application_id, tag, color"),
     ]);
     if (a.error) toast.error(a.error.message);
     if (t.error) toast.error(t.error.message);
+    if (g.error) toast.error(g.error.message);
     setApps((a.data ?? []) as Application[]);
     setTutors((t.data ?? []) as TutorProfile[]);
+    setTags((g.data ?? []) as AppTag[]);
     setLoading(false);
+  };
+
+  const tagsFor = (appId: string) => tags.filter((t) => t.application_id === appId);
+
+  const allTags = useMemo(() => {
+    const m = new Map<string, number>();
+    tags.forEach((t) => m.set(t.tag, (m.get(t.tag) ?? 0) + 1));
+    return [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  }, [tags]);
+
+  const addTag = async (appId: string, raw: string) => {
+    const tag = raw.trim().slice(0, 40);
+    if (!tag) return;
+    if (tagsFor(appId).some((t) => t.tag.toLowerCase() === tag.toLowerCase())) return;
+    const optimistic: AppTag = { id: `tmp-${Date.now()}`, application_id: appId, tag, color: "slate" };
+    setTags((prev) => [...prev, optimistic]);
+    setNewTag("");
+    const { data, error } = await supabase
+      .from("tutor_application_tags")
+      .insert({ application_id: appId, tag })
+      .select("id, application_id, tag, color")
+      .single();
+    if (error) {
+      setTags((prev) => prev.filter((t) => t.id !== optimistic.id));
+      toast.error(error.message);
+      return;
+    }
+    setTags((prev) => prev.map((t) => (t.id === optimistic.id ? (data as AppTag) : t)));
+  };
+
+  const removeTag = async (tagId: string) => {
+    const prev = tags;
+    setTags((p) => p.filter((t) => t.id !== tagId));
+    const { error } = await supabase.from("tutor_application_tags").delete().eq("id", tagId);
+    if (error) { setTags(prev); toast.error(error.message); }
   };
   useEffect(() => { reload(); }, []);
 
