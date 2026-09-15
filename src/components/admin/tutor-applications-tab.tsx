@@ -297,6 +297,14 @@ export default function TutorApplicationsTab() {
                     {(a.subjects ?? []).length > 4 && <Badge variant="outline" className="text-[10px]">+{a.subjects.length - 4}</Badge>}
                   </div>
                 </td>
+                <td className="px-4 py-3">
+                  <div className="flex max-w-[200px] flex-wrap gap-1">
+                    {tagsFor(a.id).length === 0 && <span className="text-xs text-muted-foreground">—</span>}
+                    {tagsFor(a.id).map((t) => (
+                      <span key={t.id} className={`rounded-full border px-2 py-0.5 text-[10px] ${toneFor(t.tag)}`}>{t.tag}</span>
+                    ))}
+                  </div>
+                </td>
                 <td className="px-4 py-3 text-xs text-muted-foreground">{a.experience_band ?? `${a.years_experience ?? 0} yrs`}</td>
                 <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</td>
                 <td className="px-4 py-3"><AppStatusBadge status={a.status} /></td>
