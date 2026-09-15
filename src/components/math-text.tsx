@@ -34,7 +34,7 @@ const HAS_MARKUP = /<(math|p|span|table|ul|ol|li|sub|sup|em|strong|br|img|div)\b
 
 function RichHtml({ html, className, block }: { html: string; className?: string; block: boolean }) {
   const clean = DOMPurify.sanitize(html, {
-    USE_PROFILES: { html: true, mathMl: true },
+    USE_PROFILES: { html: true, mathMl: true, svg: true, svgFilters: true },
     FORBID_TAGS: ["script", "style", "iframe", "form", "input"],
     FORBID_ATTR: ["onerror", "onload", "onclick", "style"],
   });
