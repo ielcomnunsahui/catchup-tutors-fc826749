@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   Loader2, Search, CheckCircle2, XCircle, RotateCcw, ShieldOff, ShieldCheck, Eye, Mail, Phone, MapPin,
+  Tag as TagIcon, Plus, X, Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
