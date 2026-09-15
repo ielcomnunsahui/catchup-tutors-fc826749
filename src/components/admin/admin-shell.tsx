@@ -15,7 +15,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 export type AdminSectionId =
   | "overview" | "registrations" | "students" | "tutor-apps" | "attendance"
   | "programs" | "subjects" | "topics" | "resources"
-  | "topic-questions" | "past-papers" | "quiz" | "ng-questions" | "settings";
+  | "topic-questions" | "past-papers" | "quiz" | "ng-questions" | "sat-questions" | "settings";
 
 export type AdminSection = {
   id: AdminSectionId;
@@ -48,6 +48,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { id: "topic-questions", label: "Topical past questions", icon: Layers3, description: "Topic sets with questions, mark schemes and videos" },
       { id: "quiz", label: "Quiz bank", icon: Brain, description: "Practice questions students answer online" },
       { id: "ng-questions", label: "JAMB / WAEC / NECO", icon: Flag, description: "Import Nigerian exam questions from myschool" },
+      { id: "sat-questions", label: "SAT questions", icon: GraduationCap, description: "Import real SAT questions from the College Board bank" },
     ],
   },
   {
