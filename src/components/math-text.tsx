@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { InlineMath, BlockMath } from "react-katex";
+import DOMPurify from "dompurify";
 import "katex/dist/katex.min.css";
 import { cn } from "@/lib/utils";
 
@@ -28,9 +29,29 @@ function equation(part: string) {
   return { value: part.slice(1, -1), display: false };
 }
 
+/** Imported College Board questions arrive as HTML with inline MathML. */
+const HAS_MARKUP = /<(math|p|span|table|ul|ol|li|sub|sup|em|strong|br|img|div)\b/i;
+
+function RichHtml({ html, className, block }: { html: string; className?: string; block: boolean }) {
+  const clean = DOMPurify.sanitize(html, {
+    USE_PROFILES: { html: true, mathMl: true },
+    FORBID_TAGS: ["script", "style", "iframe", "form", "input"],
+    FORBID_ATTR: ["onerror", "onload", "onclick", "style"],
+  });
+  const Tag = block ? "div" : "span";
+  return (
+    <Tag
+      className={cn("math-text break-words [&_p]:my-1 [&_table]:my-2 [&_table_td]:border [&_table_td]:px-2 [&_table_td]:py-1", className)}
+      dangerouslySetInnerHTML={{ __html: clean }}
+    />
+  );
+}
+
 /** Renders ordinary copy and LaTeX equations from imported exam questions together. */
 export function MathText({ children, className, block = false }: MathTextProps) {
-  const content = decode(children ?? "");
+  const raw = children ?? "";
+  if (HAS_MARKUP.test(raw)) return <RichHtml html={raw} className={className} block={block} />;
+  const content = decode(raw);
   const parts = content.split(MATH_PARTS).filter(Boolean);
   const rendered: ReactNode[] = parts.map((part, index) => {
     if (!MATH_PARTS.test(part)) return <span key={index}>{part}</span>;
