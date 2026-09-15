@@ -1249,6 +1249,44 @@ export type Database = {
           },
         ]
       }
+      tutor_application_tags: {
+        Row: {
+          application_id: string
+          color: string
+          created_at: string
+          created_by: string | null
+          id: string
+          tag: string
+          updated_at: string
+        }
+        Insert: {
+          application_id: string
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          tag: string
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          tag?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tutor_application_tags_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tutor_applications: {
         Row: {
           admin_feedback: string | null
