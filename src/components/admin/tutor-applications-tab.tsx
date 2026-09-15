@@ -33,7 +33,29 @@ type TutorProfile = {
   created_at: string;
 };
 
+type AppTag = { id: string; application_id: string; tag: string; color: string };
+
 const STATUSES = ["pending", "approved", "changes_requested", "rejected"] as const;
+
+const SUGGESTED_TAGS = [
+  "Shortlisted", "Interview scheduled", "Strong candidate", "Needs CV", "Needs video",
+  "Sciences", "Maths", "Languages", "Follow up", "Waitlist", "Not a fit",
+] as const;
+
+const TAG_TONES = [
+  "bg-primary/10 text-primary border-primary/20",
+  "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  "bg-sky-500/10 text-sky-600 border-sky-500/20",
+  "bg-fuchsia-500/10 text-fuchsia-600 border-fuchsia-500/20",
+  "bg-rose-500/10 text-rose-600 border-rose-500/20",
+];
+
+function toneFor(tag: string) {
+  let h = 0;
+  for (let i = 0; i < tag.length; i++) h = (h * 31 + tag.charCodeAt(i)) >>> 0;
+  return TAG_TONES[h % TAG_TONES.length];
+}
 
 function AppStatusBadge({ status }: { status: string }) {
   const tone: Record<string, string> = {
