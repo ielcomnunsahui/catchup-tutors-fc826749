@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   Loader2, Search, CheckCircle2, XCircle, RotateCcw, ShieldOff, ShieldCheck, Eye, Mail, Phone, MapPin,
+  Tag as TagIcon, Plus, X, Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,7 +33,29 @@ type TutorProfile = {
   created_at: string;
 };
 
+type AppTag = { id: string; application_id: string; tag: string; color: string };
+
 const STATUSES = ["pending", "approved", "changes_requested", "rejected"] as const;
+
+const SUGGESTED_TAGS = [
+  "Shortlisted", "Interview scheduled", "Strong candidate", "Needs CV", "Needs video",
+  "Sciences", "Maths", "Languages", "Follow up", "Waitlist", "Not a fit",
+] as const;
+
+const TAG_TONES = [
+  "bg-primary/10 text-primary border-primary/20",
+  "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  "bg-sky-500/10 text-sky-600 border-sky-500/20",
+  "bg-fuchsia-500/10 text-fuchsia-600 border-fuchsia-500/20",
+  "bg-rose-500/10 text-rose-600 border-rose-500/20",
+];
+
+function toneFor(tag: string) {
+  let h = 0;
+  for (let i = 0; i < tag.length; i++) h = (h * 31 + tag.charCodeAt(i)) >>> 0;
+  return TAG_TONES[h % TAG_TONES.length];
+}
 
 function AppStatusBadge({ status }: { status: string }) {
   const tone: Record<string, string> = {
@@ -55,18 +78,59 @@ export default function TutorApplicationsTab() {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [links, setLinks] = useState<{ cv?: string; photo?: string }>({});
+  const [tags, setTags] = useState<AppTag[]>([]);
+  const [tagFilter, setTagFilter] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState("");
 
   const reload = async () => {
     setLoading(true);
-    const [a, t] = await Promise.all([
+    const [a, t, g] = await Promise.all([
       supabase.from("tutor_applications").select("*").order("created_at", { ascending: false }),
       supabase.from("tutor_profiles").select("*").order("created_at", { ascending: false }),
+      supabase.from("tutor_application_tags").select("id, application_id, tag, color"),
     ]);
     if (a.error) toast.error(a.error.message);
     if (t.error) toast.error(t.error.message);
+    if (g.error) toast.error(g.error.message);
     setApps((a.data ?? []) as Application[]);
     setTutors((t.data ?? []) as TutorProfile[]);
+    setTags((g.data ?? []) as AppTag[]);
     setLoading(false);
+  };
+
+  const tagsFor = (appId: string) => tags.filter((t) => t.application_id === appId);
+
+  const allTags = useMemo(() => {
+    const m = new Map<string, number>();
+    tags.forEach((t) => m.set(t.tag, (m.get(t.tag) ?? 0) + 1));
+    return [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  }, [tags]);
+
+  const addTag = async (appId: string, raw: string) => {
+    const tag = raw.trim().slice(0, 40);
+    if (!tag) return;
+    if (tagsFor(appId).some((t) => t.tag.toLowerCase() === tag.toLowerCase())) return;
+    const optimistic: AppTag = { id: `tmp-${Date.now()}`, application_id: appId, tag, color: "slate" };
+    setTags((prev) => [...prev, optimistic]);
+    setNewTag("");
+    const { data, error } = await supabase
+      .from("tutor_application_tags")
+      .insert({ application_id: appId, tag })
+      .select("id, application_id, tag, color")
+      .single();
+    if (error) {
+      setTags((prev) => prev.filter((t) => t.id !== optimistic.id));
+      toast.error(error.message);
+      return;
+    }
+    setTags((prev) => prev.map((t) => (t.id === optimistic.id ? (data as AppTag) : t)));
+  };
+
+  const removeTag = async (tagId: string) => {
+    const prev = tags;
+    setTags((p) => p.filter((t) => t.id !== tagId));
+    const { error } = await supabase.from("tutor_application_tags").delete().eq("id", tagId);
+    if (error) { setTags(prev); toast.error(error.message); }
   };
   useEffect(() => { reload(); }, []);
 
@@ -86,11 +150,18 @@ export default function TutorApplicationsTab() {
     const s = q.trim().toLowerCase();
     return apps.filter((a) => {
       if (statusFilter !== "all" && a.status !== statusFilter) return false;
+      if (tagFilter.length) {
+        const mine = tags.filter((t) => t.application_id === a.id).map((t) => t.tag);
+        if (tagFilter.includes("__untagged__")) {
+          if (mine.length) return false;
+        } else if (!tagFilter.every((t) => mine.includes(t))) return false;
+      }
       if (!s) return true;
-      return [a.ref_code ?? "", a.full_name, a.email, a.phone, a.location ?? "", (a.subjects ?? []).join(" ")]
+      const mineStr = tags.filter((t) => t.application_id === a.id).map((t) => t.tag).join(" ");
+      return [a.ref_code ?? "", a.full_name, a.email, a.phone, a.location ?? "", (a.subjects ?? []).join(" "), mineStr]
         .join(" ").toLowerCase().includes(s);
     });
-  }, [apps, q, statusFilter]);
+  }, [apps, q, statusFilter, tagFilter, tags]);
 
   const counts = STATUSES.map((s) => ({ s, n: apps.filter((a) => a.status === s).length }));
 
@@ -152,12 +223,55 @@ export default function TutorApplicationsTab() {
         <span className="ml-auto text-xs text-muted-foreground">{filtered.length} of {apps.length}</span>
       </div>
 
+      <div className="rounded-2xl border bg-card p-3 shadow-soft">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <TagIcon className="h-3.5 w-3.5" /> Categories
+            <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium normal-case tracking-normal">
+              <Lock className="h-3 w-3" /> Admin only
+            </span>
+          </span>
+          {tagFilter.length > 0 && (
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setTagFilter([])}>Clear</Button>
+          )}
+        </div>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {allTags.length === 0 && (
+            <p className="text-xs text-muted-foreground">No categories yet — open an application and add one to start grouping applicants.</p>
+          )}
+          {allTags.map(([tag, n]) => {
+            const active = tagFilter.includes(tag);
+            return (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => setTagFilter((p) => (active ? p.filter((t) => t !== tag) : [...p.filter((t) => t !== "__untagged__"), tag]))}
+                className={`rounded-full border px-3 py-1 text-xs transition-colors ${active ? "border-primary bg-primary text-primary-foreground" : toneFor(tag)}`}
+              >
+                {tag} <span className="opacity-70">{n}</span>
+              </button>
+            );
+          })}
+          {allTags.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setTagFilter((p) => (p.includes("__untagged__") ? [] : ["__untagged__"]))}
+              className={`rounded-full border px-3 py-1 text-xs transition-colors ${tagFilter.includes("__untagged__") ? "border-primary bg-primary text-primary-foreground" : "bg-muted/40 text-muted-foreground"}`}
+            >
+              Untagged
+            </button>
+          )}
+        </div>
+      </div>
+
+
       <div className="overflow-x-auto rounded-2xl border bg-card shadow-soft">
         <table className="min-w-full text-sm">
           <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="px-4 py-3">Applicant</th>
               <th className="px-4 py-3">Subjects</th>
+              <th className="px-4 py-3">Categories</th>
               <th className="px-4 py-3">Experience</th>
               <th className="px-4 py-3">Submitted</th>
               <th className="px-4 py-3">Status</th>
@@ -166,7 +280,7 @@ export default function TutorApplicationsTab() {
           </thead>
           <tbody className="divide-y">
             {filtered.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">No applications yet.</td></tr>
+              <tr><td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">No applications match these filters.</td></tr>
             )}
             {filtered.map((a) => (
               <tr key={a.id} className="cursor-pointer align-top transition-colors hover:bg-muted/30"
@@ -181,6 +295,14 @@ export default function TutorApplicationsTab() {
                   <div className="flex max-w-[220px] flex-wrap gap-1">
                     {(a.subjects ?? []).slice(0, 4).map((s) => <Badge key={s} variant="secondary" className="text-[10px]">{s}</Badge>)}
                     {(a.subjects ?? []).length > 4 && <Badge variant="outline" className="text-[10px]">+{a.subjects.length - 4}</Badge>}
+                  </div>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex max-w-[200px] flex-wrap gap-1">
+                    {tagsFor(a.id).length === 0 && <span className="text-xs text-muted-foreground">—</span>}
+                    {tagsFor(a.id).map((t) => (
+                      <span key={t.id} className={`rounded-full border px-2 py-0.5 text-[10px] ${toneFor(t.tag)}`}>{t.tag}</span>
+                    ))}
                   </div>
                 </td>
                 <td className="px-4 py-3 text-xs text-muted-foreground">{a.experience_band ?? `${a.years_experience ?? 0} yrs`}</td>
@@ -296,6 +418,50 @@ export default function TutorApplicationsTab() {
                   <span className="inline-flex items-center gap-1.5"><Phone className="h-4 w-4" /> {selected.phone}</span>
                   {selected.location && <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4" /> {selected.location}</span>}
                 </div>
+
+                <div className="rounded-2xl border p-4">
+                  <p className="flex items-center gap-2 font-semibold">
+                    <TagIcon className="h-4 w-4" /> Categories
+                    <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                      <Lock className="h-3 w-3" /> Only visible to admins
+                    </span>
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {tagsFor(selected.id).length === 0 && <span className="text-xs text-muted-foreground">No categories yet.</span>}
+                    {tagsFor(selected.id).map((t) => (
+                      <span key={t.id} className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs ${toneFor(t.tag)}`}>
+                        {t.tag}
+                        <button type="button" onClick={() => removeTag(t.id)} aria-label={`Remove ${t.tag}`} className="opacity-60 transition-opacity hover:opacity-100">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    <Input
+                      value={newTag}
+                      maxLength={40}
+                      placeholder="Add a category, e.g. Shortlisted"
+                      onChange={(e) => setNewTag(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(selected.id, newTag); } }}
+                    />
+                    <Button type="button" variant="outline" onClick={() => addTag(selected.id, newTag)}>
+                      <Plus className="h-4 w-4" /> Add
+                    </Button>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {[...new Set([...SUGGESTED_TAGS, ...allTags.map(([t]) => t)])]
+                      .filter((t) => !tagsFor(selected.id).some((x) => x.tag.toLowerCase() === t.toLowerCase()))
+                      .slice(0, 12)
+                      .map((t) => (
+                        <button key={t} type="button" onClick={() => addTag(selected.id, t)}
+                          className="rounded-full border border-dashed px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:border-primary hover:text-primary">
+                          + {t}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+
 
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Info label="Occupation" value={selected.occupation} />
