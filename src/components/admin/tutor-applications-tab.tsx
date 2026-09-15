@@ -223,6 +223,48 @@ export default function TutorApplicationsTab() {
         <span className="ml-auto text-xs text-muted-foreground">{filtered.length} of {apps.length}</span>
       </div>
 
+      <div className="rounded-2xl border bg-card p-3 shadow-soft">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <TagIcon className="h-3.5 w-3.5" /> Categories
+            <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium normal-case tracking-normal">
+              <Lock className="h-3 w-3" /> Admin only
+            </span>
+          </span>
+          {tagFilter.length > 0 && (
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setTagFilter([])}>Clear</Button>
+          )}
+        </div>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {allTags.length === 0 && (
+            <p className="text-xs text-muted-foreground">No categories yet — open an application and add one to start grouping applicants.</p>
+          )}
+          {allTags.map(([tag, n]) => {
+            const active = tagFilter.includes(tag);
+            return (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => setTagFilter((p) => (active ? p.filter((t) => t !== tag) : [...p.filter((t) => t !== "__untagged__"), tag]))}
+                className={`rounded-full border px-3 py-1 text-xs transition-colors ${active ? "border-primary bg-primary text-primary-foreground" : toneFor(tag)}`}
+              >
+                {tag} <span className="opacity-70">{n}</span>
+              </button>
+            );
+          })}
+          {allTags.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setTagFilter((p) => (p.includes("__untagged__") ? [] : ["__untagged__"]))}
+              className={`rounded-full border px-3 py-1 text-xs transition-colors ${tagFilter.includes("__untagged__") ? "border-primary bg-primary text-primary-foreground" : "bg-muted/40 text-muted-foreground"}`}
+            >
+              Untagged
+            </button>
+          )}
+        </div>
+      </div>
+
+
       <div className="overflow-x-auto rounded-2xl border bg-card shadow-soft">
         <table className="min-w-full text-sm">
           <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
