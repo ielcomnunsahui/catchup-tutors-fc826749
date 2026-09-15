@@ -280,7 +280,7 @@ export default function TutorApplicationsTab() {
           </thead>
           <tbody className="divide-y">
             {filtered.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">No applications yet.</td></tr>
+              <tr><td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">No applications match these filters.</td></tr>
             )}
             {filtered.map((a) => (
               <tr key={a.id} className="cursor-pointer align-top transition-colors hover:bg-muted/30"
