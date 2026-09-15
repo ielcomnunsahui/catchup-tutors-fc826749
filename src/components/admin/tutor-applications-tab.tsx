@@ -271,6 +271,7 @@ export default function TutorApplicationsTab() {
             <tr>
               <th className="px-4 py-3">Applicant</th>
               <th className="px-4 py-3">Subjects</th>
+              <th className="px-4 py-3">Categories</th>
               <th className="px-4 py-3">Experience</th>
               <th className="px-4 py-3">Submitted</th>
               <th className="px-4 py-3">Status</th>
