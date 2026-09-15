@@ -419,6 +419,50 @@ export default function TutorApplicationsTab() {
                   {selected.location && <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4" /> {selected.location}</span>}
                 </div>
 
+                <div className="rounded-2xl border p-4">
+                  <p className="flex items-center gap-2 font-semibold">
+                    <TagIcon className="h-4 w-4" /> Categories
+                    <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                      <Lock className="h-3 w-3" /> Only visible to admins
+                    </span>
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {tagsFor(selected.id).length === 0 && <span className="text-xs text-muted-foreground">No categories yet.</span>}
+                    {tagsFor(selected.id).map((t) => (
+                      <span key={t.id} className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs ${toneFor(t.tag)}`}>
+                        {t.tag}
+                        <button type="button" onClick={() => removeTag(t.id)} aria-label={`Remove ${t.tag}`} className="opacity-60 transition-opacity hover:opacity-100">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    <Input
+                      value={newTag}
+                      maxLength={40}
+                      placeholder="Add a category, e.g. Shortlisted"
+                      onChange={(e) => setNewTag(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(selected.id, newTag); } }}
+                    />
+                    <Button type="button" variant="outline" onClick={() => addTag(selected.id, newTag)}>
+                      <Plus className="h-4 w-4" /> Add
+                    </Button>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {[...new Set([...SUGGESTED_TAGS, ...allTags.map(([t]) => t)])]
+                      .filter((t) => !tagsFor(selected.id).some((x) => x.tag.toLowerCase() === t.toLowerCase()))
+                      .slice(0, 12)
+                      .map((t) => (
+                        <button key={t} type="button" onClick={() => addTag(selected.id, t)}
+                          className="rounded-full border border-dashed px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:border-primary hover:text-primary">
+                          + {t}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+
+
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Info label="Occupation" value={selected.occupation} />
                   <Info label="Highest qualification" value={selected.highest_qualification} />
