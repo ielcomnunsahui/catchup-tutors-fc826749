@@ -150,11 +150,18 @@ export default function TutorApplicationsTab() {
     const s = q.trim().toLowerCase();
     return apps.filter((a) => {
       if (statusFilter !== "all" && a.status !== statusFilter) return false;
+      if (tagFilter.length) {
+        const mine = tags.filter((t) => t.application_id === a.id).map((t) => t.tag);
+        if (tagFilter.includes("__untagged__")) {
+          if (mine.length) return false;
+        } else if (!tagFilter.every((t) => mine.includes(t))) return false;
+      }
       if (!s) return true;
-      return [a.ref_code ?? "", a.full_name, a.email, a.phone, a.location ?? "", (a.subjects ?? []).join(" ")]
+      const mineStr = tags.filter((t) => t.application_id === a.id).map((t) => t.tag).join(" ");
+      return [a.ref_code ?? "", a.full_name, a.email, a.phone, a.location ?? "", (a.subjects ?? []).join(" "), mineStr]
         .join(" ").toLowerCase().includes(s);
     });
-  }, [apps, q, statusFilter]);
+  }, [apps, q, statusFilter, tagFilter, tags]);
 
   const counts = STATUSES.map((s) => ({ s, n: apps.filter((a) => a.status === s).length }));
 
