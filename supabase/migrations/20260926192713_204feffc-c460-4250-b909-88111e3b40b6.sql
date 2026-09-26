@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.prepare_programme_enrolment() FROM PUBLIC, anon, authenticated;

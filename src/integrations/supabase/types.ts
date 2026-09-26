@@ -642,6 +642,90 @@ export type Database = {
         }
         Relationships: []
       }
+      programme_enrolments: {
+        Row: {
+          age: number | null
+          available_days: string[]
+          created_at: string
+          current_level: string | null
+          days_per_week: number
+          email: string
+          full_name: string
+          gender: string | null
+          guardian_name: string | null
+          guardian_phone: string | null
+          id: string
+          location: string | null
+          monthly_fee: number
+          notes: string | null
+          phone: string
+          preferred_time: string
+          programme: string
+          ref_code: string | null
+          school: string | null
+          status: string
+          subjects: string[]
+          target_exam_date: string | null
+          target_score: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          age?: number | null
+          available_days?: string[]
+          created_at?: string
+          current_level?: string | null
+          days_per_week: number
+          email: string
+          full_name: string
+          gender?: string | null
+          guardian_name?: string | null
+          guardian_phone?: string | null
+          id?: string
+          location?: string | null
+          monthly_fee: number
+          notes?: string | null
+          phone: string
+          preferred_time: string
+          programme: string
+          ref_code?: string | null
+          school?: string | null
+          status?: string
+          subjects?: string[]
+          target_exam_date?: string | null
+          target_score?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          age?: number | null
+          available_days?: string[]
+          created_at?: string
+          current_level?: string | null
+          days_per_week?: number
+          email?: string
+          full_name?: string
+          gender?: string | null
+          guardian_name?: string | null
+          guardian_phone?: string | null
+          id?: string
+          location?: string | null
+          monthly_fee?: number
+          notes?: string | null
+          phone?: string
+          preferred_time?: string
+          programme?: string
+          ref_code?: string | null
+          school?: string | null
+          status?: string
+          subjects?: string[]
+          target_exam_date?: string | null
+          target_score?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       programs: {
         Row: {
           accent: string
@@ -1621,6 +1705,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_enrolment_ref: { Args: { _id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
