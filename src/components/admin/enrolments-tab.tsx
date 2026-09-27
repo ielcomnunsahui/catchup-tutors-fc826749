@@ -26,11 +26,12 @@ export default function EnrolmentsTab() {
   const [q, setQ] = useState("");
   const [prog, setProg] = useState("all");
   const [status, setStatus] = useState("all");
+  const [payFilter, setPayFilter] = useState("all");
   const [open, setOpen] = useState<Row | null>(null);
 
   const rows = useMemo(() => data.filter((r) =>
-    (prog === "all" || r.programme === prog) && (status === "all" || r.status === status) &&
-    (!q || [r.full_name, r.email, r.phone, r.ref_code].join(" ").toLowerCase().includes(q.toLowerCase()))), [data, q, prog, status]);
+    (prog === "all" || r.programme === prog) && (status === "all" || r.status === status) && (payFilter === "all" || r.payment_status === payFilter) &&
+    (!q || [r.full_name, r.email, r.phone, r.ref_code].join(" ").toLowerCase().includes(q.toLowerCase()))), [data, q, prog, status, payFilter]);
 
   const updateStatus = async (r: Row, s: string) => {
     qc.setQueryData<Row[]>(["admin", "enrolments"], (cur) => (cur ?? []).map((x) => x.id === r.id ? { ...x, status: s } : x));
@@ -41,7 +42,7 @@ export default function EnrolmentsTab() {
   };
 
   const exportCsv = () => {
-    const cols = ["ref_code", "programme", "monthly_fee", "full_name", "email", "phone", "available_days", "preferred_time", "current_level", "school", "status", "created_at"];
+    const cols = ["ref_code", "programme", "monthly_fee", "full_name", "email", "phone", "available_days", "preferred_time", "payment_status", "amount_paid", "paid_at", "current_level", "school", "status", "created_at"];
     const esc = (v: any) => `"${String(Array.isArray(v) ? v.join("; ") : v ?? "").replace(/"/g, '""')}"`;
     const csv = [cols.join(","), ...rows.map((r) => cols.map((c) => esc(r[c])).join(","))].join("\n");
     const a = document.createElement("a");
@@ -72,23 +73,28 @@ export default function EnrolmentsTab() {
           <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
           <SelectContent><SelectItem value="all">All statuses</SelectItem>{STATUSES.map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}</SelectContent>
         </Select>
+        <Select value={payFilter} onValueChange={setPayFilter}>
+          <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+          <SelectContent><SelectItem value="all">All payments</SelectItem>{["paid", "pending", "unpaid", "failed"].map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}</SelectContent>
+        </Select>
         <Button variant="outline" onClick={exportCsv}><Download className="size-4" /> CSV</Button>
       </div>
 
       <div className="overflow-x-auto rounded-2xl border bg-card">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
-            <tr><th className="p-3">Reference</th><th className="p-3">Candidate</th><th className="p-3">Programme</th><th className="p-3">Schedule</th><th className="p-3">Status</th></tr>
+            <tr><th className="p-3">Reference</th><th className="p-3">Candidate</th><th className="p-3">Programme</th><th className="p-3">Schedule</th><th className="p-3">Payment</th><th className="p-3">Status</th></tr>
           </thead>
           <tbody>
-            {isLoading ? <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">Loading…</td></tr>
-              : rows.length === 0 ? <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">No enrolments yet</td></tr>
+            {isLoading ? <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">Loading…</td></tr>
+              : rows.length === 0 ? <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">No enrolments yet</td></tr>
               : rows.map((r) => (
                 <tr key={r.id} className="cursor-pointer border-t hover:bg-muted/40" onClick={() => setOpen(r)}>
                   <td className="p-3 font-mono text-xs">{r.ref_code}</td>
                   <td className="p-3"><p className="font-semibold">{r.full_name}</p><p className="text-xs text-muted-foreground">{r.phone} · {r.email}</p></td>
                   <td className="p-3"><Badge variant="secondary">{r.programme}</Badge> <span className="text-xs text-muted-foreground">{naira(r.monthly_fee)}</span></td>
                   <td className="p-3 text-xs">{(r.available_days ?? []).map((d: string) => d.slice(0, 3)).join(", ")}<br /><span className="text-muted-foreground">{r.preferred_time}</span></td>
+                  <td className="p-3"><Badge variant={r.payment_status === "paid" ? "default" : "outline"} className="capitalize">{r.payment_status}</Badge></td>
                   <td className="p-3" onClick={(e) => e.stopPropagation()}>
                     <Select value={r.status} onValueChange={(s) => updateStatus(r, s)}>
                       <SelectTrigger className="h-8 w-32 capitalize"><SelectValue /></SelectTrigger>
@@ -108,7 +114,9 @@ export default function EnrolmentsTab() {
             <dl className="grid grid-cols-[140px_1fr] gap-x-3 gap-y-2 text-sm">
               {[
                 ["Programme", `${open.programme} — ${naira(open.monthly_fee)}/month`], ["Days", (open.available_days ?? []).join(", ")],
-                ["Class time", open.preferred_time], ["Email", open.email], ["Phone", open.phone], ["Gender", open.gender], ["Age", open.age],
+                ["Class time", open.preferred_time],
+                ["Payment", `${open.payment_status}${open.amount_paid ? ` — ${naira(open.amount_paid)}` : ""}${open.paid_at ? ` on ${new Date(open.paid_at).toLocaleDateString()}` : ""}`],
+                ["Paystack ref", open.payment_reference], ["Email", open.email], ["Phone", open.phone], ["Gender", open.gender], ["Age", open.age],
                 ["Location", open.location], ["Guardian", [open.guardian_name, open.guardian_phone].filter(Boolean).join(" · ")],
                 ["Level", open.current_level], ["School", open.school], ["Subjects", (open.subjects ?? []).join(", ")],
                 ["Exam date", open.target_exam_date], ["Target", open.target_score], ["Notes", open.notes],
