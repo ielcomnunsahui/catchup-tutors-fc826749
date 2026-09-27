@@ -7,6 +7,7 @@ import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { heroImages } from "@/assets/heroes";
+import ProgrammePrices from "@/components/programme-prices";
 
 type DbPlan = { id: string; slug: string; name: string; price_ngn: number; price_usd: number | null };
 
@@ -148,6 +149,8 @@ export default function Pricing() {
         title="Two clear paths. One serious goal — mastery."
         description="Pick 1-on-1 tutoring for personal coaching, or a resource subscription for unlimited self-study. Or combine both."
       />
+
+      <ProgrammePrices />
 
       {/* Hourly */}
       <section className="mx-auto max-w-6xl px-4 pt-16 sm:px-6 lg:px-8">
