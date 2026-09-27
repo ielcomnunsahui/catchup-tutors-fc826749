@@ -25,6 +25,7 @@ import Events from "./pages/Events";
 import Partnership from "./pages/Partnership";
 import SummerStudentRegister from "./pages/SummerStudentRegister";
 import SummerTutorRegister from "./pages/SummerTutorRegister";
+import Enrol from "./pages/Enrol";
 import NotFound from "./pages/NotFound";
 
 export default function App() {
@@ -57,6 +58,8 @@ export default function App() {
       <Route path="/summerlessons" element={<SummerLessons />} />
       <Route path="/summerlessons/student" element={<SummerStudentRegister />} />
       <Route path="/summerlessons/tutor" element={<SummerTutorRegister />} />
+      <Route path="/enrol" element={<Enrol />} />
+      <Route path="/enrol/:programme" element={<Enrol />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
     </>

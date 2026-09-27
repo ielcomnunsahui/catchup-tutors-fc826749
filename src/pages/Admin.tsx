@@ -24,6 +24,7 @@ import PastPapersTab from "@/components/admin/past-papers-tab";
 import QuizBankTab from "@/components/admin/quiz-bank-tab";
 import MyschoolImportTab from "@/components/admin/myschool-import-tab";
 import SatImportTab from "@/components/admin/sat-import-tab";
+import EnrolmentsTab from "@/components/admin/enrolments-tab";
 import SettingsTab from "@/components/admin/settings-tab";
 import StudentsTab from "@/components/admin/students-tab";
 import TutorApplicationsTab from "@/components/admin/tutor-applications-tab";
@@ -109,6 +110,7 @@ function AdminBody() {
     quiz: <QuizBankTab />,
     "ng-questions": <MyschoolImportTab />,
     "sat-questions": <SatImportTab />,
+    enrolments: <EnrolmentsTab />,
     settings: <SettingsTab />,
   };
 

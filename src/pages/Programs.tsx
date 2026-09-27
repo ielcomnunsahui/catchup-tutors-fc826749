@@ -11,6 +11,7 @@ import AdmissionRequirements from "@/components/admission-requirements";
 import { quizLink } from "@/lib/nigerian-exams";
 import { EXAMS, CATALOG_SUBJECTS } from "@/lib/catalog";
 import { heroImages } from "@/assets/heroes";
+import ProgrammePrices from "@/components/programme-prices";
 
 const LOCAL_PATHWAYS = [
   {
@@ -109,6 +110,8 @@ export default function Programs() {
           ))}
         </div>
       </section>
+
+      <ProgrammePrices />
 
       {/* Pathways */}
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">

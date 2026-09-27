@@ -15,7 +15,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 export type AdminSectionId =
   | "overview" | "registrations" | "students" | "tutor-apps" | "attendance"
   | "programs" | "subjects" | "topics" | "resources"
-  | "topic-questions" | "past-papers" | "quiz" | "ng-questions" | "sat-questions" | "settings";
+  | "topic-questions" | "past-papers" | "quiz" | "ng-questions" | "sat-questions" | "enrolments" | "settings";
 
 export type AdminSection = {
   id: AdminSectionId;
@@ -37,6 +37,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
     label: "People",
     items: [
       { id: "students", label: "Students & accounts", icon: Users, description: "Every registered account and access level" },
+      { id: "enrolments", label: "Programme enrolments", icon: ClipboardList, description: "Sign-ups for the fixed-price exam programmes" },
       { id: "tutor-apps", label: "Tutor applications", icon: UserCheck, description: "Review, approve or decline tutors" },
       { id: "attendance", label: "Attendance", icon: CalendarCheck, description: "Session marks and discrepancies" },
     ],
