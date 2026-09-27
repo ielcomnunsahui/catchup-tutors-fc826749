@@ -23,6 +23,19 @@ Deno.serve(async (req) => {
 
   const reference = event.data.reference!;
   const db = admin();
+
+  // Programme enrolment payments (guest-friendly, tracked on the enrolment row).
+  if (reference.startsWith("cute_")) {
+    const { data: e } = await db.from("programme_enrolments")
+      .select("id, monthly_fee, payment_status").eq("payment_reference", reference).maybeSingle();
+    const paid = Number((event.data as { amount?: number }).amount ?? 0);
+    if (e && e.payment_status !== "paid" && paid >= Number(e.monthly_fee) * 100) {
+      await db.from("programme_enrolments").update({
+        payment_status: "paid", amount_paid: Math.round(paid / 100), paid_at: new Date().toISOString(),
+      }).eq("id", e.id);
+    }
+    return new Response("ok", { status: 200 });
+  }
   const { data: payment } = await db.from("payments").select("*").eq("provider_reference", reference).maybeSingle();
   if (!payment || payment.status === "paid") return new Response("ok", { status: 200 });
 
