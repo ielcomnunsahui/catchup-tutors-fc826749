@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, ArrowRight, CalendarDays, CheckCircle2, Loader2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { ArrowLeft, ArrowRight, CalendarDays, CheckCircle2, CreditCard, Loader2, ShieldCheck, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { SiteShell, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,32 @@ export default function Enrol() {
   const [time, setTime] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<string | null>(null);
+  const [enrolId, setEnrolId] = useState<string | null>(null);
+  const [paying, setPaying] = useState(false);
+  const [params, setParams] = useSearchParams();
+  const [verify, setVerify] = useState<{ state: "checking" | "paid" | "failed"; e?: any } | null>(null);
+
+  useEffect(() => {
+    const reference = params.get("reference") ?? params.get("trxref");
+    if (!reference) return;
+    setVerify({ state: "checking" });
+    supabase.functions.invoke("paystack-enrol", { body: { action: "verify", reference } }).then(({ data, error }) => {
+      if (error || data?.error) return setVerify({ state: "failed" });
+      setVerify({ state: data.status === "paid" ? "paid" : "failed", e: data.enrolment });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const pay = async (id: string) => {
+    setPaying(true);
+    const callbackUrl = `${window.location.origin}/enrol/${plan.key.toLowerCase()}`;
+    const { data, error } = await supabase.functions.invoke("paystack-enrol", { body: { action: "init", enrolmentId: id, callbackUrl } });
+    if (error || data?.error || !data?.authorizationUrl) {
+      setPaying(false);
+      return toast.error(data?.error ?? "Could not start payment. Please try again or contact us.");
+    }
+    window.location.href = data.authorizationUrl;
+  };
   const set = (k: keyof typeof empty) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setForm({ ...form, [k]: e.target.value });
 
   const toggleDay = (d: string) => setDays((cur) =>
@@ -53,9 +79,39 @@ export default function Enrol() {
     const { data: ref } = await supabase.rpc("get_enrolment_ref" as any, { _id: id });
     supabase.functions.invoke("send-enrolment-email", { body: { id } }).catch(() => {});
     setBusy(false);
+    setEnrolId(id);
     setDone((ref as string) ?? "received");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  if (verify) return (
+    <SiteShell>
+      <Seo title="Payment | CatchUp Tutors" description="Programme enrolment payment." path={`/enrol/${plan.key.toLowerCase()}`} noindex />
+      <section className="mx-auto max-w-xl px-4 py-20 text-center">
+        {verify.state === "checking" ? (
+          <><Loader2 className="mx-auto size-12 animate-spin text-primary" /><p className="mt-4 text-muted-foreground">Confirming your payment…</p></>
+        ) : verify.state === "paid" ? (
+          <>
+            <CheckCircle2 className="mx-auto size-14 text-brand-green" />
+            <h1 className="mt-4 font-display text-3xl font-bold">Payment received — you're in!</h1>
+            <p className="mt-3 text-lg">{verify.e?.programme} · Reference <b>{verify.e?.ref_code}</b></p>
+            <p className="mt-2 text-muted-foreground">{naira(verify.e?.amount_paid ?? plan.fee)} paid for your first month. {(verify.e?.available_days ?? []).join(", ")} · {verify.e?.preferred_time}. We'll send your class timetable shortly.</p>
+            <Button asChild className="mt-8"><Link to="/">Back to home</Link></Button>
+          </>
+        ) : (
+          <>
+            <XCircle className="mx-auto size-14 text-destructive" />
+            <h1 className="mt-4 font-display text-3xl font-bold">Payment not completed</h1>
+            <p className="mt-3 text-muted-foreground">Your enrolment is saved{verify.e?.ref_code ? ` (${verify.e.ref_code})` : ""}, but we couldn't confirm the payment.</p>
+            <div className="mt-8 flex flex-wrap justify-center gap-2">
+              {verify.e?.id && <Button onClick={() => pay(verify.e.id)} disabled={paying}>{paying ? <Loader2 className="animate-spin" /> : <CreditCard />} Try again</Button>}
+              <Button variant="outline" onClick={() => { setParams({}); setVerify(null); }}>Back to form</Button>
+            </div>
+          </>
+        )}
+      </section>
+    </SiteShell>
+  );
 
   if (done) return (
     <SiteShell>
@@ -65,9 +121,19 @@ export default function Enrol() {
         <h1 className="mt-4 font-display text-3xl font-bold">You're enrolled for {plan.name}!</h1>
         {done !== "received" && <p className="mt-3 text-lg">Reference: <b>{done}</b></p>}
         <p className="mt-3 text-muted-foreground">
-          {orderedDays.join(", ")} · {time}. Our team will contact you on {form.phone} to confirm your timetable and payment of {naira(plan.fee)}/month.
+          {orderedDays.join(", ")} · {time}. Complete your first month's payment to secure your place.
         </p>
-        <Button asChild className="mt-8"><Link to="/">Back to home</Link></Button>
+        <div className="mx-auto mt-8 max-w-sm rounded-3xl border bg-card p-6 shadow-soft">
+          <p className="text-sm text-muted-foreground">Amount due</p>
+          <p className="font-display text-3xl font-bold">{naira(plan.fee)}</p>
+          {enrolId && (
+            <Button size="lg" className="mt-4 w-full" onClick={() => pay(enrolId)} disabled={paying}>
+              {paying ? <Loader2 className="animate-spin" /> : <CreditCard />} Pay now
+            </Button>
+          )}
+          <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-muted-foreground"><ShieldCheck className="size-3.5" /> Secure card, transfer or USSD via Paystack</p>
+        </div>
+        <Button asChild variant="ghost" className="mt-4"><Link to="/">I'll pay later — our team will contact you</Link></Button>
       </section>
     </SiteShell>
   );
