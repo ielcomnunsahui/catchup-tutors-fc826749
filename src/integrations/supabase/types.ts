@@ -645,6 +645,7 @@ export type Database = {
       programme_enrolments: {
         Row: {
           age: number | null
+          amount_paid: number | null
           available_days: string[]
           created_at: string
           current_level: string | null
@@ -658,6 +659,9 @@ export type Database = {
           location: string | null
           monthly_fee: number
           notes: string | null
+          paid_at: string | null
+          payment_reference: string | null
+          payment_status: string
           phone: string
           preferred_time: string
           programme: string
@@ -672,6 +676,7 @@ export type Database = {
         }
         Insert: {
           age?: number | null
+          amount_paid?: number | null
           available_days?: string[]
           created_at?: string
           current_level?: string | null
@@ -685,6 +690,9 @@ export type Database = {
           location?: string | null
           monthly_fee: number
           notes?: string | null
+          paid_at?: string | null
+          payment_reference?: string | null
+          payment_status?: string
           phone: string
           preferred_time: string
           programme: string
@@ -699,6 +707,7 @@ export type Database = {
         }
         Update: {
           age?: number | null
+          amount_paid?: number | null
           available_days?: string[]
           created_at?: string
           current_level?: string | null
@@ -712,6 +721,9 @@ export type Database = {
           location?: string | null
           monthly_fee?: number
           notes?: string | null
+          paid_at?: string | null
+          payment_reference?: string | null
+          payment_status?: string
           phone?: string
           preferred_time?: string
           programme?: string
