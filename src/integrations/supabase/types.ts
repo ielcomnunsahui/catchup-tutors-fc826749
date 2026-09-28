@@ -649,6 +649,7 @@ export type Database = {
           available_days: string[]
           created_at: string
           current_level: string | null
+          daily_schedule: Json
           days_per_week: number
           email: string
           full_name: string
@@ -680,6 +681,7 @@ export type Database = {
           available_days?: string[]
           created_at?: string
           current_level?: string | null
+          daily_schedule?: Json
           days_per_week: number
           email: string
           full_name: string
@@ -711,6 +713,7 @@ export type Database = {
           available_days?: string[]
           created_at?: string
           current_level?: string | null
+          daily_schedule?: Json
           days_per_week?: number
           email?: string
           full_name?: string
@@ -735,6 +738,51 @@ export type Database = {
           target_score?: string | null
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      programme_plan_settings: {
+        Row: {
+          blurb: string
+          created_at: string
+          days_per_week: number
+          is_active: boolean
+          max_lessons_per_day: number
+          min_lessons_per_day: number
+          monthly_fee: number
+          name: string
+          note: string | null
+          programme: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          blurb?: string
+          created_at?: string
+          days_per_week: number
+          is_active?: boolean
+          max_lessons_per_day?: number
+          min_lessons_per_day?: number
+          monthly_fee: number
+          name: string
+          note?: string | null
+          programme: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          blurb?: string
+          created_at?: string
+          days_per_week?: number
+          is_active?: boolean
+          max_lessons_per_day?: number
+          min_lessons_per_day?: number
+          monthly_fee?: number
+          name?: string
+          note?: string | null
+          programme?: string
+          sort_order?: number
+          updated_at?: string
         }
         Relationships: []
       }
