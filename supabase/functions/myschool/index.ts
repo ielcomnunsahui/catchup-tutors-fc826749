@@ -158,16 +158,27 @@ Deno.serve(async (req) => {
       let total_pages = 1;
       let credits = 0;
 
+      let warning: string | null = null;
       for (let i = 0; i < input.pages; i++) {
         const page = input.start_page + i;
         if (page > total_pages && i > 0) break;
-        const data = await parseGet("get_past_questions", {
-          subject: input.subject,
-          exam_type: input.exam_type,
-          exam_year: input.exam_year ?? "",
-          topic: input.topic ?? "",
-          page: String(page),
-        });
+        if (i > 0) await new Promise((r) => setTimeout(r, 600)); // pace requests
+        let data: Json;
+        try {
+          data = await parseGet("get_past_questions", {
+            subject: input.subject,
+            exam_type: input.exam_type,
+            exam_year: input.exam_year ?? "",
+            topic: input.topic ?? "",
+            page: String(page),
+          });
+        } catch (err) {
+          if (err instanceof RateLimitError && collected.length) {
+            warning = `Stopped at page ${page}: ${err.message}`;
+            break;
+          }
+          throw err;
+        }
         credits += 1;
         total_questions = Number(data.total_questions ?? total_questions) || total_questions;
         total_pages = Number(data.total_pages ?? total_pages) || total_pages;
@@ -177,7 +188,7 @@ Deno.serve(async (req) => {
         collected.push(...list.map(normalise).filter((q) => q.question_text && q.options.length >= 2));
       }
 
-      return json({ questions: collected, total_questions, total_pages, credits });
+      return json({ questions: collected, total_questions, total_pages, credits, warning });
     }
 
     if (input.action === "import_questions") {
@@ -252,6 +263,8 @@ Deno.serve(async (req) => {
     );
     return json({ requirements: data, cached: false });
   } catch (e) {
+    // Rate limits are expected; return 200 with an error body so the UI shows a message instead of crashing.
+    if (e instanceof RateLimitError) return json({ error: e.message, rate_limited: true }, 200);
     return json({ error: (e as Error).message }, 400);
   }
 });
