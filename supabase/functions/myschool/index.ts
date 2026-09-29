@@ -59,22 +59,40 @@ type Json = Record<string, unknown>;
 
 const CACHE_DAYS = 30;
 
+class RateLimitError extends Error {}
+
 async function parseGet(endpoint: string, params: Record<string, string>) {
   const key = Deno.env.get("PARSE_API_KEY");
   if (!key) throw new Error("PARSE_API_KEY is not configured");
   const url = new URL(`${SCRAPER}/${endpoint}`);
   for (const [k, v] of Object.entries(params)) if (v) url.searchParams.set(k, v);
-  const res = await fetch(url, { headers: { "X-API-Key": key } });
-  const text = await res.text();
+  let res: Response | null = null;
+  let text = "";
+  // Retry rate-limited (429) and transient 5xx responses with backoff.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    res = await fetch(url, { headers: { "X-API-Key": key } });
+    text = await res.text();
+    if (res.status !== 429 && res.status < 500) break;
+    const retryAfter = Number(res.headers.get("retry-after"));
+    const wait = Number.isFinite(retryAfter) && retryAfter > 0
+      ? Math.min(retryAfter * 1000, 8000)
+      : 1000 * 2 ** attempt;
+    if (attempt < 2) await new Promise((r) => setTimeout(r, wait));
+  }
   let body: Json;
   try {
     body = JSON.parse(text);
   } catch {
     body = { raw: text };
   }
-  if (!res.ok) {
+  if (!res!.ok) {
+    if (res!.status === 429) {
+      throw new RateLimitError(
+        "The question source is busy (too many requests). Please wait a minute and try again, or fetch fewer pages.",
+      );
+    }
     throw new Error(
-      typeof body.error === "string" ? body.error : `myschool API error (${res.status})`,
+      typeof body.error === "string" ? body.error : `myschool API error (${res!.status})`,
     );
   }
   return (body.data ?? body) as Json;
@@ -140,16 +158,27 @@ Deno.serve(async (req) => {
       let total_pages = 1;
       let credits = 0;
 
+      let warning: string | null = null;
       for (let i = 0; i < input.pages; i++) {
         const page = input.start_page + i;
         if (page > total_pages && i > 0) break;
-        const data = await parseGet("get_past_questions", {
-          subject: input.subject,
-          exam_type: input.exam_type,
-          exam_year: input.exam_year ?? "",
-          topic: input.topic ?? "",
-          page: String(page),
-        });
+        if (i > 0) await new Promise((r) => setTimeout(r, 600)); // pace requests
+        let data: Json;
+        try {
+          data = await parseGet("get_past_questions", {
+            subject: input.subject,
+            exam_type: input.exam_type,
+            exam_year: input.exam_year ?? "",
+            topic: input.topic ?? "",
+            page: String(page),
+          });
+        } catch (err) {
+          if (err instanceof RateLimitError && collected.length) {
+            warning = `Stopped at page ${page}: ${err.message}`;
+            break;
+          }
+          throw err;
+        }
         credits += 1;
         total_questions = Number(data.total_questions ?? total_questions) || total_questions;
         total_pages = Number(data.total_pages ?? total_pages) || total_pages;
@@ -159,7 +188,7 @@ Deno.serve(async (req) => {
         collected.push(...list.map(normalise).filter((q) => q.question_text && q.options.length >= 2));
       }
 
-      return json({ questions: collected, total_questions, total_pages, credits });
+      return json({ questions: collected, total_questions, total_pages, credits, warning });
     }
 
     if (input.action === "import_questions") {
@@ -234,6 +263,8 @@ Deno.serve(async (req) => {
     );
     return json({ requirements: data, cached: false });
   } catch (e) {
+    // Rate limits are expected; return 200 with an error body so the UI shows a message instead of crashing.
+    if (e instanceof RateLimitError) return json({ error: e.message, rate_limited: true }, 200);
     return json({ error: (e as Error).message }, 400);
   }
 });
