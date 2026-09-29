@@ -59,22 +59,40 @@ type Json = Record<string, unknown>;
 
 const CACHE_DAYS = 30;
 
+class RateLimitError extends Error {}
+
 async function parseGet(endpoint: string, params: Record<string, string>) {
   const key = Deno.env.get("PARSE_API_KEY");
   if (!key) throw new Error("PARSE_API_KEY is not configured");
   const url = new URL(`${SCRAPER}/${endpoint}`);
   for (const [k, v] of Object.entries(params)) if (v) url.searchParams.set(k, v);
-  const res = await fetch(url, { headers: { "X-API-Key": key } });
-  const text = await res.text();
+  let res: Response | null = null;
+  let text = "";
+  // Retry rate-limited (429) and transient 5xx responses with backoff.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    res = await fetch(url, { headers: { "X-API-Key": key } });
+    text = await res.text();
+    if (res.status !== 429 && res.status < 500) break;
+    const retryAfter = Number(res.headers.get("retry-after"));
+    const wait = Number.isFinite(retryAfter) && retryAfter > 0
+      ? Math.min(retryAfter * 1000, 8000)
+      : 1000 * 2 ** attempt;
+    if (attempt < 2) await new Promise((r) => setTimeout(r, wait));
+  }
   let body: Json;
   try {
     body = JSON.parse(text);
   } catch {
     body = { raw: text };
   }
-  if (!res.ok) {
+  if (!res!.ok) {
+    if (res!.status === 429) {
+      throw new RateLimitError(
+        "The question source is busy (too many requests). Please wait a minute and try again, or fetch fewer pages.",
+      );
+    }
     throw new Error(
-      typeof body.error === "string" ? body.error : `myschool API error (${res.status})`,
+      typeof body.error === "string" ? body.error : `myschool API error (${res!.status})`,
     );
   }
   return (body.data ?? body) as Json;
