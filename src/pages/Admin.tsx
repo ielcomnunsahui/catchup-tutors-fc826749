@@ -8,7 +8,7 @@ import {
   CheckCircle2, Edit3, Eye, EyeOff, Loader2, Plus, ShieldCheck, Trash2, X,
   LayoutDashboard, GraduationCap, BookOpen, FolderTree, FileText, ClipboardList,
   Users, UserCheck, Clock, TrendingUp, ArrowUp, ArrowDown, ArrowUpDown, Download, Search,
-  Activity, CalendarDays, CalendarCheck, Brain, Layers3,
+  Activity, AlertTriangle, CalendarDays, CalendarCheck, Brain, Layers3, RotateCw,
 } from "lucide-react";
 import { SiteShell } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,7 @@ import { KpiSkeleton, ListSkeleton } from "@/components/skeletons";
 import { AdminShell, useAdminSection, type AdminSectionId } from "@/components/admin/admin-shell";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { adminErrorMessage } from "@/lib/admin-errors";
 
 
 
@@ -116,7 +117,12 @@ function AdminBody() {
 
   return (
     <AdminShell section={section} setSection={setSection}>
-      <ErrorBoundary key={section} title="This section could not load">
+      <ErrorBoundary
+        resetKey={section}
+        title={`${panels[section] ? "This section" : "The admin section"} could not load`}
+        description="Your other admin tools are still available. Try this section again or return to the dashboard."
+        onBack={() => setSection("overview")}
+      >
         <div className="animate-in fade-in duration-300">{panels[section]}</div>
       </ErrorBoundary>
     </AdminShell>
@@ -128,39 +134,54 @@ function AdminBody() {
 function useTable<T extends { id: string }>(table: "programs" | "subjects" | "topics" | "resources", orderBy = "sort_order") {
   const [rows, setRows] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const reload = async () => {
     setLoading(true);
-    const { data, error } = await (supabase as any).from(table).select("*").order(orderBy, { ascending: true });
-    if (error) toast.error(`Failed to load ${table}: ${error.message}`);
-    setRows((data ?? []) as T[]);
-    setLoading(false);
+    setLoadError(null);
+    try {
+      const { data, error } = await (supabase as any).from(table).select("*").order(orderBy, { ascending: true });
+      if (error) {
+        setLoadError(adminErrorMessage(error, `load ${table}`, table));
+        return;
+      }
+      setRows((data ?? []) as T[]);
+    } catch (error) {
+      setLoadError(adminErrorMessage(error, `load ${table}`, table));
+    } finally {
+      setLoading(false);
+    }
   };
   useEffect(() => { reload(); }, []);
-  return { rows, loading, reload };
+  return { rows, loading, loadError, reload };
 }
 
-async function togglePublish(table: string, id: string, value: boolean) {
+async function togglePublish(table: string, id: string, value: boolean, itemLabel: string) {
   const { error } = await (supabase as any).from(table).update({ is_published: value }).eq("id", id);
-  if (error) toast.error(error.message); else toast.success(value ? "Published" : "Unpublished");
+  if (error) {
+    toast.error(adminErrorMessage(error, value ? `publish this ${itemLabel}` : `hide this ${itemLabel}`, itemLabel));
+    return false;
+  }
+  toast.success(value ? `${itemLabel} published` : `${itemLabel} hidden from students`);
+  return true;
 }
 
-async function removeRow(table: string, id: string) {
+async function removeRow(table: string, id: string, itemLabel: string) {
   const { error } = await (supabase as any).from(table).delete().eq("id", id);
-  if (error) { toast.error(error.message); return false; }
-  toast.success("Deleted"); return true;
+  if (error) { toast.error(adminErrorMessage(error, `delete this ${itemLabel}`, itemLabel)); return false; }
+  toast.success(`${itemLabel} deleted`); return true;
 }
 
 const programSchema = z.object({
-  name: z.string().trim().min(2).max(80),
-  slug: z.string().trim().min(2).max(80).regex(/^[a-z0-9-]+$/, "lowercase letters, numbers, hyphens"),
-  description: z.string().trim().min(10).max(500),
+  name: z.string().trim().min(2, "Enter a programme name with at least 2 characters.").max(80, "Keep the programme name under 80 characters."),
+  slug: z.string().trim().min(2, "Enter a URL name with at least 2 characters.").max(80, "Keep the URL name under 80 characters.").regex(/^[a-z0-9-]+$/, "Use only lowercase letters, numbers and hyphens in the URL name."),
+  description: z.string().trim().min(10, "Add a short description with at least 10 characters.").max(500, "Keep the description under 500 characters."),
   accent: z.enum(["blue", "orange", "green", "navy"]),
-  sort_order: z.coerce.number().int().min(0).max(999),
+  sort_order: z.coerce.number().int("Sort order must be a whole number.").min(0, "Sort order cannot be negative.").max(999, "Sort order cannot be more than 999."),
   is_published: z.boolean(),
 });
 
 function ProgramsTab() {
-  const { rows, loading, reload } = useTable<Program>("programs");
+  const { rows, loading, loadError, reload } = useTable<Program>("programs");
   const [editing, setEditing] = useState<Partial<Program> | null>(null);
 
   return (
@@ -168,6 +189,8 @@ function ProgramsTab() {
       <Toolbar title="Programs" onNew={() => setEditing({ name: "", slug: "", description: "", accent: "blue", is_published: true, sort_order: rows.length })} />
       <DataTable
         loading={loading}
+        error={loadError}
+        onRetry={reload}
         rows={rows}
         columns={[
           { key: "name", header: "Name" },
@@ -175,8 +198,8 @@ function ProgramsTab() {
           { key: "accent", header: "Accent" },
         ]}
         onEdit={(r) => setEditing(r)}
-        onPublishToggle={async (r) => { await togglePublish("programs", r.id, !r.is_published); reload(); }}
-        onDelete={async (r) => { if (await removeRow("programs", r.id)) reload(); }}
+        onPublishToggle={async (r) => { const changed = await togglePublish("programs", r.id, !r.is_published, "Programme"); if (changed) reload(); return changed; }}
+        onDelete={async (r) => { const deleted = await removeRow("programs", r.id, "Programme"); if (deleted) reload(); return deleted; }}
       />
       {editing && (
         <EditDialog title={editing.id ? "Edit program" : "New program"} onClose={() => setEditing(null)} onSave={async () => {
@@ -186,8 +209,8 @@ function ProgramsTab() {
           const { error } = editing.id
             ? await (supabase as any).from("programs").update(payload).eq("id", editing.id)
             : await (supabase as any).from("programs").insert(payload);
-          if (error) { toast.error(error.message); return; }
-          toast.success("Saved"); setEditing(null); reload();
+          if (error) { toast.error(adminErrorMessage(error, `${editing.id ? "update" : "create"} this programme`, "programme")); return; }
+          toast.success(editing.id ? `“${payload.name}” updated` : `“${payload.name}” created`); setEditing(null); reload();
         }}>
           <Field label="Name"><Input value={editing.name ?? ""} onChange={(e) => setEditing({ ...editing, name: e.target.value, slug: editing.slug || slugify(e.target.value) })} maxLength={80} /></Field>
           <Field label="Slug"><Input value={editing.slug ?? ""} onChange={(e) => setEditing({ ...editing, slug: e.target.value })} maxLength={80} /></Field>
@@ -209,25 +232,37 @@ function ProgramsTab() {
 }
 
 const subjectSchema = z.object({
-  program_id: z.string().uuid("Pick a program"),
-  name: z.string().trim().min(2).max(80),
-  slug: z.string().trim().min(2).max(80).regex(/^[a-z0-9-]+$/),
-  description: z.string().trim().min(5).max(500),
-  sort_order: z.coerce.number().int().min(0).max(999),
+  program_id: z.string().uuid("Choose the programme this subject belongs to."),
+  name: z.string().trim().min(2, "Enter a subject name with at least 2 characters.").max(80, "Keep the subject name under 80 characters."),
+  slug: z.string().trim().min(2, "Enter a URL name with at least 2 characters.").max(80, "Keep the URL name under 80 characters.").regex(/^[a-z0-9-]+$/, "Use only lowercase letters, numbers and hyphens in the URL name."),
+  description: z.string().trim().min(5, "Add a short description with at least 5 characters.").max(500, "Keep the description under 500 characters."),
+  sort_order: z.coerce.number().int("Sort order must be a whole number.").min(0, "Sort order cannot be negative.").max(999, "Sort order cannot be more than 999."),
   is_published: z.boolean(),
 });
 
 function SubjectsTab() {
   const programs = useTable<Program>("programs");
-  const { rows, loading, reload } = useTable<Subject>("subjects");
+  const { rows, loading, loadError, reload } = useTable<Subject>("subjects");
   const [editing, setEditing] = useState<Partial<Subject> | null>(null);
   const programName = (id: string) => programs.rows.find((p) => p.id === id)?.name ?? "—";
 
   return (
     <div>
-      <Toolbar title="Subjects" onNew={() => setEditing({ program_id: programs.rows[0]?.id, name: "", slug: "", description: "", is_published: true, sort_order: rows.length })} />
+      <Toolbar
+        title="Subjects"
+        subtitle="Create a programme first, then add its subjects."
+        onNew={() => {
+          if (!programs.rows.length) { toast.error("Create a programme before adding a subject."); return; }
+          setEditing({ program_id: programs.rows[0].id, name: "", slug: "", description: "", is_published: true, sort_order: rows.length });
+        }}
+        newDisabled={programs.loading || !!programs.loadError || !programs.rows.length}
+        newDisabledReason={programs.loadError ?? (!programs.rows.length ? "Create a programme first" : undefined)}
+      />
+      {programs.loadError && <InlineLoadError message={programs.loadError} onRetry={programs.reload} label="programmes" />}
       <DataTable
         loading={loading}
+        error={loadError}
+        onRetry={reload}
         rows={rows}
         columns={[
           { key: "name", header: "Subject" },
@@ -235,8 +270,8 @@ function SubjectsTab() {
           { key: "slug", header: "Slug" },
         ]}
         onEdit={(r) => setEditing(r)}
-        onPublishToggle={async (r) => { await togglePublish("subjects", r.id, !r.is_published); reload(); }}
-        onDelete={async (r) => { if (await removeRow("subjects", r.id)) reload(); }}
+        onPublishToggle={async (r) => { const changed = await togglePublish("subjects", r.id, !r.is_published, "Subject"); if (changed) reload(); return changed; }}
+        onDelete={async (r) => { const deleted = await removeRow("subjects", r.id, "Subject"); if (deleted) reload(); return deleted; }}
       />
       {editing && (
         <EditDialog title={editing.id ? "Edit subject" : "New subject"} onClose={() => setEditing(null)} onSave={async () => {
@@ -245,8 +280,8 @@ function SubjectsTab() {
           const { error } = editing.id
             ? await (supabase as any).from("subjects").update(parsed.data).eq("id", editing.id)
             : await (supabase as any).from("subjects").insert(parsed.data);
-          if (error) { toast.error(error.message); return; }
-          toast.success("Saved"); setEditing(null); reload();
+          if (error) { toast.error(adminErrorMessage(error, `${editing.id ? "update" : "create"} this subject`, "subject")); return; }
+          toast.success(editing.id ? `“${parsed.data.name}” updated` : `“${parsed.data.name}” created`); setEditing(null); reload();
         }}>
           <Field label="Program">
             <Select value={editing.program_id ?? ""} onValueChange={(v) => setEditing({ ...editing, program_id: v })}>
@@ -291,8 +326,8 @@ function TopicsTab() {
           { key: "subject_id", header: "Subject", render: (r) => subjectName(r.subject_id) },
         ]}
         onEdit={(r) => setEditing(r)}
-        onPublishToggle={async (r) => { await togglePublish("topics", r.id, !r.is_published); reload(); }}
-        onDelete={async (r) => { if (await removeRow("topics", r.id)) reload(); }}
+        onPublishToggle={async (r) => { const changed = await togglePublish("topics", r.id, !r.is_published, "Topic"); if (changed) reload(); return changed; }}
+        onDelete={async (r) => { const deleted = await removeRow("topics", r.id, "Topic"); if (deleted) reload(); return deleted; }}
       />
       {editing && (
         <EditDialog title={editing.id ? "Edit topic" : "New topic"} onClose={() => setEditing(null)} onSave={async () => {
@@ -381,8 +416,8 @@ function ResourcesTab() {
           { key: "access_level", header: "Access", render: (r) => <Badge>{r.access_level}</Badge> },
         ]}
         onEdit={(r) => setEditing(r)}
-        onPublishToggle={async (r) => { await togglePublish("resources", r.id, !r.is_published); reload(); }}
-        onDelete={async (r) => { if (await removeRow("resources", r.id)) reload(); }}
+        onPublishToggle={async (r) => { const changed = await togglePublish("resources", r.id, !r.is_published, "Resource"); if (changed) reload(); return changed; }}
+        onDelete={async (r) => { const deleted = await removeRow("resources", r.id, "Resource"); if (deleted) reload(); return deleted; }}
       />
       {editing && (
         <EditDialog title={editing.id ? "Edit resource" : "New resource"} onClose={() => setEditing(null)} onSave={async () => {
@@ -446,7 +481,16 @@ function ResourcesTab() {
 
 /* ---------- Shared UI ---------- */
 
-function Toolbar({ title, subtitle, onNew, newLabel = "New", extra }: { title: string; subtitle?: string; onNew: () => void; newLabel?: string; extra?: React.ReactNode }) {
+function Toolbar({ title, subtitle, onNew, newLabel = "New", newDisabled = false, newDisabledReason, extra }: {
+  title: string;
+  subtitle?: string;
+  onNew: () => void;
+  newLabel?: string;
+  newDisabled?: boolean;
+  newDisabledReason?: string;
+  extra?: React.ReactNode;
+}) {
+  const newButton = <Button onClick={onNew} disabled={newDisabled} className="transition-transform active:scale-95"><Plus /> {newLabel}</Button>;
   return (
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
@@ -455,7 +499,9 @@ function Toolbar({ title, subtitle, onNew, newLabel = "New", extra }: { title: s
       </div>
       <div className="flex flex-wrap items-center gap-2">
         {extra}
-        <Button onClick={onNew} className="transition-transform active:scale-95"><Plus /> {newLabel}</Button>
+        {newDisabled && newDisabledReason ? (
+          <Tooltip><TooltipTrigger asChild><span>{newButton}</span></TooltipTrigger><TooltipContent>{newDisabledReason}</TooltipContent></Tooltip>
+        ) : newButton}
       </div>
     </div>
   );
@@ -463,9 +509,22 @@ function Toolbar({ title, subtitle, onNew, newLabel = "New", extra }: { title: s
 
 type Column<T> = { key: keyof T; header: string; render?: (r: T) => React.ReactNode };
 
-function DataTable<T extends { id: string; is_published: boolean }>({ rows, loading, columns, onEdit, onPublishToggle, onDelete, searchPlaceholder = "Search…" }: {
-  rows: T[]; loading: boolean; columns: Column<T>[];
-  onEdit: (r: T) => void; onPublishToggle: (r: T) => Promise<void> | void; onDelete: (r: T) => Promise<boolean | void> | void;
+function InlineLoadError({ message, onRetry, label = "items" }: { message: string; onRetry: () => void; label?: string }) {
+  return (
+    <div role="alert" className="mb-4 flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 sm:flex-row sm:items-center">
+      <AlertTriangle className="size-5 shrink-0 text-destructive" />
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold">Could not load {label}</p>
+        <p className="text-sm text-muted-foreground">{message}</p>
+      </div>
+      <Button type="button" variant="outline" size="sm" onClick={onRetry}><RotateCw className="size-4" /> Try again</Button>
+    </div>
+  );
+}
+
+function DataTable<T extends { id: string; is_published: boolean }>({ rows, loading, error, onRetry, columns, onEdit, onPublishToggle, onDelete, searchPlaceholder = "Search…" }: {
+  rows: T[]; loading: boolean; error?: string | null; onRetry?: () => void; columns: Column<T>[];
+  onEdit: (r: T) => void; onPublishToggle: (r: T) => Promise<boolean | void> | boolean | void; onDelete: (r: T) => Promise<boolean | void> | boolean | void;
   searchPlaceholder?: string;
 }) {
   const [q, setQ] = useState("");
@@ -480,6 +539,7 @@ function DataTable<T extends { id: string; is_published: boolean }>({ rows, load
   }, [rows, q, columns]);
 
   if (loading) return <ListSkeleton rows={5} />;
+  if (error) return <InlineLoadError message={error} onRetry={onRetry ?? (() => undefined)} />;
   if (!rows.length) return <div className="rounded-2xl border border-dashed bg-card p-10 text-center text-muted-foreground">No items yet. Click <strong>New</strong> to create the first one.</div>;
 
   return (
@@ -549,7 +609,10 @@ function DataTable<T extends { id: string; is_published: boolean }>({ rows, load
                 e.preventDefault();
                 if (!confirming) return;
                 setDeleting(true);
-                try { await onDelete(confirming); setConfirming(null); } finally { setDeleting(false); }
+                try {
+                  const deleted = await onDelete(confirming);
+                  if (deleted !== false) setConfirming(null);
+                } finally { setDeleting(false); }
               }}
             >
               {deleting ? <Loader2 className="animate-spin" /> : <Trash2 />} Delete
