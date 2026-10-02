@@ -2,7 +2,14 @@ import { Component, type ErrorInfo, type ReactNode } from "react";
 import { AlertTriangle, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-type Props = { children: ReactNode; title?: string; compact?: boolean };
+type Props = {
+  children: ReactNode;
+  title?: string;
+  description?: string;
+  compact?: boolean;
+  resetKey?: string;
+  onBack?: () => void;
+};
 type State = { error: Error | null };
 
 /**
@@ -20,6 +27,10 @@ export default class ErrorBoundary extends Component<Props, State> {
     console.error("ErrorBoundary caught", error, info.componentStack);
   }
 
+  componentDidUpdate(previous: Props) {
+    if (this.state.error && previous.resetKey !== this.props.resetKey) this.reset();
+  }
+
   reset = () => this.setState({ error: null });
 
   render() {
@@ -34,14 +45,21 @@ export default class ErrorBoundary extends Component<Props, State> {
         <AlertTriangle className="mx-auto size-8 text-destructive" />
         <h2 className="mt-3 font-display text-lg font-bold">{this.props.title ?? "Something went wrong"}</h2>
         <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-          This section could not be displayed. You can retry, or reload the page if it keeps happening.
+          {this.props.description ?? "This section could not be displayed. Try it again, or reload the page if the problem continues."}
         </p>
         <div className="mt-5 flex flex-wrap justify-center gap-2">
           <Button size="sm" variant="outline" onClick={this.reset}>
             <RotateCw className="size-4" /> Try again
           </Button>
+          {this.props.onBack && <Button size="sm" variant="outline" onClick={this.props.onBack}>Back to dashboard</Button>}
           <Button size="sm" onClick={() => window.location.reload()}>Reload page</Button>
         </div>
+        <details className="mx-auto mt-5 max-w-xl text-left text-xs text-muted-foreground">
+          <summary className="cursor-pointer text-center font-medium">Technical details</summary>
+          <pre className="mt-2 max-h-32 overflow-auto whitespace-pre-wrap rounded-lg bg-muted p-3 font-mono">
+            {error.message || "No technical details were provided."}
+          </pre>
+        </details>
       </div>
     );
   }
