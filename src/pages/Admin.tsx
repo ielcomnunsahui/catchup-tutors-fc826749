@@ -8,7 +8,7 @@ import {
   CheckCircle2, Edit3, Eye, EyeOff, Loader2, Plus, ShieldCheck, Trash2, X,
   LayoutDashboard, GraduationCap, BookOpen, FolderTree, FileText, ClipboardList,
   Users, UserCheck, Clock, TrendingUp, ArrowUp, ArrowDown, ArrowUpDown, Download, Search,
-  Activity, CalendarDays, CalendarCheck, Brain, Layers3,
+  Activity, AlertTriangle, CalendarDays, CalendarCheck, Brain, Layers3, RotateCw,
 } from "lucide-react";
 import { SiteShell } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
@@ -198,8 +198,8 @@ function ProgramsTab() {
           { key: "accent", header: "Accent" },
         ]}
         onEdit={(r) => setEditing(r)}
-        onPublishToggle={async (r) => { if (await togglePublish("programs", r.id, !r.is_published, "Programme")) reload(); }}
-        onDelete={async (r) => { if (await removeRow("programs", r.id, "Programme")) reload(); }}
+        onPublishToggle={async (r) => { const changed = await togglePublish("programs", r.id, !r.is_published, "Programme"); if (changed) reload(); return changed; }}
+        onDelete={async (r) => { const deleted = await removeRow("programs", r.id, "Programme"); if (deleted) reload(); return deleted; }}
       />
       {editing && (
         <EditDialog title={editing.id ? "Edit program" : "New program"} onClose={() => setEditing(null)} onSave={async () => {
@@ -270,8 +270,8 @@ function SubjectsTab() {
           { key: "slug", header: "Slug" },
         ]}
         onEdit={(r) => setEditing(r)}
-        onPublishToggle={async (r) => { if (await togglePublish("subjects", r.id, !r.is_published, "Subject")) reload(); }}
-        onDelete={async (r) => { if (await removeRow("subjects", r.id, "Subject")) reload(); }}
+        onPublishToggle={async (r) => { const changed = await togglePublish("subjects", r.id, !r.is_published, "Subject"); if (changed) reload(); return changed; }}
+        onDelete={async (r) => { const deleted = await removeRow("subjects", r.id, "Subject"); if (deleted) reload(); return deleted; }}
       />
       {editing && (
         <EditDialog title={editing.id ? "Edit subject" : "New subject"} onClose={() => setEditing(null)} onSave={async () => {
@@ -326,8 +326,8 @@ function TopicsTab() {
           { key: "subject_id", header: "Subject", render: (r) => subjectName(r.subject_id) },
         ]}
         onEdit={(r) => setEditing(r)}
-        onPublishToggle={async (r) => { await togglePublish("topics", r.id, !r.is_published); reload(); }}
-        onDelete={async (r) => { if (await removeRow("topics", r.id)) reload(); }}
+        onPublishToggle={async (r) => { const changed = await togglePublish("topics", r.id, !r.is_published, "Topic"); if (changed) reload(); return changed; }}
+        onDelete={async (r) => { const deleted = await removeRow("topics", r.id, "Topic"); if (deleted) reload(); return deleted; }}
       />
       {editing && (
         <EditDialog title={editing.id ? "Edit topic" : "New topic"} onClose={() => setEditing(null)} onSave={async () => {
@@ -416,8 +416,8 @@ function ResourcesTab() {
           { key: "access_level", header: "Access", render: (r) => <Badge>{r.access_level}</Badge> },
         ]}
         onEdit={(r) => setEditing(r)}
-        onPublishToggle={async (r) => { await togglePublish("resources", r.id, !r.is_published); reload(); }}
-        onDelete={async (r) => { if (await removeRow("resources", r.id)) reload(); }}
+        onPublishToggle={async (r) => { const changed = await togglePublish("resources", r.id, !r.is_published, "Resource"); if (changed) reload(); return changed; }}
+        onDelete={async (r) => { const deleted = await removeRow("resources", r.id, "Resource"); if (deleted) reload(); return deleted; }}
       />
       {editing && (
         <EditDialog title={editing.id ? "Edit resource" : "New resource"} onClose={() => setEditing(null)} onSave={async () => {
@@ -481,7 +481,16 @@ function ResourcesTab() {
 
 /* ---------- Shared UI ---------- */
 
-function Toolbar({ title, subtitle, onNew, newLabel = "New", extra }: { title: string; subtitle?: string; onNew: () => void; newLabel?: string; extra?: React.ReactNode }) {
+function Toolbar({ title, subtitle, onNew, newLabel = "New", newDisabled = false, newDisabledReason, extra }: {
+  title: string;
+  subtitle?: string;
+  onNew: () => void;
+  newLabel?: string;
+  newDisabled?: boolean;
+  newDisabledReason?: string;
+  extra?: React.ReactNode;
+}) {
+  const newButton = <Button onClick={onNew} disabled={newDisabled} className="transition-transform active:scale-95"><Plus /> {newLabel}</Button>;
   return (
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
@@ -490,7 +499,9 @@ function Toolbar({ title, subtitle, onNew, newLabel = "New", extra }: { title: s
       </div>
       <div className="flex flex-wrap items-center gap-2">
         {extra}
-        <Button onClick={onNew} className="transition-transform active:scale-95"><Plus /> {newLabel}</Button>
+        {newDisabled && newDisabledReason ? (
+          <Tooltip><TooltipTrigger asChild><span>{newButton}</span></TooltipTrigger><TooltipContent>{newDisabledReason}</TooltipContent></Tooltip>
+        ) : newButton}
       </div>
     </div>
   );
@@ -498,9 +509,22 @@ function Toolbar({ title, subtitle, onNew, newLabel = "New", extra }: { title: s
 
 type Column<T> = { key: keyof T; header: string; render?: (r: T) => React.ReactNode };
 
-function DataTable<T extends { id: string; is_published: boolean }>({ rows, loading, columns, onEdit, onPublishToggle, onDelete, searchPlaceholder = "Search…" }: {
-  rows: T[]; loading: boolean; columns: Column<T>[];
-  onEdit: (r: T) => void; onPublishToggle: (r: T) => Promise<void> | void; onDelete: (r: T) => Promise<boolean | void> | void;
+function InlineLoadError({ message, onRetry, label = "items" }: { message: string; onRetry: () => void; label?: string }) {
+  return (
+    <div role="alert" className="mb-4 flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 sm:flex-row sm:items-center">
+      <AlertTriangle className="size-5 shrink-0 text-destructive" />
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold">Could not load {label}</p>
+        <p className="text-sm text-muted-foreground">{message}</p>
+      </div>
+      <Button type="button" variant="outline" size="sm" onClick={onRetry}><RotateCw className="size-4" /> Try again</Button>
+    </div>
+  );
+}
+
+function DataTable<T extends { id: string; is_published: boolean }>({ rows, loading, error, onRetry, columns, onEdit, onPublishToggle, onDelete, searchPlaceholder = "Search…" }: {
+  rows: T[]; loading: boolean; error?: string | null; onRetry?: () => void; columns: Column<T>[];
+  onEdit: (r: T) => void; onPublishToggle: (r: T) => Promise<boolean | void> | boolean | void; onDelete: (r: T) => Promise<boolean | void> | boolean | void;
   searchPlaceholder?: string;
 }) {
   const [q, setQ] = useState("");
@@ -515,6 +539,7 @@ function DataTable<T extends { id: string; is_published: boolean }>({ rows, load
   }, [rows, q, columns]);
 
   if (loading) return <ListSkeleton rows={5} />;
+  if (error) return <InlineLoadError message={error} onRetry={onRetry ?? (() => undefined)} />;
   if (!rows.length) return <div className="rounded-2xl border border-dashed bg-card p-10 text-center text-muted-foreground">No items yet. Click <strong>New</strong> to create the first one.</div>;
 
   return (
@@ -584,7 +609,10 @@ function DataTable<T extends { id: string; is_published: boolean }>({ rows, load
                 e.preventDefault();
                 if (!confirming) return;
                 setDeleting(true);
-                try { await onDelete(confirming); setConfirming(null); } finally { setDeleting(false); }
+                try {
+                  const deleted = await onDelete(confirming);
+                  if (deleted !== false) setConfirming(null);
+                } finally { setDeleting(false); }
               }}
             >
               {deleting ? <Loader2 className="animate-spin" /> : <Trash2 />} Delete
