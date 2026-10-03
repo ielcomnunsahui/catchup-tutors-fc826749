@@ -25,6 +25,7 @@ export const docTypeLabel = (t: DocType) => (t === "question_paper" ? "Question 
 
 export type PastPaper = {
   id: string;
+  subject_id?: string | null;
   subject_key: string;
   year: number;
   session: string;
@@ -56,9 +57,10 @@ export function paperFileName(p: PastPaper) {
 export const paperKey = (subjectKey: string, year: number, session: string, paper: string, doc: string) =>
   `${subjectKey}|${year}|${session}|${paper}|${doc}`;
 
-export async function fetchPastPapers(subjectKey?: string) {
+export async function fetchPastPapers(subjectKey?: string, subjectId?: string) {
   let query = supabase.from("past_papers").select("*").order("year", { ascending: false });
-  if (subjectKey) query = query.eq("subject_key", subjectKey);
+  if (subjectId) query = query.eq("subject_id", subjectId);
+  else if (subjectKey) query = query.eq("subject_key", subjectKey);
   const { data, error } = await query;
   if (error) throw error;
   return (data ?? []) as PastPaper[];
@@ -76,6 +78,54 @@ export const SUBJECT_OPTIONS = [
   { id: "math-0580", label: "IGCSE · Mathematics (0580)" },
   { id: "fmath-0606", label: "IGCSE · Additional Mathematics (0606)" },
 ];
+
+export type ManagedProgramme = {
+  id: string;
+  name: string;
+  slug: string;
+  is_published: boolean;
+  sort_order: number;
+};
+
+export type ManagedSubject = {
+  id: string;
+  program_id: string;
+  name: string;
+  slug: string;
+  is_published: boolean;
+  sort_order: number;
+  subject_key: string;
+};
+
+/** The shared programme/subject catalogue maintained in the admin console. */
+export async function fetchManagedQuestionCatalogue(): Promise<{
+  programmes: ManagedProgramme[];
+  subjects: ManagedSubject[];
+}> {
+  const [{ data: programmes, error: programmesError }, { data: subjects, error: subjectsError }, topicKeys, paperKeys] = await Promise.all([
+    (supabase as any).from("programs").select("id,name,slug,is_published,sort_order").order("sort_order"),
+    (supabase as any).from("subjects").select("id,program_id,name,slug,is_published,sort_order").order("sort_order"),
+    (supabase as any).from("topic_questions").select("subject_id,subject_key").not("subject_id", "is", null),
+    (supabase as any).from("past_papers").select("subject_id,subject_key").not("subject_id", "is", null),
+  ]);
+  if (programmesError) throw programmesError;
+  if (subjectsError) throw subjectsError;
+
+  const existingKeys = new Map<string, string>();
+  for (const row of [...(topicKeys.data ?? []), ...(paperKeys.data ?? [])]) {
+    if (row.subject_id && row.subject_key && !existingKeys.has(row.subject_id)) {
+      existingKeys.set(row.subject_id, row.subject_key);
+    }
+  }
+  const programmeSlugs = new Map<string, string>((programmes ?? []).map((p: ManagedProgramme) => [p.id, p.slug]));
+  return {
+    programmes: (programmes ?? []) as ManagedProgramme[],
+    subjects: (subjects ?? []).map((subject: Omit<ManagedSubject, "subject_key">) => ({
+      ...subject,
+      subject_key: existingKeys.get(subject.id) ?? `${programmeSlugs.get(subject.program_id) ?? "programme"}/${subject.slug}`,
+    })),
+  };
+}
 
 /** Fallback list used before the admin-managed list loads. */
 export const PAPER_YEARS = [2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018];
