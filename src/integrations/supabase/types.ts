@@ -460,6 +460,7 @@ export type Database = {
           is_published: boolean
           paper_number: string
           session: string
+          subject_id: string | null
           subject_key: string
           title: string | null
           updated_at: string
@@ -476,6 +477,7 @@ export type Database = {
           is_published?: boolean
           paper_number: string
           session: string
+          subject_id?: string | null
           subject_key: string
           title?: string | null
           updated_at?: string
@@ -492,12 +494,21 @@ export type Database = {
           is_published?: boolean
           paper_number?: string
           session?: string
+          subject_id?: string | null
           subject_key?: string
           title?: string | null
           updated_at?: string
           year?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "past_papers_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payments: {
         Row: {
@@ -1312,6 +1323,7 @@ export type Database = {
           paper_label: string
           questions_url: string | null
           sort_order: number
+          subject_id: string | null
           subject_key: string
           topic: string
           updated_at: string
@@ -1327,6 +1339,7 @@ export type Database = {
           paper_label: string
           questions_url?: string | null
           sort_order?: number
+          subject_id?: string | null
           subject_key: string
           topic: string
           updated_at?: string
@@ -1342,12 +1355,21 @@ export type Database = {
           paper_label?: string
           questions_url?: string | null
           sort_order?: number
+          subject_id?: string | null
           subject_key?: string
           topic?: string
           updated_at?: string
           video_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "topic_questions_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       topics: {
         Row: {
