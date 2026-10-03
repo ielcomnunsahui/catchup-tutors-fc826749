@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type TopicQuestion = {
   id: string;
+  subject_id?: string | null;
   subject_key: string;
   paper_key: string;
   paper_label: string;
@@ -20,13 +21,14 @@ export type TopicPaperGroup = {
   rows: TopicQuestion[];
 };
 
-export async function fetchTopicQuestions(subjectKey?: string) {
+export async function fetchTopicQuestions(subjectKey?: string, subjectId?: string) {
   let query = (supabase as any)
     .from("topic_questions")
     .select("*")
     .order("paper_key", { ascending: true })
     .order("sort_order", { ascending: true });
-  if (subjectKey) query = query.eq("subject_key", subjectKey);
+  if (subjectId) query = query.eq("subject_id", subjectId);
+  else if (subjectKey) query = query.eq("subject_key", subjectKey);
   const { data, error } = await query;
   if (error) throw error;
   return (data ?? []) as TopicQuestion[];

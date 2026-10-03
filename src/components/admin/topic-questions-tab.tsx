@@ -14,7 +14,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ListSkeleton } from "@/components/skeletons";
 import { supabase } from "@/integrations/supabase/client";
-import { SUBJECT_OPTIONS } from "@/lib/past-papers";
+import { fetchManagedQuestionCatalogue, type ManagedProgramme, type ManagedSubject } from "@/lib/past-papers";
 import { fetchTopicQuestions, groupByPaper, type TopicQuestion } from "@/lib/topic-questions";
 import { normalizeDriveUrl } from "@/lib/drive";
 
@@ -24,7 +24,10 @@ const PAPER_CHOICES = ["1", "2", "3", "4", "5", "6"];
 const NEW_PAPER = "__new__";
 
 export default function TopicQuestionsTab() {
-  const [subject, setSubject] = useState(SUBJECT_OPTIONS[0].id);
+  const [programmes, setProgrammes] = useState<ManagedProgramme[]>([]);
+  const [subjects, setSubjects] = useState<ManagedSubject[]>([]);
+  const [programmeId, setProgrammeId] = useState("");
+  const [subjectId, setSubjectId] = useState("");
   const [rows, setRows] = useState<TopicQuestion[]>([]);
   const [paper, setPaper] = useState<string>("");
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
@@ -38,10 +41,32 @@ export default function TopicQuestionsTab() {
   const [customLabel, setCustomLabel] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<TopicQuestion | null>(null);
 
+  const programmeSubjects = useMemo(() => subjects.filter((s) => s.program_id === programmeId), [subjects, programmeId]);
+  const selectedSubject = subjects.find((s) => s.id === subjectId);
+
+  useEffect(() => {
+    let active = true;
+    fetchManagedQuestionCatalogue().then(({ programmes: nextProgrammes, subjects: nextSubjects }) => {
+      if (!active) return;
+      setProgrammes(nextProgrammes);
+      setSubjects(nextSubjects);
+      const firstProgramme = nextProgrammes[0];
+      setProgrammeId((current) => current || firstProgramme?.id || "");
+      setSubjectId((current) => current || nextSubjects.find((s) => s.program_id === firstProgramme?.id)?.id || "");
+    }).catch(() => toast.error("We could not load the programme and subject list. Please try again."));
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!programmeId) return;
+    if (!programmeSubjects.some((s) => s.id === subjectId)) setSubjectId(programmeSubjects[0]?.id ?? "");
+  }, [programmeId, programmeSubjects, subjectId]);
+
   const reload = async () => {
     setLoading(true);
     try {
-      const data = await fetchTopicQuestions(subject);
+      if (!selectedSubject) { setRows([]); setLoading(false); return; }
+      const data = await fetchTopicQuestions(selectedSubject.subject_key, selectedSubject.id);
       setRows(data);
       setDrafts({});
       setPaper((p) => (data.some((r) => r.paper_key === p) ? p : (data[0]?.paper_key ?? "")));
@@ -52,7 +77,7 @@ export default function TopicQuestionsTab() {
     }
   };
 
-  useEffect(() => { reload(); /* eslint-disable-next-line */ }, [subject]);
+  useEffect(() => { reload(); /* eslint-disable-next-line */ }, [subjectId]);
 
   const papers = useMemo(() => groupByPaper(rows), [rows]);
   const active = papers.find((p) => p.paper === paper) ?? papers[0] ?? null;
@@ -103,7 +128,8 @@ export default function TopicQuestionsTab() {
       : (existing[0]?.paper_label ?? `Paper ${key}`);
     const start = existing.reduce((m, r) => Math.max(m, r.sort_order), 0);
     const payload = names.map((topic, i) => ({
-      subject_key: subject,
+      subject_id: selectedSubject?.id,
+      subject_key: selectedSubject?.subject_key,
       paper_key: key,
       paper_label: label,
       topic,
@@ -155,11 +181,20 @@ export default function TopicQuestionsTab() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end gap-4 rounded-2xl border bg-card p-5 shadow-soft">
         <div className="grid gap-1.5">
+          <Label className="text-xs">Programme</Label>
+          <Select value={programmeId} onValueChange={setProgrammeId}>
+            <SelectTrigger className="w-[220px]"><SelectValue placeholder="Select programme" /></SelectTrigger>
+            <SelectContent>
+              {programmes.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}{p.is_published ? "" : " · Hidden"}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid gap-1.5">
           <Label className="text-xs">Subject</Label>
-          <Select value={subject} onValueChange={setSubject}>
+          <Select value={subjectId} onValueChange={setSubjectId} disabled={!programmeSubjects.length}>
             <SelectTrigger className="w-[240px]"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {SUBJECT_OPTIONS.map((s) => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}
+              {programmeSubjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}{s.is_published ? "" : " · Hidden"}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -184,7 +219,7 @@ export default function TopicQuestionsTab() {
           <Badge className="bg-brand-green/15 text-brand-green hover:bg-brand-green/15">{filledCount} complete</Badge>
         </div>
         <div className="ml-auto mb-1 flex gap-2">
-          <Button variant="outline" onClick={() => { setNewPaper(active?.paper ?? "1"); setAdding(true); }}>
+          <Button variant="outline" disabled={!selectedSubject} onClick={() => { setNewPaper(active?.paper ?? "1"); setAdding(true); }}>
             <Plus /> Add topics
           </Button>
           <Button onClick={saveAll} disabled={!dirtyKeys.length || saving} className="transition-transform active:scale-95">

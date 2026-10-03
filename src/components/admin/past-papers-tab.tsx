@@ -16,15 +16,18 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  PAPER_GROUPS, variantsOf, SESSIONS, SUBJECT_OPTIONS, PAPER_VARIANTS,
+  PAPER_GROUPS, variantsOf, SESSIONS, PAPER_VARIANTS,
   fetchPastPapers, fetchPaperYears, savePaperYears, fetchPaperVariants, savePaperVariants,
-  indexPapers, paperKey, type PastPaper,
+  fetchManagedQuestionCatalogue, indexPapers, paperKey, type ManagedProgramme, type ManagedSubject, type PastPaper,
 } from "@/lib/past-papers";
 
 type Draft = { url: string; access: "free" | "premium" };
 
 export default function PastPapersTab() {
-  const [subject, setSubject] = useState(SUBJECT_OPTIONS[0].id);
+  const [programmes, setProgrammes] = useState<ManagedProgramme[]>([]);
+  const [subjects, setSubjects] = useState<ManagedSubject[]>([]);
+  const [programmeId, setProgrammeId] = useState("");
+  const [subjectId, setSubjectId] = useState("");
   const [years, setYears] = useState<number[]>([]);
   const [year, setYear] = useState("");
   const [rows, setRows] = useState<PastPaper[]>([]);
@@ -33,11 +36,32 @@ export default function PastPapersTab() {
   const [saving, setSaving] = useState(false);
   const [onlyMissing, setOnlyMissing] = useState(false);
   const [variants, setVariants] = useState<string[]>([...PAPER_VARIANTS]);
+  const programmeSubjects = useMemo(() => subjects.filter((s) => s.program_id === programmeId), [subjects, programmeId]);
+  const selectedSubject = subjects.find((s) => s.id === subjectId);
+
+  useEffect(() => {
+    let active = true;
+    fetchManagedQuestionCatalogue().then(({ programmes: nextProgrammes, subjects: nextSubjects }) => {
+      if (!active) return;
+      setProgrammes(nextProgrammes);
+      setSubjects(nextSubjects);
+      const firstProgramme = nextProgrammes[0];
+      setProgrammeId((current) => current || firstProgramme?.id || "");
+      setSubjectId((current) => current || nextSubjects.find((s) => s.program_id === firstProgramme?.id)?.id || "");
+    }).catch(() => toast.error("We could not load the programme and subject list. Please try again."));
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!programmeId) return;
+    if (!programmeSubjects.some((s) => s.id === subjectId)) setSubjectId(programmeSubjects[0]?.id ?? "");
+  }, [programmeId, programmeSubjects, subjectId]);
 
   const reload = async () => {
     setLoading(true);
     try {
-      const data = await fetchPastPapers(subject);
+      if (!selectedSubject) { setRows([]); setLoading(false); return; }
+      const data = await fetchPastPapers(selectedSubject.subject_key, selectedSubject.id);
       setRows(data);
       setDrafts({});
     } catch (e: any) {
@@ -47,7 +71,7 @@ export default function PastPapersTab() {
     }
   };
 
-  useEffect(() => { reload(); /* eslint-disable-next-line */ }, [subject]);
+  useEffect(() => { reload(); /* eslint-disable-next-line */ }, [subjectId]);
 
   useEffect(() => {
     let active = true;
@@ -94,7 +118,7 @@ export default function PastPapersTab() {
   const yearNum = Number(year);
 
   const cellFor = (session: string, num: string, doc: string) => {
-    const k = paperKey(subject, yearNum, session, num, doc);
+    const k = paperKey(selectedSubject?.subject_key ?? "", yearNum, session, num, doc);
     const existing = index.get(k);
     const draft = drafts[k];
     return {
@@ -123,14 +147,15 @@ export default function PastPapersTab() {
       const url = d.url.trim();
       if (!url) { if (existing) deletes.push(existing.id); continue; }
       upserts.push({
-        subject_key: subject,
+        subject_id: selectedSubject?.id,
+        subject_key: selectedSubject?.subject_key,
         year: yearNum,
         session,
         paper_number: num,
         doc_type: doc,
         file_url: url,
         access_level: d.access,
-        title: `${SUBJECT_OPTIONS.find((s) => s.id === subject)?.label ?? subject} ${yearNum} ${session} — ${doc === "question_paper" ? "Question Paper" : "Mark Scheme"} ${num}`,
+        title: `${programmes.find((p) => p.id === programmeId)?.name ?? "Programme"} · ${selectedSubject?.name ?? "Subject"} ${yearNum} ${session} — ${doc === "question_paper" ? "Question Paper" : "Mark Scheme"} ${num}`,
         is_published: true,
       });
     }
@@ -158,11 +183,20 @@ export default function PastPapersTab() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end gap-4 rounded-2xl border bg-card p-5">
         <div className="grid gap-1.5">
+          <Label className="text-xs">Programme</Label>
+          <Select value={programmeId} onValueChange={setProgrammeId}>
+            <SelectTrigger className="w-[220px]"><SelectValue placeholder="Select programme" /></SelectTrigger>
+            <SelectContent>
+              {programmes.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}{p.is_published ? "" : " · Hidden"}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid gap-1.5">
           <Label className="text-xs">Subject</Label>
-          <Select value={subject} onValueChange={setSubject}>
+          <Select value={subjectId} onValueChange={setSubjectId} disabled={!programmeSubjects.length}>
             <SelectTrigger className="w-[280px]"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {SUBJECT_OPTIONS.map((s) => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}
+              {programmeSubjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}{s.is_published ? "" : " · Hidden"}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
