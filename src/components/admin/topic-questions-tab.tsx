@@ -26,6 +26,8 @@ const NEW_PAPER = "__new__";
 export default function TopicQuestionsTab() {
   const [programmes, setProgrammes] = useState<ManagedProgramme[]>([]);
   const [subjects, setSubjects] = useState<ManagedSubject[]>([]);
+  const [catalogueLoading, setCatalogueLoading] = useState(true);
+  const [catalogueError, setCatalogueError] = useState(false);
   const [programmeId, setProgrammeId] = useState("");
   const [subjectId, setSubjectId] = useState("");
   const [rows, setRows] = useState<TopicQuestion[]>([]);
@@ -46,6 +48,7 @@ export default function TopicQuestionsTab() {
 
   useEffect(() => {
     let active = true;
+    setCatalogueError(false);
     fetchManagedQuestionCatalogue().then(({ programmes: nextProgrammes, subjects: nextSubjects }) => {
       if (!active) return;
       setProgrammes(nextProgrammes);
@@ -53,7 +56,11 @@ export default function TopicQuestionsTab() {
       const firstProgramme = nextProgrammes[0];
       setProgrammeId((current) => current || firstProgramme?.id || "");
       setSubjectId((current) => current || nextSubjects.find((s) => s.program_id === firstProgramme?.id)?.id || "");
-    }).catch(() => toast.error("We could not load the programme and subject list. Please try again."));
+    }).catch(() => {
+      if (!active) return;
+      setCatalogueError(true);
+      toast.error("We could not load the programme and subject list. Please refresh and try again.");
+    }).finally(() => { if (active) setCatalogueLoading(false); });
     return () => { active = false; };
   }, []);
 
@@ -227,6 +234,12 @@ export default function TopicQuestionsTab() {
           </Button>
         </div>
       </div>
+
+      {!catalogueLoading && !catalogueError && programmeId && !programmeSubjects.length && (
+        <div className="rounded-xl border border-dashed p-5 text-sm text-muted-foreground">
+          This programme has no subjects yet. Add a subject under Admin → Subjects, then return here.
+        </div>
+      )}
 
       <p className="text-sm text-muted-foreground">
         Paste the question paper link, marking scheme (MS) link and video URL for each topic. Empty fields show as “coming soon” to students.
