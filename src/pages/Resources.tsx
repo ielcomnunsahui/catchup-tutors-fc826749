@@ -11,6 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { usePremium } from "@/hooks/use-premium";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { fetchManagedQuestionCatalogue, type ManagedSubject } from "@/lib/past-papers";
 import { SESSIONS, PAPER_NUMBERS, PAPER_GROUPS, variantsOf, type Session, fetchPastPapers, indexPapers, paperKey, paperFileName, usePaperYears, usePaperVariants, type PastPaper } from "@/lib/past-papers";
 import { fetchTopicQuestions, groupByPaper, type TopicQuestion } from "@/lib/topic-questions";
 import { drivePreview, driveDownload, driveOpen } from "@/lib/drive";
@@ -28,100 +31,44 @@ type ViewerState =
 const ytId = (url: string) => url.match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/)?.[1] ?? "";
 
 
-// ---------- domain data ----------
-type Program = { id: string; name: string; tagline: string; badge: string };
-type Subject = { id: string; name: string; code: string; level: string; programId: string };
+// ---------- domain data (admin-managed programmes & subjects) ----------
+type Program = { id: string; slug: string; name: string; tagline: string; badge: string };
+type Subject = { id: string; key: string; slug: string; name: string; code: string; level: string; programId: string };
 
-const PROGRAMS: Program[] = [
-  { id: "cambridge", name: "Cambridge", tagline: "AS / A-Level pathway for university-bound students.", badge: "9709 · 9231" },
-  { id: "igcse", name: "IGCSE", tagline: "International GCSE foundation for Years 10–11.", badge: "0580 · 0606" },
-];
-
-const SUBJECTS: Subject[] = [
-  { id: "math-9709", name: "Mathematics", code: "9709", level: "A-Level", programId: "cambridge" },
-  { id: "fmath-9231", name: "Further Mathematics", code: "9231", level: "A-Level", programId: "cambridge" },
-  { id: "math-0580", name: "Mathematics", code: "0580", level: "IGCSE", programId: "igcse" },
-  { id: "fmath-0606", name: "Additional Mathematics", code: "0606", level: "IGCSE", programId: "igcse" },
-];
-
-const subjectsByProgram = (pid: string) => SUBJECTS.filter((s) => s.programId === pid);
-
-
-
-
-/** Topic past questions are organised per paper component, in syllabus order. */
-type TopicPaper = { paper: string; label: string; topics: string[] };
-
-const TOPIC_PAPERS: Record<string, TopicPaper[]> = {
-  "math-9709": [
-    { paper: "1", label: "Pure Mathematics 1", topics: ["Quadratics", "Functions", "Coordinate Geometry", "Circular Measure", "Trigonometry", "Series", "Differentiation", "Integration"] },
-    { paper: "2", label: "Pure Mathematics 2", topics: ["Algebra", "Logarithmic & Exponential Functions", "Trigonometry", "Differentiation", "Integration", "Numerical Solutions"] },
-    { paper: "3", label: "Pure Mathematics 3", topics: ["Algebra", "Logarithmic & Exponential Functions", "Trigonometry", "Differentiation", "Integration", "Numerical Solutions", "Vectors", "Differential Equations", "Complex Numbers"] },
-    { paper: "4", label: "Mechanics", topics: ["Forces & Equilibrium", "Kinematics of Motion in a Straight Line", "Momentum", "Newton's Laws of Motion", "Energy, Work & Power"] },
-    { paper: "5", label: "Probability & Statistics 1", topics: ["Representation of Data", "Permutations & Combinations", "Probability", "Discrete Random Variables", "The Normal Distribution"] },
-    { paper: "6", label: "Probability & Statistics 2", topics: ["The Poisson Distribution", "Linear Combinations of Random Variables", "Continuous Random Variables", "Sampling & Estimation", "Hypothesis Tests"] },
-  ],
-  "fmath-9231": [
-    { paper: "1", label: "Further Pure Mathematics 1", topics: ["Roots of Polynomials", "Rational Functions", "Summation of Series", "Matrices", "Polar Coordinates", "Vectors", "Proof by Induction", "Conics"] },
-    { paper: "2", label: "Further Pure Mathematics 2", topics: ["Hyperbolic Functions", "Complex Numbers", "Differentiation & Integration", "Differential Equations", "Series", "Matrices & Linear Spaces"] },
-    { paper: "3", label: "Further Mechanics", topics: ["Motion of a Projectile", "Equilibrium of a Rigid Body", "Circular Motion", "Hooke's Law", "Linear Motion under a Variable Force", "Momentum & Impulse"] },
-    { paper: "4", label: "Further Probability & Statistics", topics: ["Continuous Random Variables", "Inference using Normal & t-Distributions", "Chi-squared Tests", "Non-parametric Tests", "Probability Generating Functions"] },
-  ],
-  "math-0580": [
-    { paper: "1", label: "Core — Non-calculator", topics: ["Number", "Algebra", "Coordinate Geometry", "Geometry", "Mensuration"] },
-    { paper: "2", label: "Extended — Non-calculator", topics: ["Number", "Algebra & Graphs", "Coordinate Geometry", "Geometry", "Mensuration", "Trigonometry"] },
-    { paper: "3", label: "Core — Calculator", topics: ["Mensuration", "Trigonometry", "Vectors & Transformations", "Statistics", "Probability"] },
-    { paper: "4", label: "Extended — Calculator", topics: ["Algebra & Graphs", "Trigonometry", "Vectors & Transformations", "Statistics", "Probability", "Functions"] },
-  ],
-  "fmath-0606": [
-    { paper: "1", label: "Additional Mathematics — Paper 1", topics: ["Sets", "Functions", "Quadratic Functions", "Indices & Surds", "Factors of Polynomials", "Logarithmic & Exponential", "Straight Line Graphs", "Circular Measure"] },
-    { paper: "2", label: "Additional Mathematics — Paper 2", topics: ["Trigonometry", "Permutations & Combinations", "Series", "Vectors", "Differentiation", "Integration", "Kinematics"] },
-  ],
-};
-
-const TOPICS: Record<string, string[]> = Object.fromEntries(
-  Object.entries(TOPIC_PAPERS).map(([id, papers]) => [id, [...new Set(papers.flatMap((p) => p.topics))]]),
-);
-
-
-// ---------- real assets ----------
 const SAMPLE_PDF = "https://www.africau.edu/images/default/sample.pdf";
 
-type YearlyAssets = { paper?: string; scheme?: string };
-const YEARLY_ASSETS: Record<string, Partial<Record<number, Partial<Record<Session, YearlyAssets>>>>> = {
-  "math-9709": {
-    2025: {
-      "Feb / March": {
-        paper: "https://drive.google.com/file/d/1YAX9kv5sT1Tm2NMemS1MZQAvZkxEObws/view?usp=drive_link",
-        scheme: "https://drive.google.com/file/d/1LEa0w73pBlG2fnW5NrY5YW5Uab5HhiML/view?usp=drive_link",
-      },
-    },
-  },
-};
+const subjectCode = (s: ManagedSubject) =>
+  s.name.match(/\b(\d{4})\b/)?.[1] ?? s.slug.match(/(\d{4})/)?.[1] ?? s.subject_key.match(/(\d{4})/)?.[1] ?? "";
 
-type TopicAssets = { questions?: string; solutions?: string; videoUrl?: string; isFree?: boolean };
-const TOPIC_ASSETS: Record<string, Record<string, TopicAssets>> = {
-  "math-9709": {
-    "Series": {
-      questions: "https://drive.google.com/file/d/1vehvlz7C3_NhkjOBHhfIMWUi1cTKIa8Z/view?usp=drive_link",
-      solutions: "https://drive.google.com/file/d/1x-rtoTc3P7GT1dsYvgQpEKNdCkEA2cFR/view?usp=drive_link",
-      videoUrl: "https://youtu.be/AsrUcvWocqg?si=IxOXn3zNtMggq00J",
-      isFree: true,
-    },
-    "Coordinate Geometry": {
-      questions: "https://drive.google.com/file/d/1STr6AtCTJYf2kGZ0GM-AOZrGCYVmJL7i/view?usp=drive_link",
-      solutions: "https://drive.google.com/file/d/1BtCTIdoFMxudqt8IkYDbbLPlkpLd1wjF/view?usp=drive_link",
-      videoUrl: "https://youtu.be/6WV3RwPSET8?si=NlPxpaVmAz8i6Rt4",
-      isFree: true,
-    },
-  },
-};
+function useManagedCatalogue() {
+  const query = useQuery({ queryKey: ["managed-question-catalogue"], queryFn: fetchManagedQuestionCatalogue, staleTime: 5 * 60_000 });
+  return useMemo(() => {
+    const progs = (query.data?.programmes ?? []).filter((p) => p.is_published);
+    const progIds = new Set(progs.map((p) => p.id));
+    const subjects: Subject[] = (query.data?.subjects ?? [])
+      .filter((s) => s.is_published && progIds.has(s.program_id))
+      .map((s) => {
+        const program = progs.find((p) => p.id === s.program_id)!;
+        return { id: s.id, key: s.subject_key, slug: s.slug, name: s.name, code: subjectCode(s), level: program.name, programId: s.program_id };
+      });
+    const programs: Program[] = progs.map((p) => {
+      const subs = subjects.filter((s) => s.programId === p.id);
+      const codes = subs.map((s) => s.code).filter(Boolean);
+      return {
+        id: p.id, slug: p.slug, name: p.name,
+        tagline: subs.length ? `${subs.length} subject${subs.length === 1 ? "" : "s"}: ${subs.map((s) => s.name).join(", ")}.` : "Subjects coming soon.",
+        badge: codes.length ? codes.join(" · ") : `${subs.length} subject${subs.length === 1 ? "" : "s"}`,
+      };
+    });
+    return { programs, subjects, isLoading: query.isLoading, isError: query.isError, refetch: query.refetch };
+  }, [query.data, query.isLoading, query.isError, query.refetch]);
+}
 
-const getTopicAssets = (subjectId: string, topic: string): TopicAssets =>
-  TOPIC_ASSETS[subjectId]?.[topic] ?? {};
-
-const getYearlyAssets = (subjectId: string, year: number, session: Session): YearlyAssets =>
-  YEARLY_ASSETS[subjectId]?.[year]?.[session] ?? {};
+const matchProgram = (programs: Program[], v?: string) =>
+  !v ? null : programs.find((p) => p.slug === v || p.id === v) ?? null;
+const matchSubject = (subjects: Subject[], program: Program | null, v?: string) =>
+  !v || !program ? null
+  : subjects.find((s) => s.programId === program.id && (s.slug === v || s.id === v || s.key === v || s.key.endsWith(`/${v}`))) ?? null;
 
 // ---------- viewer ----------
 function ResourceViewer({ state, onClose }: { state: ViewerState; onClose: () => void }) {
@@ -190,78 +137,70 @@ type SearchItem = {
   year?: number;
   session?: Session;
   topic?: string;
-  hasPaper: boolean;
-  hasScheme: boolean;
-  hasQuestions: boolean;
-  hasSolutions: boolean;
-  hasVideo: boolean;
   isFree: boolean;
   assets: { paper?: string; scheme?: string; questions?: string; solutions?: string; videoUrl?: string };
 };
 
-function buildIndex(YEARS: number[]): SearchItem[] {
-  const items: SearchItem[] = [];
-  for (const subject of SUBJECTS) {
-    const program = PROGRAMS.find((p) => p.id === subject.programId)!;
-    for (const year of YEARS) {
-      for (const session of SESSIONS) {
-        const a = getYearlyAssets(subject.id, year, session);
-        items.push({
-          id: `y:${subject.id}:${year}:${session}`,
-          kind: "yearly",
-          program, subject, year, session,
-          title: `${subject.code} ${year} ${session}`,
-          subtitle: `${program.name} · ${subject.name} · Yearly past questions`,
-          hasPaper: true, hasScheme: true,
-          hasQuestions: false, hasSolutions: false, hasVideo: false,
-          isFree: true,
-          assets: { paper: a.paper ?? SAMPLE_PDF, scheme: a.scheme ?? SAMPLE_PDF },
-        });
-      }
-    }
-    for (const topic of TOPICS[subject.id] ?? []) {
-      const a = getTopicAssets(subject.id, topic);
-      const hasReal = !!(a.questions || a.solutions || a.videoUrl);
-      items.push({
-        id: `t:${subject.id}:${topic}`,
-        kind: "topic",
-        program, subject, topic,
-        title: topic,
-        subtitle: `${program.name} · ${subject.name} · Topic past questions`,
-        hasPaper: false, hasScheme: false,
-        hasQuestions: true, hasSolutions: true, hasVideo: true,
-        isFree: !!a.isFree || !hasReal ? !!a.isFree : false,
-        assets: {
-          questions: a.questions, solutions: a.solutions, videoUrl: a.videoUrl,
-        },
-      });
-    }
+async function fetchPublishedResources() {
+  const [papers, topics] = await Promise.all([
+    supabase.from("past_papers").select("subject_id,subject_key,year,session,paper_number,doc_type,file_url,access_level").eq("is_published", true),
+    (supabase as any).from("topic_questions").select("id,subject_id,subject_key,paper_label,topic,questions_url,ms_url,video_url,access_level").eq("is_published", true),
+  ]);
+  return { papers: (papers.data ?? []) as Partial<PastPaper>[], topics: (topics.data ?? []) as Partial<TopicQuestion>[] };
+}
+
+function buildIndex(programs: Program[], subjects: Subject[], data?: Awaited<ReturnType<typeof fetchPublishedResources>>): SearchItem[] {
+  if (!data) return [];
+  const findSub = (id?: string | null, key?: string) => subjects.find((s) => (id && s.id === id) || (!id && key && s.key === key));
+  const items = new Map<string, SearchItem>();
+  for (const r of data.papers) {
+    const subject = findSub(r.subject_id, r.subject_key);
+    const program = subject && programs.find((p) => p.id === subject.programId);
+    if (!subject || !program || !r.year || !r.session) continue;
+    const id = `y:${subject.id}:${r.year}:${r.session}`;
+    const it = items.get(id) ?? {
+      id, kind: "yearly" as const, program, subject, year: r.year, session: r.session as Session,
+      title: `${subject.code || subject.name} ${r.year} ${r.session}`,
+      subtitle: `${program.name} · ${subject.name} · Yearly past questions`,
+      isFree: false, assets: {},
+    };
+    if (r.access_level === "free") it.isFree = true;
+    if (r.doc_type === "question_paper" && !it.assets.paper) it.assets.paper = r.file_url;
+    if (r.doc_type === "mark_scheme" && !it.assets.scheme) it.assets.scheme = r.file_url;
+    items.set(id, it);
   }
-  return items;
+  for (const r of data.topics) {
+    const subject = findSub(r.subject_id, r.subject_key);
+    const program = subject && programs.find((p) => p.id === subject.programId);
+    if (!subject || !program || !r.topic) continue;
+    items.set(`t:${r.id}`, {
+      id: `t:${r.id}`, kind: "topic", program, subject, topic: r.topic, title: r.topic,
+      subtitle: `${program.name} · ${subject.name} · ${r.paper_label ?? "Topic past questions"}`,
+      isFree: r.access_level === "free",
+      assets: { questions: r.questions_url ?? undefined, solutions: r.ms_url ?? undefined, videoUrl: r.video_url ?? undefined },
+    });
+  }
+  return [...items.values()];
 }
 
 // ---------- SEO ----------
 type Search = { program?: string; subject?: string; view?: "yearly" | "topics" };
-const findProgram = (id?: string) => PROGRAMS.find((p) => p.id === id) ?? null;
-const findSubject = (programId?: string, subjectId?: string) =>
-  !programId || !subjectId ? null : SUBJECTS.find((s) => s.id === subjectId && s.programId === programId) ?? null;
 
-function buildMeta(s: Search) {
-  const program = findProgram(s.program);
-  const subject = findSubject(s.program, s.subject);
+function buildMeta(s: Search, program: Program | null, subject: Subject | null) {
   const base = "CatchUp Tutors";
   let title = `Resource Library | ${base}`;
-  let description = "Search Cambridge & IGCSE past questions, mark schemes, topic PQs and video solutions — filter by program, subject, topic or year.";
+  let description = "Search past questions, mark schemes, topic PQs and video solutions — filter by programme, subject, topic or year.";
+  const label = subject ? `${subject.name}${subject.code ? ` ${subject.code}` : ""}` : "";
   if (program && subject && s.view === "yearly") {
-    title = `${subject.name} ${subject.code} Yearly Past Papers (2018–2025) | ${base}`;
-    description = `Download ${program.name} ${subject.name} ${subject.code} past papers and marking schemes by session.`;
+    title = `${label} Yearly Past Papers | ${base}`;
+    description = `Download ${program.name} ${label} past papers and marking schemes by session.`;
   } else if (program && subject && s.view === "topics") {
-    title = `${subject.name} ${subject.code} Topic Past Questions | ${base}`;
-    description = `Topic-grouped past questions for ${program.name} ${subject.name} ${subject.code} with solutions and video lessons.`;
+    title = `${label} Topic Past Questions | ${base}`;
+    description = `Topic-grouped past questions for ${program.name} ${label} with solutions and video lessons.`;
   } else if (program && subject) {
-    title = `${program.name} ${subject.name} (${subject.code}) | ${base}`;
+    title = `${program.name} ${label} | ${base}`;
   } else if (program) {
-    title = `${program.name} Mathematics Resources | ${base}`;
+    title = `${program.name} Resources | ${base}`;
   }
   return { title, description, program, subject };
 }
@@ -274,8 +213,11 @@ export default function Resources() {
     subject: params.get("subject") || undefined,
     view: (params.get("view") === "yearly" || params.get("view") === "topics") ? (params.get("view") as Search["view"]) : undefined,
   };
-  const program = findProgram(search.program);
-  const subject = findSubject(search.program, search.subject);
+  const catalogue = useManagedCatalogue();
+  const { programs: PROGRAMS, subjects: SUBJECTS } = catalogue;
+  const subjectsByProgram = (pid: string) => SUBJECTS.filter((s) => s.programId === pid);
+  const program = matchProgram(PROGRAMS, search.program);
+  const subject = matchSubject(SUBJECTS, program, search.subject);
 
   const [viewer, setViewer] = useState<ViewerState>(null);
   const premium = usePremium();
@@ -290,7 +232,8 @@ export default function Resources() {
   const [fAccess, setFAccess] = useState<string>("all");
 
   const { years: YEARS } = usePaperYears();
-  const index = useMemo(() => buildIndex(YEARS), [YEARS]);
+  const resourcesQuery = useQuery({ queryKey: ["published-resources-index"], queryFn: fetchPublishedResources, staleTime: 5 * 60_000 });
+  const index = useMemo(() => buildIndex(PROGRAMS, SUBJECTS, resourcesQuery.data), [PROGRAMS, SUBJECTS, resourcesQuery.data]);
   const hasFilters = q.trim().length > 0 || fProgram !== "all" || fSubject !== "all" || fYear !== "all" || fSession !== "all" || fType !== "all" || fAccess !== "all";
 
   const results = useMemo(() => {
@@ -304,7 +247,7 @@ export default function Resources() {
       if (fAccess === "free" && !it.isFree) return false;
       if (fAccess === "premium" && it.isFree) return false;
       if (!needle) return true;
-      return [it.title, it.subtitle, it.topic, it.subject.code, it.subject.name, String(it.year ?? "")]
+      return [it.title, it.subtitle, it.topic, it.subject.code, it.subject.name, it.session, String(it.year ?? "")]
         .filter(Boolean).some((x) => x!.toString().toLowerCase().includes(needle));
     });
   }, [index, q, fProgram, fSubject, fYear, fSession, fType, fAccess]);
@@ -315,13 +258,15 @@ export default function Resources() {
       const sub = SUBJECTS.find((s) => s.id === fSubject);
       if (sub && sub.programId !== fProgram) setFSubject("all");
     }
-  }, [fProgram, fSubject]);
+  }, [fProgram, fSubject, SUBJECTS]);
 
   const go = (next: Partial<Search>) => {
     const merged = { ...search, ...next };
     const p = new URLSearchParams();
-    if (merged.program) p.set("program", merged.program);
-    if (merged.subject) p.set("subject", merged.subject);
+    const prog = matchProgram(PROGRAMS, merged.program);
+    const sub = matchSubject(SUBJECTS, prog, merged.subject);
+    if (merged.program) p.set("program", prog?.slug ?? merged.program);
+    if (merged.subject) p.set("subject", sub?.slug ?? merged.subject);
     if (merged.view) p.set("view", merged.view);
     setParams(p);
   };
@@ -335,7 +280,7 @@ export default function Resources() {
     : search.view === "topics" ? "topics"
     : subject ? "type" : program ? "subject" : "program";
 
-  const meta = buildMeta(search);
+  const meta = buildMeta(search, program, subject);
   const jsonLd: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": meta.program && meta.subject ? "LearningResource" : "CollectionPage",
@@ -413,14 +358,14 @@ export default function Resources() {
               <Input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Search topic, year, 9709, Series, May/June…"
+                placeholder="Search topic, year, subject code, May/June…"
                 aria-label="Search resources"
               />
             </div>
             <FilterSelect value={fProgram} onChange={setFProgram} placeholder="Program"
               options={[{ v: "all", l: "All programs" }, ...PROGRAMS.map((p) => ({ v: p.id, l: p.name }))]} />
             <FilterSelect value={fSubject} onChange={setFSubject} placeholder="Subject"
-              options={[{ v: "all", l: "All subjects" }, ...(fProgram === "all" ? SUBJECTS : subjectsByProgram(fProgram)).map((s) => ({ v: s.id, l: `${s.name} (${s.code})` }))]} />
+              options={[{ v: "all", l: "All subjects" }, ...(fProgram === "all" ? SUBJECTS : subjectsByProgram(fProgram)).map((s) => ({ v: s.id, l: s.code ? `${s.name} (${s.code})` : s.name }))]} />
             <FilterSelect value={fType} onChange={setFType} placeholder="Type"
               options={[{ v: "all", l: "All resources" }, { v: "yearly", l: "Yearly past papers" }, { v: "topic", l: "Topic past questions" }]} />
             <FilterSelect value={fYear} onChange={setFYear} placeholder="Year"
@@ -443,24 +388,44 @@ export default function Resources() {
               if (s === "type") go({ view: undefined });
             }} />
             <div className="mt-8">
-              {step === "program" && (
+              {catalogue.isLoading ? (
+                <div className="flex items-center justify-center gap-2 rounded-2xl border bg-card py-16 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Loading programmes…</div>
+              ) : catalogue.isError ? (
+                <div className="rounded-2xl border bg-card p-10 text-center">
+                  <p className="font-semibold">We couldn't load the programmes right now.</p>
+                  <Button className="mt-4" variant="outline" onClick={() => catalogue.refetch()}>Try again</Button>
+                </div>
+              ) : (search.program && !program) || (search.subject && !subject) ? (
+                <div className="rounded-2xl border bg-card p-10 text-center">
+                  <p className="font-semibold">That {search.subject && program ? "subject" : "programme"} isn't available.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">It may have been renamed or unpublished.</p>
+                  <Button className="mt-4" variant="outline" onClick={reset}>Browse all programmes</Button>
+                </div>
+              ) : (<>
+              {step === "program" && (PROGRAMS.length === 0 ? (
+                <div className="rounded-2xl border border-dashed p-10 text-center text-sm text-muted-foreground">No programmes have been published yet.</div>
+              ) : (
                 <StepShell eyebrow="Step 1 of 3" title="Choose your program" description="Start with the examination board you're preparing for.">
                   <div className="grid gap-5 md:grid-cols-2">
-                    {PROGRAMS.map((p) => <ChoiceCard key={p.id} icon={<GraduationCap className="size-6" />} badge={p.badge} title={p.name} description={p.tagline} onClick={() => go({ program: p.id, subject: undefined, view: undefined })} />)}
+                    {PROGRAMS.map((p) => <ChoiceCard key={p.id} icon={<GraduationCap className="size-6" />} badge={p.badge} title={p.name} description={p.tagline} onClick={() => go({ program: p.slug, subject: undefined, view: undefined })} />)}
                   </div>
                 </StepShell>
-              )}
+              ))}
               {step === "subject" && program && (
                 <StepShell eyebrow="Step 2 of 3" title={`${program.name} subjects`} description="Select the subject you want to revise.">
+                  {subjectsByProgram(program.id).length === 0 ? (
+                    <div className="rounded-2xl border border-dashed p-10 text-center text-sm text-muted-foreground">No subjects have been published for {program.name} yet.</div>
+                  ) : (
                   <div className="grid gap-5 md:grid-cols-2">
-                    {subjectsByProgram(program.id).map((s) => <ChoiceCard key={s.id} icon={<Sigma className="size-6" />} badge={`${s.level} · ${s.code}`} title={s.name} description={`Full ${s.level} ${s.name} syllabus — papers, schemes & lessons.`} onClick={() => go({ subject: s.id, view: undefined })} />)}
+                    {subjectsByProgram(program.id).map((s) => <ChoiceCard key={s.id} icon={<Sigma className="size-6" />} badge={s.code ? `${s.level} · ${s.code}` : s.level} title={s.name} description={`Full ${s.level} ${s.name} syllabus — papers, schemes & lessons.`} onClick={() => go({ subject: s.slug, view: undefined })} />)}
                   </div>
+                  )}
                 </StepShell>
               )}
               {step === "type" && program && subject && (
-                <StepShell eyebrow="Step 3 of 3" title={`${subject.name} (${subject.code})`} description="How would you like to practice today?">
+                <StepShell eyebrow="Step 3 of 3" title={subject.code ? `${subject.name} (${subject.code})` : subject.name} description="How would you like to practice today?">
                   <div className="grid gap-5 md:grid-cols-2">
-                    <ChoiceCard icon={<CalendarDays className="size-6" />} badge="By exam session" title="Yearly past questions" description="Full question papers and marking schemes from 2018 – 2025, Feb/March, May/June & Oct/Nov." onClick={() => go({ view: "yearly" })} />
+                    <ChoiceCard icon={<CalendarDays className="size-6" />} badge="By exam session" title="Yearly past questions" description="Full question papers and marking schemes by year — Feb/March, May/June & Oct/Nov." onClick={() => go({ view: "yearly" })} />
                     <ChoiceCard icon={<Layers3 className="size-6" />} badge="By syllabus topic" title="Topic-based past questions" description="Targeted question sets per syllabus topic — with worked solutions and video lessons." onClick={() => go({ view: "topics" })} />
                   </div>
                 </StepShell>
@@ -471,9 +436,12 @@ export default function Resources() {
               {step === "topics" && subject && program && (
                 <TopicsView program={program} subject={subject} premium={premium} onBack={() => go({ view: undefined })} onOpenPdf={openPdf} onOpenVideo={openVideo} />
               )}
+              </>)}
             </div>
           </div>
         )}
+
+        <div className="mt-12"><SatPracticeCard /></div>
 
         <div className="mt-16 border-t pt-12">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Local examinations</p>
@@ -534,7 +502,7 @@ function SearchResults({ results, premium, onOpenPdf, onOpenVideo }: { results: 
           {results.map((it) => (
             <article key={it.id} className="flex flex-col gap-3 rounded-2xl border bg-card p-5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wide text-primary">{it.subject.code} · {it.kind === "yearly" ? `${it.year}` : "Topic"}</span>
+                <span className="text-xs font-bold uppercase tracking-wide text-primary">{it.subject.code || it.subject.name} · {it.kind === "yearly" ? `${it.year}` : "Topic"}</span>
                 {it.isFree ? <FreeBadge /> : <PremiumBadge />}
               </div>
               <h3 className="font-display text-lg font-bold">{it.title}</h3>
@@ -542,12 +510,16 @@ function SearchResults({ results, premium, onOpenPdf, onOpenVideo }: { results: 
               <div className="mt-auto grid gap-2">
                 {it.kind === "yearly" && (
                   <>
-                    <Button size="sm" variant="outline" className="justify-start" onClick={() => onOpenPdf(it.assets.paper!, `${it.title} — Paper`, false)}>
-                      <BookMarked /> View paper
-                    </Button>
-                    <Button size="sm" variant="outline" className="justify-start" onClick={() => onOpenPdf(it.assets.scheme!, `${it.title} — Mark scheme`, false)}>
-                      <BookMarked /> View mark scheme
-                    </Button>
+                    {it.assets.paper && (
+                      <LockableButton locked={!it.isFree && !premium.isPremium} onClick={() => onOpenPdf(it.assets.paper!, `${it.title} — Paper`, !it.isFree)}>
+                        <BookMarked /> View paper
+                      </LockableButton>
+                    )}
+                    {it.assets.scheme && (
+                      <LockableButton locked={!it.isFree && !premium.isPremium} onClick={() => onOpenPdf(it.assets.scheme!, `${it.title} — Mark scheme`, !it.isFree)}>
+                        <BookMarked /> View mark scheme
+                      </LockableButton>
+                    )}
                   </>
                 )}
                 {it.kind === "topic" && (
@@ -648,12 +620,12 @@ function YearlyView({ years: YEARS, program, subject, premium, onBack, onOpenPdf
   useEffect(() => {
     let active = true;
     setLoading(true);
-    fetchPastPapers(subject.id)
-      .then((rows) => { if (active) setPapers(indexPapers(rows)); })
+    fetchPastPapers(subject.key, subject.id)
+      .then((rows) => { if (active) setPapers(indexPapers(rows.filter((r) => r.is_published).map((r) => ({ ...r, subject_key: subject.id })))); })
       .catch(() => { if (active) setPapers(new Map()); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [subject.id]);
+  }, [subject.id, subject.key]);
 
   return (
     <div>
@@ -662,7 +634,7 @@ function YearlyView({ years: YEARS, program, subject, premium, onBack, onOpenPdf
         <CalendarDays className="text-primary" />
         <div>
           <h2 className="font-display text-3xl font-bold">Yearly past questions</h2>
-          <p className="text-sm text-muted-foreground">{program.name} · {subject.name} ({subject.code})</p>
+          <p className="text-sm text-muted-foreground">{program.name} · {subject.name}{subject.code ? ` (${subject.code})` : ""}</p>
         </div>
       </div>
       <p className="mt-3 text-sm text-muted-foreground">
@@ -870,15 +842,14 @@ function TopicsView({ program, subject, premium, onBack, onOpenPdf, onOpenVideo 
     let cancelled = false;
     setDbRows(null);
     setSelected(null);
-    fetchTopicQuestions(subject.id)
+    fetchTopicQuestions(subject.key, subject.id)
       .then((rows) => { if (!cancelled) setDbRows(rows.filter((r) => r.is_published)); })
       .catch(() => { if (!cancelled) setDbRows([]); });
     return () => { cancelled = true; };
-  }, [subject.id]);
+  }, [subject.id, subject.key]);
 
   const papers: PaperEntry[] = useMemo(() => {
-    if (dbRows && dbRows.length) {
-      return groupByPaper(dbRows).map((g) => ({
+    return groupByPaper(dbRows ?? []).map((g) => ({
         paper: g.paper,
         label: g.label,
         topics: g.rows.map((r) => ({
@@ -889,16 +860,7 @@ function TopicsView({ program, subject, premium, onBack, onOpenPdf, onOpenVideo 
           isFree: r.access_level === "free",
         })),
       }));
-    }
-    return (TOPIC_PAPERS[subject.id] ?? []).map((p) => ({
-      paper: p.paper,
-      label: p.label,
-      topics: p.topics.map((t) => {
-        const a = getTopicAssets(subject.id, t);
-        return { topic: t, questions: a.questions, solutions: a.solutions, videoUrl: a.videoUrl, isFree: !!a.isFree };
-      }),
-    }));
-  }, [dbRows, subject.id]);
+  }, [dbRows]);
 
   const active = papers.find((p) => p.paper === selected) ?? null;
 
@@ -911,12 +873,14 @@ function TopicsView({ program, subject, premium, onBack, onOpenPdf, onOpenVideo 
           <h2 className="font-display text-2xl font-bold sm:text-3xl">
             {active ? active.label : "Topic-based past questions"}
           </h2>
-          <p className="text-sm text-muted-foreground">{program.name} · {subject.name} ({subject.code})</p>
+          <p className="text-sm text-muted-foreground">{program.name} · {subject.name}{subject.code ? ` (${subject.code})` : ""}</p>
         </div>
       </div>
 
       {dbRows === null ? (
         <div className="mt-10 flex justify-center py-16 text-muted-foreground"><Loader2 className="animate-spin" /></div>
+      ) : papers.length === 0 ? (
+        <div className="mt-8 rounded-2xl border border-dashed p-10 text-center text-sm text-muted-foreground">No topic questions have been published for {subject.name} yet.</div>
       ) : !active ? (
         <>
           <p className="mt-6 max-w-2xl text-sm text-muted-foreground">Choose a paper component — you'll then see its topics in syllabus order.</p>
@@ -987,6 +951,20 @@ function BackBar({ onBack, label }: { onBack: () => void; label: string }) {
     <button onClick={onBack} className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-primary">
       <ArrowLeft className="size-4" /> {label}
     </button>
+  );
+}
+
+export function SatPracticeCard() {
+  return (
+    <aside className="flex flex-col gap-4 rounded-3xl border bg-card p-6 shadow-soft sm:flex-row sm:items-center">
+      <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"><GraduationCap className="size-6" /></span>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Digital SAT</p>
+        <h3 className="mt-1 font-display text-xl font-bold">SAT practice question bank</h3>
+        <p className="mt-1 text-sm text-muted-foreground">Official-style Math and Reading &amp; Writing questions — pick a section, domain, skill and difficulty, with explanations after you submit.</p>
+      </div>
+      <Button asChild className="shrink-0"><Link to="/quiz?exam=SAT">Practise SAT <ArrowRight /></Link></Button>
+    </aside>
   );
 }
 

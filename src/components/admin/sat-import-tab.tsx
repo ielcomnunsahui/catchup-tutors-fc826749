@@ -18,6 +18,8 @@ export default function SatImportTab() {
   const [sectionId, setSectionId] = useState<SatSectionId>("math");
   const [domains, setDomains] = useState<string[]>([]);
   const [difficulties, setDifficulties] = useState<string[]>([]);
+  const [skill, setSkill] = useState<string>("all");
+  const [skills, setSkills] = useState<Record<string, number>>({});
   const [limit, setLimit] = useState(10);
   const [accessLevel, setAccessLevel] = useState<"free" | "premium">("free");
   const [publish, setPublish] = useState(true);
@@ -39,15 +41,17 @@ export default function SatImportTab() {
     setResult(null);
     try {
       const data = await callSat<{
-        questions: SatQuestion[]; available: number; remaining: number; skipped_grid_ins: number;
+        questions: SatQuestion[]; available: number; remaining: number; skipped_grid_ins: number; skills?: Record<string, number>;
       }>({
         action: "fetch",
         section: sectionId,
         domains,
         difficulties,
+        skill: skill === "all" ? undefined : skill,
         limit,
       });
       setPreview(data.questions);
+      setSkills(data.skills ?? {});
       setChosen(new Set(data.questions.map((q) => q.external_id)));
       setMeta({ available: data.available, remaining: data.remaining, skipped_grid_ins: data.skipped_grid_ins });
       if (!data.questions.length) toast.message("Nothing new came back — try other domains or difficulties.");
@@ -86,7 +90,7 @@ export default function SatImportTab() {
         <div>
           <h2 className="font-display text-xl font-bold">SAT question bank</h2>
           <p className="text-sm text-muted-foreground">
-            Pull real SAT questions with official answer explanations from the College Board question bank, preview them, then add them to your quiz bank.
+            Digital SAT → section → domain → skill → difficulty. Pull real SAT questions with official answer explanations from the College Board question bank, preview them, then add them to your quiz bank.
           </p>
         </div>
         <Tooltip>
@@ -100,7 +104,7 @@ export default function SatImportTab() {
       <div className="grid gap-4 rounded-2xl border bg-card p-5 shadow-soft sm:grid-cols-2 lg:grid-cols-3">
         <div className="space-y-1.5">
           <Label>Section</Label>
-          <Select value={sectionId} onValueChange={(v) => { setSectionId(v as SatSectionId); setDomains([]); }}>
+          <Select value={sectionId} onValueChange={(v) => { setSectionId(v as SatSectionId); setDomains([]); setSkill("all"); setSkills({}); }}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               {SAT_SECTIONS.map((s) => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}
@@ -138,7 +142,7 @@ export default function SatImportTab() {
                 type="button"
                 size="sm"
                 variant={domains.includes(d.code) ? "default" : "outline"}
-                onClick={() => toggle(domains, d.code, setDomains)}
+                onClick={() => { toggle(domains, d.code, setDomains); setSkill("all"); setSkills({}); }}
               >
                 {d.label}
               </Button>
@@ -161,6 +165,19 @@ export default function SatImportTab() {
               </Button>
             ))}
           </div>
+        </div>
+
+        <div className="space-y-1.5 sm:col-span-2 lg:col-span-3">
+          <Label>Skill / topic <span className="text-xs font-normal text-muted-foreground">(fetch once to load the skills for these domains)</span></Label>
+          <Select value={skill} onValueChange={setSkill} disabled={!Object.keys(skills).length}>
+            <SelectTrigger><SelectValue placeholder="All skills" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All skills</SelectItem>
+              {Object.entries(skills).sort(([a], [b]) => a.localeCompare(b)).map(([k, n]) => (
+                <SelectItem key={k} value={k}>{k} ({n})</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 sm:col-span-2 lg:col-span-3">

@@ -25,6 +25,7 @@ type Question = {
   session: string | null;
   paper_number: string | null;
   topic: string | null;
+  domain?: string | null;
   question_text: string;
   image_url: string | null;
   options: string[];
@@ -66,6 +67,8 @@ export default function Quiz() {
   const [subject, setSubject] = useState(params.get("subject") ?? ANY);
   const [year, setYear] = useState(params.get("year") ?? ANY); // ANY = shuffle years
   const [topic, setTopic] = useState(params.get("topic") ?? ANY);
+  const [domain, setDomain] = useState(params.get("domain") ?? ANY);
+  const [difficulty, setDifficulty] = useState(params.get("difficulty") ?? ANY);
   const [length, setLength] = useState(10);
   const [timeLimit, setTimeLimit] = useState(0); // minutes
   const [remaining, setRemaining] = useState<number | null>(null);
@@ -111,16 +114,23 @@ export default function Quiz() {
     () => uniq(bySubject.map((q) => (q.year ? String(q.year) : null))).sort((a, b) => Number(b) - Number(a)),
     [bySubject],
   );
-  const topics = useMemo(() => uniq(bySubject.map((q) => q.topic)), [bySubject]);
+  const domains = useMemo(() => uniq(bySubject.map((q) => q.domain ?? null)), [bySubject]);
+  const byDomain = useMemo(
+    () => bySubject.filter((q) => domain === ANY || q.domain === domain),
+    [bySubject, domain],
+  );
+  const topics = useMemo(() => uniq(byDomain.map((q) => q.topic)), [byDomain]);
+  const difficulties = useMemo(() => uniq(byDomain.map((q) => q.difficulty)), [byDomain]);
 
   const pool = useMemo(
     () =>
-      bySubject.filter(
+      byDomain.filter(
         (q) =>
           (year === ANY || String(q.year) === year) &&
-          (topic === ANY || q.topic === topic),
+          (topic === ANY || q.topic === topic) &&
+          (difficulty === ANY || q.difficulty === difficulty),
       ),
-    [bySubject, year, topic],
+    [byDomain, year, topic, difficulty],
   );
 
   const start = () => {
@@ -197,9 +207,11 @@ export default function Quiz() {
           </div>
         ) : !quiz ? (
           <SetupCard
-            {...{ examTypes, subjects, years, topics, examType, subject, year, topic, length, timeLimit, pool, lockedCount, isPremium, isAuthed }}
-            onExam={(v) => { setExamType(v); setSubject(ANY); setYear(ANY); setTopic(ANY); }}
-            onSubject={(v) => { setSubject(v); setYear(ANY); setTopic(ANY); }}
+            {...{ examTypes, subjects, years, topics, domains, difficulties, domain, difficulty, examType, subject, year, topic, length, timeLimit, pool, lockedCount, isPremium, isAuthed }}
+            onExam={(v) => { setExamType(v); setSubject(ANY); setYear(ANY); setTopic(ANY); setDomain(ANY); setDifficulty(ANY); }}
+            onSubject={(v) => { setSubject(v); setYear(ANY); setTopic(ANY); setDomain(ANY); }}
+            onDomain={(v) => { setDomain(v); setTopic(ANY); }}
+            onDifficulty={setDifficulty}
             onYear={setYear}
             onTopic={setTopic}
             onLength={setLength}
@@ -244,6 +256,8 @@ function Field({ label, value, onChange, options, anyLabel }: {
 
 function SetupCard(props: {
   examTypes: string[]; subjects: string[]; years: string[]; topics: string[];
+  domains: string[]; difficulties: string[]; domain: string; difficulty: string;
+  onDomain: (v: string) => void; onDifficulty: (v: string) => void;
   examType: string; subject: string; year: string; topic: string; length: number; timeLimit: number;
   pool: Question[]; lockedCount: number; isPremium: boolean; isAuthed: boolean;
   onExam: (v: string) => void; onSubject: (v: string) => void; onYear: (v: string) => void;
@@ -262,9 +276,17 @@ function SetupCard(props: {
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <Field label="Exam type" value={props.examType} onChange={props.onExam} options={props.examTypes} anyLabel="All exam types" />
-        <Field label="Course / subject" value={props.subject} onChange={props.onSubject} options={props.subjects} anyLabel="All courses" />
-        <Field label="Year" value={props.year} onChange={props.onYear} options={props.years} anyLabel="Shuffle all years" />
-        <Field label="Topic" value={props.topic} onChange={props.onTopic} options={props.topics} anyLabel="All topics" />
+        <Field label={props.examType === "SAT" ? "Section" : "Course / subject"} value={props.subject} onChange={props.onSubject} options={props.subjects} anyLabel={props.examType === "SAT" ? "All sections" : "All courses"} />
+        {props.domains.length > 0 && (
+          <Field label="Domain" value={props.domain} onChange={props.onDomain} options={props.domains} anyLabel="All domains" />
+        )}
+        {props.years.length > 0 && (
+          <Field label="Year" value={props.year} onChange={props.onYear} options={props.years} anyLabel="Shuffle all years" />
+        )}
+        <Field label={props.examType === "SAT" ? "Skill" : "Topic"} value={props.topic} onChange={props.onTopic} options={props.topics} anyLabel={props.examType === "SAT" ? "All skills" : "All topics"} />
+        {props.difficulties.length > 1 && (
+          <Field label="Difficulty" value={props.difficulty} onChange={props.onDifficulty} options={props.difficulties} anyLabel="Any difficulty" />
+        )}
       </div>
 
       <div className="mt-6 space-y-2">

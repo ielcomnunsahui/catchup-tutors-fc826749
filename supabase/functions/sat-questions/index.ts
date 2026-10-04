@@ -23,6 +23,7 @@ const Question = z.object({
   correct_index: z.number().int().min(0).max(7),
   explanation: z.string().nullable().optional(),
   topic: z.string().nullable().optional(),
+  domain: z.string().max(120).nullable().optional(),
   difficulty: z.string().max(20).default("medium"),
 });
 
@@ -148,6 +149,11 @@ Deno.serve(async (req) => {
       }
       if (input.skill) pool = pool.filter((q) => String(q.skill_desc ?? "") === input.skill);
       const available = pool.length;
+      const skillCounts: Record<string, number> = {};
+      for (const q of Array.isArray(list) ? list : []) {
+        const k = String(q.skill_desc ?? "");
+        if (k) skillCounts[k] = (skillCounts[k] ?? 0) + 1;
+      }
 
       // Skip anything already imported so admins keep getting fresh questions.
       if (input.skip_existing && pool.length) {
@@ -179,7 +185,7 @@ Deno.serve(async (req) => {
         }
       }
 
-      return json({ questions, available, remaining: pool.length, skipped_grid_ins });
+      return json({ questions, available, remaining: pool.length, skipped_grid_ins, skills: skillCounts });
     }
 
     // import
@@ -197,6 +203,7 @@ Deno.serve(async (req) => {
         subject_key: conf.label,
         year: null,
         topic: q.topic ?? null,
+        domain: q.domain ?? null,
         question_text: q.question_text,
         options: q.options,
         correct_index: q.correct_index,
