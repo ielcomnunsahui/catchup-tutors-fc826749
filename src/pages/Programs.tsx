@@ -5,7 +5,9 @@ import {
 } from "lucide-react";
 import { SiteShell, PageHero, Seo } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
-import { PremiumCTA, TutorCTA } from "./Resources";
+import { PremiumCTA, TutorCTA, SatPracticeCard } from "./Resources";
+import { useQuery } from "@tanstack/react-query";
+import { fetchManagedQuestionCatalogue } from "@/lib/past-papers";
 import ExamSubjectCatalog from "@/components/exam-subject-catalog";
 import AdmissionRequirements from "@/components/admission-requirements";
 import { quizLink } from "@/lib/nigerian-exams";
@@ -38,27 +40,6 @@ const PROGRAM_LIST = [
   { name: "IGCSE Mathematics", description: "Focused IGCSE Mathematics exam preparation with topic-based practice." },
 ];
 
-const PATHWAYS = [
-  {
-    name: "Cambridge",
-    icon: Sigma,
-    accent: "bg-primary",
-    badge: "9709 · 9231",
-    subjects: ["Mathematics", "Further Mathematics"],
-    text: "Deep conceptual learning for confident problem-solving across AS and A-Level pathways.",
-    includes: ["Pure, Mechanics & Statistics components", "Past papers 2018 – 2025, all sessions", "Topic sets with worked solutions"],
-  },
-  {
-    name: "IGCSE",
-    icon: BookOpen,
-    accent: "bg-brand-orange",
-    badge: "0580 · 0606",
-    subjects: ["Mathematics", "Additional Mathematics"],
-    text: "Focused exam preparation with clear topic pathways and deliberate past-paper practice.",
-    includes: ["Core & Extended coverage", "Variant-by-variant paper practice", "Marking schemes side by side"],
-  },
-];
-
 const STEPS = [
   { icon: Target, title: "Pick your exam", text: "Choose the board and subjects you're sitting — international or local." },
   { icon: Layers3, title: "Follow the topics", text: "Work through syllabus topics with notes and targeted question sets." },
@@ -67,6 +48,9 @@ const STEPS = [
 ];
 
 export default function Programs() {
+  const { data: catalogue, isLoading: catalogueLoading } = useQuery({ queryKey: ["managed-question-catalogue"], queryFn: fetchManagedQuestionCatalogue, staleTime: 5 * 60_000 });
+  const managedProgrammes = (catalogue?.programmes ?? []).filter((p) => p.is_published);
+  const managedSubjects = (catalogue?.subjects ?? []).filter((s) => s.is_published && managedProgrammes.some((p) => p.id === s.program_id));
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -83,8 +67,8 @@ export default function Programs() {
   };
 
   const stats = [
-    { icon: GraduationCap, value: `${EXAMS.length}`, label: "Examination boards" },
-    { icon: BookOpen, value: `${CATALOG_SUBJECTS.length}`, label: "Subjects taught" },
+    { icon: GraduationCap, value: catalogueLoading ? "…" : `${managedProgrammes.length || EXAMS.length}`, label: "Programmes" },
+    { icon: BookOpen, value: catalogueLoading ? "…" : `${managedSubjects.length || CATALOG_SUBJECTS.length}`, label: "Subjects with resources" },
     { icon: Layers3, value: `${CATALOG_SUBJECTS.reduce((n, s) => n + s.topics.length, 0)}+`, label: "Syllabus topics" },
     { icon: PlayCircle, value: "1-on-1", label: "Live tutor contacts" },
   ];
@@ -117,38 +101,52 @@ export default function Programs() {
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Core pathways</p>
         <h2 className="mt-2 font-display text-2xl font-bold sm:text-3xl">Structured programs, built around the syllabus</h2>
+        {catalogueLoading ? (
+          <p className="mt-8 text-sm text-muted-foreground">Loading programmes…</p>
+        ) : managedProgrammes.length === 0 ? (
+          <p className="mt-8 rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">Programmes will appear here once published.</p>
+        ) : (
         <div className="mt-8 grid gap-7 md:grid-cols-2">
-          {PATHWAYS.map((program) => (
-            <article key={program.name} className="group flex flex-col overflow-hidden rounded-3xl border bg-card shadow-soft transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lift">
-              <div className={`${program.accent} p-8 text-primary-foreground`}>
+          {managedProgrammes.map((program, i) => {
+            const subs = managedSubjects.filter((s) => s.program_id === program.id);
+            const accent = ["bg-primary", "bg-brand-orange", "bg-brand-green", "bg-brand-navy"][i % 4];
+            return (
+            <article key={program.id} className="group flex flex-col overflow-hidden rounded-3xl border bg-card shadow-soft transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lift">
+              <div className={`${accent} p-8 text-primary-foreground`}>
                 <div className="flex items-start justify-between">
-                  <program.icon className="h-10 w-10" />
-                  <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-bold tracking-wide">{program.badge}</span>
+                  <Sigma className="h-10 w-10" />
+                  <span className="rounded-full bg-primary-foreground/15 px-3 py-1 text-xs font-bold tracking-wide">{subs.length} subject{subs.length === 1 ? "" : "s"}</span>
                 </div>
                 <h3 className="mt-8 font-display text-4xl font-bold">{program.name}</h3>
               </div>
               <div className="flex flex-1 flex-col p-8">
-                <p className="leading-7 text-muted-foreground">{program.text}</p>
-                <div className="mt-6 flex flex-wrap gap-2">
-                  {program.subjects.map((s) => (
-                    <span key={s} className="rounded-full bg-muted px-3 py-1.5 text-sm font-semibold">{s}</span>
-                  ))}
-                </div>
+                {subs.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Subjects coming soon.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {subs.map((s) => (
+                      <Link key={s.id} to={`/resources?program=${program.slug}&subject=${s.slug}`} className="rounded-full bg-muted px-3 py-1.5 text-sm font-semibold transition hover:bg-primary/10 hover:text-primary">{s.name}</Link>
+                    ))}
+                  </div>
+                )}
                 <ul className="mt-6 space-y-2">
-                  {program.includes.map((i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-brand-green" /> {i}
+                  {["Yearly past papers by session", "Topic questions with mark schemes", "Video lessons and tutor support"].map((t) => (
+                    <li key={t} className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-brand-green" /> {t}
                     </li>
                   ))}
                 </ul>
                 <div className="mt-8 flex flex-wrap gap-2">
-                  <Button asChild><Link to="/resources">Explore resources <ArrowRight /></Link></Button>
+                  <Button asChild><Link to={`/resources?program=${program.slug}`}>Explore resources <ArrowRight /></Link></Button>
                   <Button asChild variant="outline"><Link to="/tutors">Book a tutor</Link></Button>
                 </div>
               </div>
             </article>
-          ))}
+            );
+          })}
         </div>
+        )}
+        <div className="mt-8"><SatPracticeCard /></div>
       </section>
 
       {/* How it works */}
