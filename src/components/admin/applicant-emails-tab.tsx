@@ -63,7 +63,7 @@ export default function ApplicantEmailsTab({ onBack }: { onBack: () => void }) {
     try {
       while (current.next < current.batches.length) {
         const batch: SendRun["batches"][number] = current.batches[current.next];
-        const responseResult = await supabase.functions.invoke<{ accepted?: number; error?: string; details?: string }>("send-applicant-emails", {
+        const responseResult: { data: { accepted?: number; error?: string; details?: string } | null; error: { message: string; context?: Response } | null } = await supabase.functions.invoke<{ accepted?: number; error?: string; details?: string }>("send-applicant-emails", {
           body: { applicationIds: batch.ids, subject: current.subject, message: current.message, requestId: batch.requestId },
         });
         const data: { accepted?: number; error?: string; details?: string } | null = responseResult.data;
