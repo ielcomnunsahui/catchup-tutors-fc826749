@@ -9,6 +9,6 @@
 - [x] Display admin-managed programmes and subjects on Programs
 - [x] Review and improve SAT question-bank organization
 - [x] Verify the public catalogue and SAT quiz flow
-- [ ] Export all tutor applicants and their details to CSV
-- [ ] Add admin-only selected-applicant email page using Resend
-- [ ] Verify export and applicant email safety
+- [x] Export all tutor applicants and their details to CSV
+- [x] Add admin-only selected-applicant email page using Resend
+- [ ] Verify live applicant email delivery — blocked by Resend sender-domain verification and unavailable authenticated admin testing; CSV tests/download and synthetic email selection, preview, confirmation and mobile checks passed
