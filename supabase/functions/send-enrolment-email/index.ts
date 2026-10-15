@@ -1,3 +1,4 @@
+import { resendRequest } from "../_shared/resend-gateway.ts";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -20,11 +21,7 @@ Deno.serve(async (req) => {
     const summary = `<p style="background:#FFF4EC;border-left:3px solid #FF6B12;padding:12px 14px">
       <b>Reference:</b> ${esc(r.ref_code)}<br/><b>Programme:</b> ${esc(r.programme)} — ${fee}/month<br/>
       <b>Days:</b> ${esc((r.available_days ?? []).join(", "))}<br/><b>Class time:</b> ${esc(r.preferred_time)}</p>`;
-    const send = (to: string, subject: string, html: string) => fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY")}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: FROM, to: [to], reply_to: ADMIN_EMAIL, subject, html }),
-    });
+    const send = (to: string, subject: string, html: string) => resendRequest("emails", { from: FROM, to: [to], reply_to: ADMIN_EMAIL, subject, html });
     await Promise.all([
       send(r.email, `Your ${r.programme} enrolment — ${r.ref_code}`,
         `<div style="font-family:Arial,sans-serif;max-width:600px"><p>Dear <b>${esc(r.full_name)}</b>,</p>

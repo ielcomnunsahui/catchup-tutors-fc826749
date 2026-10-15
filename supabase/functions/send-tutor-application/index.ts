@@ -1,3 +1,4 @@
+import { resendRequest } from "../_shared/resend-gateway.ts";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3";
 
@@ -70,11 +71,7 @@ Deno.serve(async (req) => {
     <p>Review it in the admin console under <b>Tutor applications</b>.</p>`);
 
   const send = (to: string, subject: string, html: string) =>
-    fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: FROM, to: [to], reply_to: ADMIN_EMAIL, subject, html }),
-    }).then((r) => r.json());
+    resendRequest("emails", { from: FROM, to: [to], reply_to: ADMIN_EMAIL, subject, html }).then((r) => r.json());
 
   const results = await Promise.allSettled([
     send(p.email, "Thank you for your application to Catch-Up Tutors", applicantHtml),

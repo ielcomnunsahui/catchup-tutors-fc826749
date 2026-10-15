@@ -1,3 +1,4 @@
+import { resendRequest } from "../_shared/resend-gateway.ts";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
@@ -39,11 +40,7 @@ function html(b: Payload) {
 }
 
 async function send(to: string, subject: string, body: string) {
-  const r = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
-    body: JSON.stringify({ from: FROM, to: [to], subject, html: body }),
-  });
+  const r = await resendRequest("emails", { from: FROM, to: [to], subject, html: body });
   const data = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(`Resend ${r.status}: ${JSON.stringify(data)}`);
   return data;

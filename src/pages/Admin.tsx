@@ -28,6 +28,7 @@ import EnrolmentsTab from "@/components/admin/enrolments-tab";
 import SettingsTab from "@/components/admin/settings-tab";
 import StudentsTab from "@/components/admin/students-tab";
 import TutorApplicationsTab from "@/components/admin/tutor-applications-tab";
+import ApplicantEmailsTab from "@/components/admin/applicant-emails-tab";
 import TopicQuestionsTab from "@/components/admin/topic-questions-tab";
 import AttendanceTab from "@/components/admin/attendance-tab";
 import ErrorBoundary from "@/components/error-boundary";
@@ -100,7 +101,8 @@ function AdminBody() {
     overview: <OverviewTab onNavigate={setSection} />,
     registrations: <RegistrationsTab />,
     students: <StudentsTab />,
-    "tutor-apps": <TutorApplicationsTab />,
+    "tutor-apps": <TutorApplicationsTab onEmail={() => setSection("applicant-emails")} />,
+    "applicant-emails": <ApplicantEmailsTab onBack={() => setSection("tutor-apps")} />,
     attendance: <AttendanceTab />,
     programs: <ProgramsTab />,
     subjects: <SubjectsTab />,
