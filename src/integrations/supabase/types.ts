@@ -881,6 +881,7 @@ export type Database = {
           correct_index: number
           created_at: string
           difficulty: string
+          domain: string | null
           exam_type: string
           explanation: string | null
           id: string
@@ -901,6 +902,7 @@ export type Database = {
           correct_index?: number
           created_at?: string
           difficulty?: string
+          domain?: string | null
           exam_type: string
           explanation?: string | null
           id?: string
@@ -921,6 +923,7 @@ export type Database = {
           correct_index?: number
           created_at?: string
           difficulty?: string
+          domain?: string | null
           exam_type?: string
           explanation?: string | null
           id?: string
