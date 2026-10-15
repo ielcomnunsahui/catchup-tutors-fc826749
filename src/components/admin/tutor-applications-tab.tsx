@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   Loader2, Search, CheckCircle2, XCircle, RotateCcw, ShieldOff, ShieldCheck, Eye, Mail, Phone, MapPin,
-  Tag as TagIcon, Plus, X, Lock,
+  Tag as TagIcon, Plus, X, Lock, Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,8 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAllTutorApplicants } from "@/lib/tutor-applicants";
+import { downloadApplicantCsv, type ApplicantExportRow } from "@/lib/tutor-applicant-export";
 
 type Application = {
   id: string; ref_code: string | null; user_id: string; full_name: string; email: string; phone: string; location: string | null;
@@ -67,7 +69,7 @@ function AppStatusBadge({ status }: { status: string }) {
   return <Badge variant="outline" className={`capitalize ${tone[status] ?? ""}`}>{status.replace("_", " ")}</Badge>;
 }
 
-export default function TutorApplicationsTab() {
+export default function TutorApplicationsTab({ onEmail }: { onEmail?: () => void }) {
   const [apps, setApps] = useState<Application[]>([]);
   const [tutors, setTutors] = useState<TutorProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,11 +83,21 @@ export default function TutorApplicationsTab() {
   const [tags, setTags] = useState<AppTag[]>([]);
   const [tagFilter, setTagFilter] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
+  const [exporting, setExporting] = useState(false);
+  const exportAll = async () => {
+    setExporting(true);
+    try {
+      const rows = await fetchAllTutorApplicants();
+      downloadApplicantCsv(rows as ApplicantExportRow[]);
+      toast.success(`Downloaded details for ${rows.length} applicants.`);
+    } catch { toast.error("Applicants could not be downloaded. Check your connection and try again."); }
+    finally { setExporting(false); }
+  };
 
   const reload = async () => {
     setLoading(true);
     const [a, t, g] = await Promise.all([
-      supabase.from("tutor_applications").select("*").order("created_at", { ascending: false }),
+      fetchAllTutorApplicants().then((data) => ({ data, error: null })).catch((error) => ({ data: null, error })),
       supabase.from("tutor_profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("tutor_application_tags").select("id, application_id, tag, color"),
     ]);
@@ -220,6 +232,8 @@ export default function TutorApplicationsTab() {
           </SelectContent>
         </Select>
         <Button variant="outline" size="sm" onClick={reload}><RotateCcw className="h-4 w-4" /> Refresh</Button>
+        <Button variant="outline" size="sm" onClick={exportAll} disabled={exporting}>{exporting ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />} Download all applicants CSV</Button>
+        {onEmail && <Button variant="outline" size="sm" onClick={onEmail}><Mail className="size-4" /> Email applicants</Button>}
         <span className="ml-auto text-xs text-muted-foreground">{filtered.length} of {apps.length}</span>
       </div>
 

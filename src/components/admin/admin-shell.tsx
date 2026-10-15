@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Settings, LayoutDashboard, GraduationCap, BookOpen, FolderTree, FileText, ClipboardList,
   Users, UserCheck, CalendarDays, CalendarCheck, Brain, Layers3, Search, Command as CommandIcon, Flag,
-  ChevronRight, PanelLeftClose, PanelLeft,
+  ChevronRight, PanelLeftClose, PanelLeft, Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export type AdminSectionId =
-  | "overview" | "registrations" | "students" | "tutor-apps" | "attendance"
+  | "overview" | "registrations" | "students" | "tutor-apps" | "applicant-emails" | "attendance"
   | "programs" | "subjects" | "topics" | "resources"
   | "topic-questions" | "past-papers" | "quiz" | "ng-questions" | "sat-questions" | "enrolments" | "settings";
 
@@ -39,6 +39,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { id: "students", label: "Students & accounts", icon: Users, description: "Every registered account and access level" },
       { id: "enrolments", label: "Programme enrolments", icon: ClipboardList, description: "Sign-ups for the fixed-price exam programmes" },
       { id: "tutor-apps", label: "Tutor applications", icon: UserCheck, description: "Review, approve or decline tutors" },
+      { id: "applicant-emails", label: "Applicant emails", icon: Mail, description: "Send application updates to selected tutor applicants" },
       { id: "attendance", label: "Attendance", icon: CalendarCheck, description: "Session marks and discrepancies" },
     ],
   },
