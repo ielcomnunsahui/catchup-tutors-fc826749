@@ -48,11 +48,29 @@ export default function ApplicantEmailsTab({ onBack }: { onBack: () => void }) {
     finally { setLoading(false); }
   };
   useEffect(() => { void load(); }, []);
-  const subjects = useMemo(() => [...new Set(apps.flatMap((app) => app.subjects ?? []))].sort(), [apps]);
-  const filtered = useMemo(() => apps.filter((app) =>
-    (status === "all" || app.status === status) &&
-    (subjectFilter === "all" || (app.subjects ?? []).includes(subjectFilter)) &&
-    [app.full_name, app.email, app.ref_code ?? "", ...(app.subjects ?? [])].join(" ").toLowerCase().includes(q.toLowerCase().trim())), [apps, q, status, subjectFilter]);
+  const tagsFor = useMemo(() => {
+    const byApp = new Map<string, string[]>();
+    tags.forEach((tag) => byApp.set(tag.application_id, [...(byApp.get(tag.application_id) ?? []), tag.tag]));
+    return byApp;
+  }, [tags]);
+  const allTags = useMemo(() => {
+    const counts = new Map<string, number>();
+    tags.forEach((tag) => counts.set(tag.tag, (counts.get(tag.tag) ?? 0) + 1));
+    return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  }, [tags]);
+  const untaggedCount = apps.filter((app) => !(tagsFor.get(app.id) ?? []).length).length;
+  const filtered = useMemo(() => apps.filter((app) => {
+    if (status !== "all" && app.status !== status) return false;
+    if (subjectFilter !== "all" && !(app.subjects ?? []).includes(subjectFilter)) return false;
+    if (tagFilter.length) {
+      const mine = tagsFor.get(app.id) ?? [];
+      if (tagFilter.includes("__untagged__")) { if (mine.length) return false; }
+      else if (!tagFilter.every((tag) => mine.includes(tag))) return false;
+    }
+    return [app.full_name, app.email, app.ref_code ?? "", ...(app.subjects ?? [])].join(" ").toLowerCase().includes(q.toLowerCase().trim());
+  }), [apps, q, status, subjectFilter, tagFilter, tagsFor]);
+  const toggleTag = (tag: string) => setTagFilter((previous) =>
+    previous.includes(tag) ? previous.filter((value) => value !== tag) : [...previous, tag]);
   const selected = apps.filter((app) => chosen.has(app.id));
   const recipients = [...new Map(selected.map((app) => [app.email.trim().toLowerCase(), app])).values()];
   const preview = recipients[0];
