@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, ArrowLeft, CheckCircle2, Loader2, Mail, Search, Send, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CheckCircle2, Loader2, Mail, Search, Send, Tag, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllTutorApplicants } from "@/lib/tutor-applicants";
@@ -13,6 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 type Applicant = Awaited<ReturnType<typeof fetchAllTutorApplicants>>[number];
 type SendRun = { batches: { ids: string[]; requestId: string }[]; next: number; subject: string; message: string; accepted: number };
+type AppTag = { id: string; application_id: string; tag: string; color: string };
 
 export default function ApplicantEmailsTab({ onBack }: { onBack: () => void }) {
   const [apps, setApps] = useState<Applicant[]>([]);
@@ -29,10 +30,20 @@ export default function ApplicantEmailsTab({ onBack }: { onBack: () => void }) {
   const [run, setRun] = useState<SendRun | null>(null);
   const [sendError, setSendError] = useState("");
   const [technical, setTechnical] = useState("");
+  const [tags, setTags] = useState<AppTag[]>([]);
+  const [tagFilter, setTagFilter] = useState<string[]>([]);
 
   const load = async () => {
     setLoading(true); setLoadError(false);
-    try { setApps(await fetchAllTutorApplicants()); }
+    try {
+      const [applicants, tagRows] = await Promise.all([
+        fetchAllTutorApplicants(),
+        supabase.from("tutor_application_tags").select("id, application_id, tag, color"),
+      ]);
+      if (tagRows.error) throw tagRows.error;
+      setApps(applicants);
+      setTags((tagRows.data ?? []) as AppTag[]);
+    }
     catch { setLoadError(true); }
     finally { setLoading(false); }
   };
