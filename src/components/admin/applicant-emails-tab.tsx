@@ -128,6 +128,23 @@ export default function ApplicantEmailsTab({ onBack }: { onBack: () => void }) {
             <Select value={status} onValueChange={setStatus} disabled={locked}><SelectTrigger aria-label="Applicant status"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All statuses</SelectItem>{["pending", "approved", "changes_requested", "rejected"].map((value) => <SelectItem key={value} value={value}>{value.replace(/_/g, " ")}</SelectItem>)}</SelectContent></Select>
             <Select value={subjectFilter} onValueChange={setSubjectFilter} disabled={locked}><SelectTrigger aria-label="Teaching subject"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All subjects</SelectItem>{subjects.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select>
           </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Tag className="size-4 text-muted-foreground" aria-hidden />
+            {allTags.map(([tag, count]) => (
+              <button key={tag} type="button" disabled={locked} aria-pressed={tagFilter.includes(tag)} onClick={() => toggleTag(tag)}
+                className={`rounded-full border px-3 py-1 text-xs transition-colors ${tagFilter.includes(tag) ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/60"}`}>
+                {tag} ({count})
+              </button>
+            ))}
+            {untaggedCount > 0 && (
+              <button type="button" disabled={locked} aria-pressed={tagFilter.includes("__untagged__")} onClick={() => toggleTag("__untagged__")}
+                className={`rounded-full border px-3 py-1 text-xs transition-colors ${tagFilter.includes("__untagged__") ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/60"}`}>
+                No category ({untaggedCount})
+              </button>
+            )}
+            {tagFilter.length > 0 && <button type="button" disabled={locked} onClick={() => setTagFilter([])} className="text-xs text-muted-foreground underline underline-offset-2">Clear</button>}
+            {!allTags.length && <span className="text-xs text-muted-foreground">No categories yet — tag applicants in Tutor applications, then select them here.</span>}
+          </div>
           <div className="flex flex-wrap items-center justify-between gap-2"><Button size="sm" variant="outline" disabled={locked || !filtered.length} onClick={() => setChosen((previous) => new Set([...previous, ...filtered.map((app) => app.id)]))}>Select all matching ({filtered.length})</Button><Button size="sm" variant="ghost" disabled={locked || !chosen.size} onClick={() => setChosen(new Set())}><X /> Clear selection</Button></div>
           <div className="max-h-[600px] overflow-y-auto rounded-lg border divide-y">
             {!filtered.length && <p className="p-6 text-sm text-muted-foreground">No applicants match these filters.</p>}
