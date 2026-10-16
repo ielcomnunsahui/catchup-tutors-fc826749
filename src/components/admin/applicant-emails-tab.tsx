@@ -48,6 +48,7 @@ export default function ApplicantEmailsTab({ onBack }: { onBack: () => void }) {
     finally { setLoading(false); }
   };
   useEffect(() => { void load(); }, []);
+  const subjects = useMemo(() => [...new Set(apps.flatMap((app) => app.subjects ?? []))].sort(), [apps]);
   const tagsFor = useMemo(() => {
     const byApp = new Map<string, string[]>();
     tags.forEach((tag) => byApp.set(tag.application_id, [...(byApp.get(tag.application_id) ?? []), tag.tag]));
