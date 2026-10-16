@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, ArrowLeft, CheckCircle2, Loader2, Mail, Search, Send, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CheckCircle2, Loader2, Mail, Search, Send, Tag, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllTutorApplicants } from "@/lib/tutor-applicants";
@@ -13,6 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 type Applicant = Awaited<ReturnType<typeof fetchAllTutorApplicants>>[number];
 type SendRun = { batches: { ids: string[]; requestId: string }[]; next: number; subject: string; message: string; accepted: number };
+type AppTag = { id: string; application_id: string; tag: string; color: string };
 
 export default function ApplicantEmailsTab({ onBack }: { onBack: () => void }) {
   const [apps, setApps] = useState<Applicant[]>([]);
@@ -29,19 +30,48 @@ export default function ApplicantEmailsTab({ onBack }: { onBack: () => void }) {
   const [run, setRun] = useState<SendRun | null>(null);
   const [sendError, setSendError] = useState("");
   const [technical, setTechnical] = useState("");
+  const [tags, setTags] = useState<AppTag[]>([]);
+  const [tagFilter, setTagFilter] = useState<string[]>([]);
 
   const load = async () => {
     setLoading(true); setLoadError(false);
-    try { setApps(await fetchAllTutorApplicants()); }
+    try {
+      const [applicants, tagRows] = await Promise.all([
+        fetchAllTutorApplicants(),
+        supabase.from("tutor_application_tags").select("id, application_id, tag, color"),
+      ]);
+      if (tagRows.error) throw tagRows.error;
+      setApps(applicants);
+      setTags((tagRows.data ?? []) as AppTag[]);
+    }
     catch { setLoadError(true); }
     finally { setLoading(false); }
   };
   useEffect(() => { void load(); }, []);
   const subjects = useMemo(() => [...new Set(apps.flatMap((app) => app.subjects ?? []))].sort(), [apps]);
-  const filtered = useMemo(() => apps.filter((app) =>
-    (status === "all" || app.status === status) &&
-    (subjectFilter === "all" || (app.subjects ?? []).includes(subjectFilter)) &&
-    [app.full_name, app.email, app.ref_code ?? "", ...(app.subjects ?? [])].join(" ").toLowerCase().includes(q.toLowerCase().trim())), [apps, q, status, subjectFilter]);
+  const tagsFor = useMemo(() => {
+    const byApp = new Map<string, string[]>();
+    tags.forEach((tag) => byApp.set(tag.application_id, [...(byApp.get(tag.application_id) ?? []), tag.tag]));
+    return byApp;
+  }, [tags]);
+  const allTags = useMemo(() => {
+    const counts = new Map<string, number>();
+    tags.forEach((tag) => counts.set(tag.tag, (counts.get(tag.tag) ?? 0) + 1));
+    return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  }, [tags]);
+  const untaggedCount = apps.filter((app) => !(tagsFor.get(app.id) ?? []).length).length;
+  const filtered = useMemo(() => apps.filter((app) => {
+    if (status !== "all" && app.status !== status) return false;
+    if (subjectFilter !== "all" && !(app.subjects ?? []).includes(subjectFilter)) return false;
+    if (tagFilter.length) {
+      const mine = tagsFor.get(app.id) ?? [];
+      if (tagFilter.includes("__untagged__")) { if (mine.length) return false; }
+      else if (!tagFilter.every((tag) => mine.includes(tag))) return false;
+    }
+    return [app.full_name, app.email, app.ref_code ?? "", ...(app.subjects ?? [])].join(" ").toLowerCase().includes(q.toLowerCase().trim());
+  }), [apps, q, status, subjectFilter, tagFilter, tagsFor]);
+  const toggleTag = (tag: string) => setTagFilter((previous) =>
+    previous.includes(tag) ? previous.filter((value) => value !== tag) : [...previous, tag]);
   const selected = apps.filter((app) => chosen.has(app.id));
   const recipients = [...new Map(selected.map((app) => [app.email.trim().toLowerCase(), app])).values()];
   const preview = recipients[0];
@@ -98,6 +128,23 @@ export default function ApplicantEmailsTab({ onBack }: { onBack: () => void }) {
           <div className="grid grid-cols-2 gap-3">
             <Select value={status} onValueChange={setStatus} disabled={locked}><SelectTrigger aria-label="Applicant status"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All statuses</SelectItem>{["pending", "approved", "changes_requested", "rejected"].map((value) => <SelectItem key={value} value={value}>{value.replace(/_/g, " ")}</SelectItem>)}</SelectContent></Select>
             <Select value={subjectFilter} onValueChange={setSubjectFilter} disabled={locked}><SelectTrigger aria-label="Teaching subject"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All subjects</SelectItem>{subjects.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Tag className="size-4 text-muted-foreground" aria-hidden />
+            {allTags.map(([tag, count]) => (
+              <button key={tag} type="button" disabled={locked} aria-pressed={tagFilter.includes(tag)} onClick={() => toggleTag(tag)}
+                className={`rounded-full border px-3 py-1 text-xs transition-colors ${tagFilter.includes(tag) ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/60"}`}>
+                {tag} ({count})
+              </button>
+            ))}
+            {untaggedCount > 0 && (
+              <button type="button" disabled={locked} aria-pressed={tagFilter.includes("__untagged__")} onClick={() => toggleTag("__untagged__")}
+                className={`rounded-full border px-3 py-1 text-xs transition-colors ${tagFilter.includes("__untagged__") ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/60"}`}>
+                No category ({untaggedCount})
+              </button>
+            )}
+            {tagFilter.length > 0 && <button type="button" disabled={locked} onClick={() => setTagFilter([])} className="text-xs text-muted-foreground underline underline-offset-2">Clear</button>}
+            {!allTags.length && <span className="text-xs text-muted-foreground">No categories yet — tag applicants in Tutor applications, then select them here.</span>}
           </div>
           <div className="flex flex-wrap items-center justify-between gap-2"><Button size="sm" variant="outline" disabled={locked || !filtered.length} onClick={() => setChosen((previous) => new Set([...previous, ...filtered.map((app) => app.id)]))}>Select all matching ({filtered.length})</Button><Button size="sm" variant="ghost" disabled={locked || !chosen.size} onClick={() => setChosen(new Set())}><X /> Clear selection</Button></div>
           <div className="max-h-[600px] overflow-y-auto rounded-lg border divide-y">
