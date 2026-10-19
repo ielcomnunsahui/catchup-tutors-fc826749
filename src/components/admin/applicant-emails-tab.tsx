@@ -32,17 +32,24 @@ export default function ApplicantEmailsTab({ onBack }: { onBack: () => void }) {
   const [technical, setTechnical] = useState("");
   const [tags, setTags] = useState<AppTag[]>([]);
   const [tagFilter, setTagFilter] = useState<string[]>([]);
+  const [sentMap, setSentMap] = useState<Map<string, string>>(new Map());
+  const [previewIndex, setPreviewIndex] = useState(0);
 
   const load = async () => {
     setLoading(true); setLoadError(false);
     try {
-      const [applicants, tagRows] = await Promise.all([
+      const [applicants, tagRows, sendRows] = await Promise.all([
         fetchAllTutorApplicants(),
         supabase.from("tutor_application_tags").select("id, application_id, tag, color"),
+        supabase.from("applicant_email_sends").select("application_id, created_at").order("created_at", { ascending: false }),
       ]);
       if (tagRows.error) throw tagRows.error;
+      if (sendRows.error) throw sendRows.error;
       setApps(applicants);
       setTags((tagRows.data ?? []) as AppTag[]);
+      const latest = new Map<string, string>();
+      (sendRows.data ?? []).forEach((row) => { if (!latest.has(row.application_id)) latest.set(row.application_id, row.created_at); });
+      setSentMap(latest);
     }
     catch { setLoadError(true); }
     finally { setLoading(false); }
