@@ -58,6 +58,10 @@ Deno.serve(async (req) => {
     }
     const result = JSON.parse(details);
     if (!Array.isArray(result.data) || result.data.length !== emails.length) return json({ error: "Resend returned an unexpected receipt. Retry the same batch; do not start a new message.", details }, 502);
+    const { error: logError } = await db.from("applicant_email_sends").insert(
+      applicants.map((applicant) => ({ application_id: applicant.id, subject, request_id: requestId, sent_by: auth.user.id })),
+    );
+    if (logError) console.error("Could not record applicant email sends", logError);
     return json({ accepted: emails.length, applicationIds: ids, duplicateAddresses: ids.length - emails.length });
   } catch (error) {
     console.error("Applicant email request failed", error);
