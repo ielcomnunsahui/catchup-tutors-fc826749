@@ -89,6 +89,41 @@ export type Database = {
         }
         Relationships: []
       }
+      applicant_email_sends: {
+        Row: {
+          application_id: string
+          created_at: string
+          id: string
+          request_id: string
+          sent_by: string | null
+          subject: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          id?: string
+          request_id: string
+          sent_by?: string | null
+          subject: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          id?: string
+          request_id?: string
+          sent_by?: string | null
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applicant_email_sends_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance: {
         Row: {
           attended: boolean | null
