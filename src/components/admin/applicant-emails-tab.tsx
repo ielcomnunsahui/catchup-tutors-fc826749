@@ -120,7 +120,7 @@ export default function ApplicantEmailsTab({ onBack }: { onBack: () => void }) {
       const now = new Date().toISOString();
       setSentMap((previous) => {
         const next = new Map(previous);
-        current.batches.flatMap((batch) => batch.ids).forEach((id) => next.set(id, now));
+        current!.batches.flatMap((batch) => batch.ids).forEach((id) => next.set(id, now));
         return next;
       });
     } catch (error) { setSendError(error instanceof Error ? error.message : "Sending could not be confirmed."); }
