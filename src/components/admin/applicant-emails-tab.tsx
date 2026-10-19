@@ -81,7 +81,7 @@ export default function ApplicantEmailsTab({ onBack }: { onBack: () => void }) {
     previous.includes(tag) ? previous.filter((value) => value !== tag) : [...previous, tag]);
   const selected = apps.filter((app) => chosen.has(app.id));
   const recipients = [...new Map(selected.map((app) => [app.email.trim().toLowerCase(), app])).values()];
-  const preview = recipients[0];
+  const preview = recipients[Math.min(previewIndex, Math.max(recipients.length - 1, 0))];
   const complete = !!run && run.next === run.batches.length;
   const locked = !!run && !complete;
   const invalidEmail = recipients.some((app) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(app.email.trim()));
@@ -117,6 +117,12 @@ export default function ApplicantEmailsTab({ onBack }: { onBack: () => void }) {
         setRun(current);
       }
       toast.success(`Resend accepted ${current.accepted} applicant emails.`);
+      const now = new Date().toISOString();
+      setSentMap((previous) => {
+        const next = new Map(previous);
+        current.batches.flatMap((batch) => batch.ids).forEach((id) => next.set(id, now));
+        return next;
+      });
     } catch (error) { setSendError(error instanceof Error ? error.message : "Sending could not be confirmed."); }
     finally { setSending(false); }
   };
