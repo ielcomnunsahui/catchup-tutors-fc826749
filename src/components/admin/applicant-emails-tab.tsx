@@ -32,17 +32,24 @@ export default function ApplicantEmailsTab({ onBack }: { onBack: () => void }) {
   const [technical, setTechnical] = useState("");
   const [tags, setTags] = useState<AppTag[]>([]);
   const [tagFilter, setTagFilter] = useState<string[]>([]);
+  const [sentMap, setSentMap] = useState<Map<string, string>>(new Map());
+  const [previewIndex, setPreviewIndex] = useState(0);
 
   const load = async () => {
     setLoading(true); setLoadError(false);
     try {
-      const [applicants, tagRows] = await Promise.all([
+      const [applicants, tagRows, sendRows] = await Promise.all([
         fetchAllTutorApplicants(),
         supabase.from("tutor_application_tags").select("id, application_id, tag, color"),
+        supabase.from("applicant_email_sends").select("application_id, created_at").order("created_at", { ascending: false }),
       ]);
       if (tagRows.error) throw tagRows.error;
+      if (sendRows.error) throw sendRows.error;
       setApps(applicants);
       setTags((tagRows.data ?? []) as AppTag[]);
+      const latest = new Map<string, string>();
+      (sendRows.data ?? []).forEach((row) => { if (!latest.has(row.application_id)) latest.set(row.application_id, row.created_at); });
+      setSentMap(latest);
     }
     catch { setLoadError(true); }
     finally { setLoading(false); }
@@ -74,7 +81,7 @@ export default function ApplicantEmailsTab({ onBack }: { onBack: () => void }) {
     previous.includes(tag) ? previous.filter((value) => value !== tag) : [...previous, tag]);
   const selected = apps.filter((app) => chosen.has(app.id));
   const recipients = [...new Map(selected.map((app) => [app.email.trim().toLowerCase(), app])).values()];
-  const preview = recipients[0];
+  const preview = recipients[Math.min(previewIndex, Math.max(recipients.length - 1, 0))];
   const complete = !!run && run.next === run.batches.length;
   const locked = !!run && !complete;
   const invalidEmail = recipients.some((app) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(app.email.trim()));
@@ -110,6 +117,12 @@ export default function ApplicantEmailsTab({ onBack }: { onBack: () => void }) {
         setRun(current);
       }
       toast.success(`Resend accepted ${current.accepted} applicant emails.`);
+      const now = new Date().toISOString();
+      setSentMap((previous) => {
+        const next = new Map(previous);
+        current!.batches.flatMap((batch) => batch.ids).forEach((id) => next.set(id, now));
+        return next;
+      });
     } catch (error) { setSendError(error instanceof Error ? error.message : "Sending could not be confirmed."); }
     finally { setSending(false); }
   };
@@ -151,7 +164,7 @@ export default function ApplicantEmailsTab({ onBack }: { onBack: () => void }) {
             {!filtered.length && <p className="p-6 text-sm text-muted-foreground">No applicants match these filters.</p>}
             {filtered.map((app) => <label key={app.id} className="flex cursor-pointer items-start gap-3 p-4 transition-colors hover:bg-muted/40">
               <Checkbox checked={chosen.has(app.id)} onCheckedChange={(value) => toggle(app.id, value === true)} disabled={locked} aria-label={`Select ${app.full_name}`} />
-              <span className="min-w-0"><span className="block text-sm font-medium">{app.full_name}</span><span className="block break-all text-xs text-muted-foreground">{app.email}</span><span className="mt-1 block text-xs text-muted-foreground">{(app.subjects ?? []).join(" · ")} · {app.status.replace(/_/g, " ")}</span></span>
+              <span className="min-w-0"><span className="flex flex-wrap items-center gap-2 text-sm font-medium">{app.full_name}{sentMap.has(app.id) && <span className="inline-flex items-center gap-1 rounded-full bg-brand-green/10 px-2 py-0.5 text-[11px] font-medium text-brand-green"><CheckCircle2 className="size-3" /> Emailed {new Date(sentMap.get(app.id)!).toLocaleDateString()}</span>}</span><span className="block break-all text-xs text-muted-foreground">{app.email}</span><span className="mt-1 block text-xs text-muted-foreground">{(app.subjects ?? []).join(" · ")} · {app.status.replace(/_/g, " ")}</span></span>
             </label>)}
           </div>
         </section>
@@ -159,7 +172,7 @@ export default function ApplicantEmailsTab({ onBack }: { onBack: () => void }) {
           <h3 className="font-medium">Message</h3>
           <div className="space-y-2"><Label htmlFor="applicant-email-subject">Subject</Label><Input id="applicant-email-subject" value={subject} maxLength={200} onChange={(event) => setSubject(event.target.value.replace(/[\r\n]/g, ""))} disabled={!!run} /></div>
           <div className="space-y-2"><Label htmlFor="applicant-email-message">Application update</Label><Textarea id="applicant-email-message" value={message} maxLength={12000} rows={10} onChange={(event) => setMessage(event.target.value)} disabled={!!run} /></div>
-          <div className="rounded-lg border bg-muted/20 p-5"><p className="mb-3 flex items-center gap-2 text-xs font-medium text-muted-foreground"><Mail className="size-4" /> Preview</p><p className="text-sm font-medium">{subject || "Email subject"}</p><p className="mt-4 text-sm">Dear {preview?.full_name ?? "Applicant"},</p><p className="mt-3 whitespace-pre-wrap break-words text-sm">{message || "Your application update"}</p><p className="mt-4 text-xs text-muted-foreground">{preview?.ref_code && <>Application reference: {preview.ref_code}<br /><br /></>}The Recruitment Team<br />Catch-Up Tutors</p></div>
+          <div className="rounded-lg border bg-muted/20 p-5"><div className="mb-3 flex flex-wrap items-center justify-between gap-2"><p className="flex items-center gap-2 text-xs font-medium text-muted-foreground"><Mail className="size-4" /> Preview</p>{recipients.length > 1 && <div className="flex items-center gap-2"><Button type="button" size="sm" variant="outline" disabled={previewIndex <= 0} onClick={() => setPreviewIndex((value) => Math.max(value - 1, 0))}>← Previous</Button><span className="text-xs text-muted-foreground">{Math.min(previewIndex + 1, recipients.length)} of {recipients.length}</span><Button type="button" size="sm" variant="outline" disabled={previewIndex >= recipients.length - 1} onClick={() => setPreviewIndex((value) => Math.min(value + 1, recipients.length - 1))}>Next →</Button></div>}</div>{preview && <p className="mb-2 text-xs text-muted-foreground">Reviewing: <span className="font-medium text-foreground">{preview.full_name}</span> · {preview.email}</p>}<p className="text-sm font-medium">{subject || "Email subject"}</p><p className="mt-4 text-sm">Dear {preview?.full_name ?? "Applicant"},</p><p className="mt-3 whitespace-pre-wrap break-words text-sm">{message || "Your application update"}</p><p className="mt-4 text-xs text-muted-foreground">{preview?.ref_code && <>Application reference: {preview.ref_code}<br /><br /></>}The Recruitment Team<br />Catch-Up Tutors</p></div>
           <p className="text-xs text-muted-foreground">Each applicant receives a separate email. Duplicate addresses receive one copy. Replies go to Catchuptutors01@gmail.com.</p>
           {invalidEmail && <p role="alert" className="text-sm text-destructive">Remove applicants with invalid email addresses before sending.</p>}
           {run && <div role="status" className="flex items-center gap-2 rounded-lg border p-4 text-sm">{complete ? <CheckCircle2 className="text-brand-green" /> : <Mail className="text-primary" />}<span>{run.accepted} emails accepted by Resend · {run.next} of {run.batches.length} batches complete{complete ? ". Acceptance does not confirm inbox delivery." : ". Keep this page open until sending finishes."}</span></div>}
