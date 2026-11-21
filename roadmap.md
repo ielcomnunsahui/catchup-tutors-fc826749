@@ -12,3 +12,5 @@
 - [x] Export all tutor applicants and their details to CSV
 - [x] Add admin-only selected-applicant email page using Resend
 - [ ] Verify live applicant email delivery — blocked by Resend sender-domain verification and unavailable authenticated admin testing; CSV tests/download and synthetic email selection, preview, confirmation and mobile checks passed
+- [x] Add admin management and learner playback for programme-, subject-, and topic-based tutorial videos
+- [x] Improve quiz explanations with separate, ordered choice rationales and a highlighted correct-answer explanation

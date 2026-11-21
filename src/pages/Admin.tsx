@@ -31,6 +31,7 @@ import TutorApplicationsTab from "@/components/admin/tutor-applications-tab";
 import ApplicantEmailsTab from "@/components/admin/applicant-emails-tab";
 import TopicQuestionsTab from "@/components/admin/topic-questions-tab";
 import AttendanceTab from "@/components/admin/attendance-tab";
+import TutorialVideosTab from "@/components/admin/tutorial-videos-tab";
 import ErrorBoundary from "@/components/error-boundary";
 import { KpiSkeleton, ListSkeleton } from "@/components/skeletons";
 import { AdminShell, useAdminSection, type AdminSectionId } from "@/components/admin/admin-shell";
@@ -108,6 +109,7 @@ function AdminBody() {
     subjects: <SubjectsTab />,
     topics: <TopicsTab />,
     resources: <ResourcesTab />,
+    videos: <TutorialVideosTab />,
     "topic-questions": <TopicQuestionsTab />,
     "past-papers": <PastPapersTab />,
     quiz: <QuizBankTab />,
@@ -736,6 +738,7 @@ function OverviewTab({ onNavigate }: { onNavigate: (id: AdminSectionId) => void 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <QuickAction icon={CalendarDays} label="Yearly past questions" hint="Add papers & mark schemes" onClick={() => onNavigate("past-papers")} />
         <QuickAction icon={Layers3} label="Topical past questions" hint="Organise topics per paper" onClick={() => onNavigate("topic-questions")} />
+        <QuickAction icon={FileText} label="Tutorial videos" hint="Add lessons by topic" onClick={() => onNavigate("videos")} />
         <QuickAction icon={UserCheck} label="Tutor applications" hint={`${stats.tutorsPending} awaiting review`} onClick={() => onNavigate("tutor-apps")} />
         <QuickAction icon={CalendarCheck} label="Attendance" hint="Check session marks" onClick={() => onNavigate("attendance")} />
       </div>

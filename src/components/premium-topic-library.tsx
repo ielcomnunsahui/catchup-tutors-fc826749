@@ -1,92 +1,166 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, FileText, LockKeyhole, PlayCircle, Unlock } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { LockKeyhole, PlayCircle, Video } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CATALOG_SUBJECTS } from "@/lib/catalog";
-import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { CardGridSkeleton } from "@/components/skeletons";
+import { supabase } from "@/integrations/supabase/client";
+import { parseVideoSource, videoEmbedSource, videoSourceUrl } from "@/lib/tutorial-videos";
+
+type TutorialVideo = {
+  id: string;
+  title: string;
+  description: string;
+  program_id: string;
+  subject_id: string;
+  topic_id: string | null;
+  provider: string;
+  provider_id: string;
+  provider_url: string | null;
+  thumbnail_url: string | null;
+  duration_seconds: number | null;
+  access_level: "free" | "premium";
+};
+
+type NamedRecord = { id: string; name: string; program_id?: string; subject_id?: string };
+const ALL = "__all__";
 
 /**
- * Subject → topic library. Each topic exposes premium notes and a video explanation,
- * shown locked until the learner has premium access.
+ * Shows published tutorial videos from the admin-managed programme, subject and topic catalogue.
  */
 export default function PremiumTopicLibrary({ unlocked, ctaLabel }: { unlocked: boolean; ctaLabel: string }) {
-  const [subjectId, setSubjectId] = useState(CATALOG_SUBJECTS[0].id);
-  const subject = CATALOG_SUBJECTS.find((s) => s.id === subjectId)!;
+  const [programmeId, setProgrammeId] = useState(ALL);
+  const [subjectId, setSubjectId] = useState(ALL);
+  const [topicId, setTopicId] = useState(ALL);
+  const [activeVideo, setActiveVideo] = useState<TutorialVideo | null>(null);
+  const library = useQuery({
+    queryKey: ["tutorial-video-library"],
+    queryFn: async () => {
+      const [videoResult, programmeResult, subjectResult, topicResult] = await Promise.all([
+        supabase.from("videos").select("*").eq("is_published", true).order("created_at", { ascending: false }).limit(200),
+        supabase.from("programs").select("id,name"),
+        supabase.from("subjects").select("id,name,program_id"),
+        supabase.from("topics").select("id,name,subject_id"),
+      ]);
+      const error = videoResult.error ?? programmeResult.error ?? subjectResult.error ?? topicResult.error;
+      if (error) throw error;
+      return {
+        videos: (videoResult.data ?? []) as TutorialVideo[],
+        programmes: (programmeResult.data ?? []) as NamedRecord[],
+        subjects: (subjectResult.data ?? []) as NamedRecord[],
+        topics: (topicResult.data ?? []) as NamedRecord[],
+      };
+    },
+  });
+
+  const data = library.data;
+  const availableSubjects = useMemo(
+    () => (data?.subjects ?? []).filter((subject) => programmeId === ALL || subject.program_id === programmeId),
+    [data?.subjects, programmeId],
+  );
+  const availableTopics = useMemo(
+    () => (data?.topics ?? []).filter((topic) => subjectId === ALL || topic.subject_id === subjectId),
+    [data?.topics, subjectId],
+  );
+  const videos = useMemo(() => (data?.videos ?? []).filter((video) =>
+    (programmeId === ALL || video.program_id === programmeId) &&
+    (subjectId === ALL || video.subject_id === subjectId) &&
+    (topicId === ALL || video.topic_id === topicId),
+  ), [data?.videos, programmeId, subjectId, topicId]);
+
+  const resetSubjects = (value: string) => {
+    setProgrammeId(value);
+    setSubjectId(ALL);
+    setTopicId(ALL);
+  };
+  const resetTopics = (value: string) => {
+    setSubjectId(value);
+    setTopicId(ALL);
+  };
+  const activeSource = activeVideo ? parseVideoSource(videoSourceUrl(activeVideo)) : null;
+  const activeEmbed = activeSource ? videoEmbedSource(activeSource) : null;
 
   return (
     <section className="mt-14">
       <div className="flex flex-wrap items-center gap-3">
-        <h2 className="font-display text-xl font-bold sm:text-2xl">Topic notes & video explanations</h2>
-        <Badge variant="secondary">{CATALOG_SUBJECTS.length} subjects</Badge>
+        <h2 className="font-display text-xl font-bold sm:text-2xl">Tutor-led video lessons</h2>
+        <Badge variant="secondary">{videos.length} lessons</Badge>
       </div>
       <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-        Pick a subject, then open any topic for written explanations and a walkthrough video from a Catch-Up tutor.
+        Browse lessons by programme, subject, and topic.
       </p>
 
-      <div className="-mx-4 mt-5 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex w-max min-w-full gap-2">
-          {CATALOG_SUBJECTS.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => setSubjectId(s.id)}
-              className={cn(
-                "shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition",
-                s.id === subjectId ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:bg-muted",
-              )}
-            >
-              {s.name}
-            </button>
-          ))}
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <Select value={programmeId} onValueChange={resetSubjects}>
+          <SelectTrigger><SelectValue placeholder="All programmes" /></SelectTrigger>
+          <SelectContent><SelectItem value={ALL}>All programmes</SelectItem>{(data?.programmes ?? []).map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent>
+        </Select>
+        <Select value={subjectId} onValueChange={resetTopics}>
+          <SelectTrigger><SelectValue placeholder="All subjects" /></SelectTrigger>
+          <SelectContent><SelectItem value={ALL}>All subjects</SelectItem>{availableSubjects.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent>
+        </Select>
+        <Select value={topicId} onValueChange={setTopicId}>
+          <SelectTrigger><SelectValue placeholder="All topics" /></SelectTrigger>
+          <SelectContent><SelectItem value={ALL}>All topics</SelectItem>{availableTopics.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+
+      {library.isLoading ? <CardGridSkeleton count={3} className="mt-6" /> : library.isError ? (
+        <div className="mt-6 rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">Video lessons could not be loaded. Refresh the page and try again.</div>
+      ) : videos.length === 0 ? (
+        <div className="mt-6 rounded-xl border border-dashed p-10 text-center">
+          <Video className="mx-auto size-8 text-muted-foreground" />
+          <p className="mt-3 text-sm text-muted-foreground">No video lessons are available for these selections yet.</p>
+          {!unlocked && <Button asChild variant="outline" className="mt-4"><Link to="/pricing"><LockKeyhole className="size-4" /> {ctaLabel}</Link></Button>}
         </div>
-      </div>
+      ) : (
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {videos.map((video) => {
+            const locked = video.access_level === "premium" && !unlocked;
+            const programme = data?.programmes.find((item) => item.id === video.program_id)?.name;
+            const subject = data?.subjects.find((item) => item.id === video.subject_id)?.name;
+            const topic = data?.topics.find((item) => item.id === video.topic_id)?.name;
+            return (
+              <article key={video.id} className="flex flex-col overflow-hidden rounded-xl border bg-card">
+                <div className="relative aspect-video bg-muted">
+                  {video.thumbnail_url && <img src={video.thumbnail_url} alt="" loading="lazy" className="h-full w-full object-cover" />}
+                  {!video.thumbnail_url && <div className="grid h-full place-items-center text-muted-foreground"><Video className="size-9" /></div>}
+                  {locked && <div className="absolute inset-0 grid place-items-center bg-brand-navy/60 text-hero-foreground"><LockKeyhole className="size-8" /></div>}
+                </div>
+                <div className="flex flex-1 flex-col p-4">
+                  <div className="flex flex-wrap gap-2"><Badge variant="outline">{video.access_level === "premium" ? "Premium" : "Free"}</Badge>{video.duration_seconds && <Badge variant="secondary">{Math.ceil(video.duration_seconds / 60)} min</Badge>}</div>
+                  <h3 className="mt-2 break-words font-display text-base font-bold leading-snug">{video.title}</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">{[programme, subject, topic].filter(Boolean).join(" · ")}</p>
+                  {video.description && <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{video.description}</p>}
+                  {locked ? (
+                    <Button asChild size="sm" variant="outline" className="mt-auto pt-2"><Link to="/pricing"><LockKeyhole className="size-4" /> {ctaLabel}</Link></Button>
+                  ) : (
+                    <Button size="sm" className="mt-auto pt-2" onClick={() => setActiveVideo(video)}><PlayCircle className="size-4" /> Watch lesson</Button>
+                  )}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {subject.topics.map((topic) => (
-          <article key={topic} className="flex flex-col rounded-2xl border bg-card p-5 transition hover:-translate-y-0.5 hover:shadow-soft">
-            <div className="flex items-start gap-3">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <BookOpen className="size-5" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-[11px] font-bold uppercase tracking-wide text-primary">{subject.name}</p>
-                <h3 className="break-words font-display text-base font-bold leading-snug">{topic}</h3>
-              </div>
-              <span className={cn("ml-auto shrink-0", unlocked ? "text-brand-green" : "text-muted-foreground")}>
-                {unlocked ? <Unlock className="size-4" /> : <LockKeyhole className="size-4" />}
-              </span>
+      <Dialog open={!!activeVideo} onOpenChange={(open) => { if (!open) setActiveVideo(null); }}>
+        <DialogContent className="max-w-4xl p-4 sm:p-6">
+          <DialogHeader><DialogTitle>{activeVideo?.title}</DialogTitle><DialogDescription>{activeVideo?.description}</DialogDescription></DialogHeader>
+          {activeVideo && activeEmbed && (
+            <div className="aspect-video overflow-hidden rounded-lg bg-muted">
+              {activeEmbed.kind === "file" ? (
+                <video key={activeEmbed.url} src={activeEmbed.url} controls playsInline className="h-full w-full" />
+              ) : (
+                <iframe key={activeEmbed.url} src={activeEmbed.url} title={activeVideo.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen className="h-full w-full border-0" />
+              )}
             </div>
-
-            <div className="mt-4 grid gap-2">
-              <ItemRow icon={FileText} label="Premium notes" unlocked={unlocked} ctaLabel={ctaLabel} />
-              <ItemRow icon={PlayCircle} label="Video explanation" unlocked={unlocked} ctaLabel={ctaLabel} />
-            </div>
-          </article>
-        ))}
-      </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </section>
-  );
-}
-
-function ItemRow({
-  icon: Icon, label, unlocked, ctaLabel,
-}: { icon: typeof FileText; label: string; unlocked: boolean; ctaLabel: string }) {
-  if (!unlocked) {
-    return (
-      <Button asChild size="sm" variant="outline" className="h-auto w-full justify-start whitespace-normal py-2 text-left">
-        <Link to="/pricing">
-          <LockKeyhole className="size-4 shrink-0" />
-          <span className="min-w-0">{label} · {ctaLabel}</span>
-        </Link>
-      </Button>
-    );
-  }
-  return (
-    <div className="flex items-center gap-2 rounded-xl border bg-muted/30 px-3 py-2 text-sm">
-      <Icon className="size-4 shrink-0 text-primary" />
-      <span className="min-w-0 break-words">{label}</span>
-      <Badge variant="secondary" className="ml-auto shrink-0">Unlocked</Badge>
-    </div>
   );
 }

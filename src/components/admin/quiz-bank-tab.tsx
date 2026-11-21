@@ -20,6 +20,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { ListSkeleton } from "@/components/skeletons";
 import { supabase } from "@/integrations/supabase/client";
 import { MathText } from "@/components/math-text";
+import { QuizExplanation } from "@/components/quiz-explanation";
 
 type Row = {
   id: string;
@@ -461,7 +462,7 @@ export default function QuizBankTab() {
                       {String.fromCharCode(65 + i)}. <MathText>{o}</MathText>
                     </p>
                   ))}
-                  {r.explanation && <div className="pt-2 text-xs text-muted-foreground">Explanation: <MathText>{r.explanation}</MathText></div>}
+                  {r.explanation && <QuizExplanation explanation={r.explanation} correctIndex={r.correct_index} compact />}
                 </div>
               )}
 

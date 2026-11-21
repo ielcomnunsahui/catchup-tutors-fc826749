@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePremium } from "@/hooks/use-premium";
 import { heroImages } from "@/assets/heroes";
 import { MathText } from "@/components/math-text";
+import { QuizExplanation } from "@/components/quiz-explanation";
 
 type Question = {
   id: string;
@@ -461,12 +462,7 @@ function Results({ quiz, answers, score, onRetry }: {
                   })}
                 </div>
                 {chosen === undefined && <p className="mt-2 text-xs text-muted-foreground">You skipped this question.</p>}
-                {q.explanation && (
-                  <div className="mt-3 rounded-xl border bg-muted/40 p-3 text-sm">
-                    <p className="font-semibold">Explanation</p>
-                    <MathText block className="mt-1 leading-6 text-muted-foreground">{q.explanation}</MathText>
-                  </div>
-                )}
+                {q.explanation && <QuizExplanation explanation={q.explanation} correctIndex={q.correct_index} />}
               </div>
             </div>
           </div>

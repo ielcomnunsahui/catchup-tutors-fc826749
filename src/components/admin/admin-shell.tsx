@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Settings, LayoutDashboard, GraduationCap, BookOpen, FolderTree, FileText, ClipboardList,
   Users, UserCheck, CalendarDays, CalendarCheck, Brain, Layers3, Search, Command as CommandIcon, Flag,
-  ChevronRight, PanelLeftClose, PanelLeft, Mail,
+  ChevronRight, PanelLeftClose, PanelLeft, Mail, Video,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 export type AdminSectionId =
   | "overview" | "registrations" | "students" | "tutor-apps" | "applicant-emails" | "attendance"
-  | "programs" | "subjects" | "topics" | "resources"
+  | "programs" | "subjects" | "topics" | "resources" | "videos"
   | "topic-questions" | "past-papers" | "quiz" | "ng-questions" | "sat-questions" | "enrolments" | "settings";
 
 export type AdminSection = {
@@ -60,6 +60,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { id: "subjects", label: "Subjects", icon: BookOpen, description: "Subjects inside each program" },
       { id: "topics", label: "Topics", icon: FolderTree, description: "Topics inside each subject" },
       { id: "resources", label: "Resource files", icon: FileText, description: "Notes, solutions and uploaded documents" },
+      { id: "videos", label: "Tutorial videos", icon: Video, description: "Hosted lessons by programme, subject, and topic" },
     ],
   },
   {
