@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { parseChoiceRationales } from "./quiz-explanations";
+import { parseChoiceRationales } from "./quiz-explanations.ts";
 
 describe("parseChoiceRationales", () => {
   test("splits and orders labelled SAT explanations by choice", () => {

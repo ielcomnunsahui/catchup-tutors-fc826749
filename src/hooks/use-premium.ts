@@ -21,9 +21,10 @@ export function usePremium(): PremiumState {
     }
     const { data } = await supabase
       .from("premium_subscriptions")
-      .select("id, status, ends_at")
+      .select("id, status, starts_at, ends_at")
       .eq("user_id", user.id)
       .eq("status", "active")
+      .lte("starts_at", new Date().toISOString())
       .gte("ends_at", new Date().toISOString())
       .limit(1)
       .maybeSingle();

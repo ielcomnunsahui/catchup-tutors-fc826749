@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { parseVideoSource, videoEmbedSource } from "./tutorial-videos";
+import { parseVideoSource, videoEmbedSource } from "./tutorial-videos.ts";
 
 describe("parseVideoSource", () => {
   test("extracts hosted video IDs and YouTube thumbnails", () => {
@@ -7,7 +7,7 @@ describe("parseVideoSource", () => {
     expect(youtube?.provider).toBe("youtube");
     expect(youtube?.providerId).toBe("AbcDef12345");
     expect(youtube?.thumbnailUrl).toBe("https://img.youtube.com/vi/AbcDef12345/hqdefault.jpg");
-    expect(videoEmbedSource(youtube!).url).toBe("https://www.youtube-nocookie.com/embed/AbcDef12345");
+    expect(videoEmbedSource(youtube).url).toBe("https://www.youtube-nocookie.com/embed/AbcDef12345");
   });
 
   test("supports Vimeo, Drive, and direct HTTPS video files", () => {
